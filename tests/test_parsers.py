@@ -3,6 +3,7 @@ import io
 import sys
 import urllib.error
 import unittest
+from unittest import mock
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -15,6 +16,7 @@ import fetch_firmware_details as ffd  # noqa: E402
 from sources import apple as apple_source  # noqa: E402
 from sources import atomos as atomos_source  # noqa: E402
 from sources import bambu as bambu_source  # noqa: E402
+from sources import common as common_source  # noqa: E402
 from sources import dji as dji_source  # noqa: E402
 
 
@@ -120,6 +122,24 @@ class ParserTests(unittest.TestCase):
         payload = json.loads((ROOT / "data" / "devices.json").read_text(encoding="utf-8"))
         # Raises on validation failure.
         ffd.validate_payload_schema(payload)
+
+    def test_fetch_bytes_does_not_retry_http_404(self) -> None:
+        with (
+            mock.patch.object(common_source.urllib.request, "urlopen") as mocked_urlopen,
+            mock.patch.object(common_source.time, "sleep") as mocked_sleep,
+        ):
+            mocked_urlopen.side_effect = urllib.error.HTTPError(
+                url="https://example.com/missing.pdf",
+                code=404,
+                msg="Not Found",
+                hdrs=None,
+                fp=io.BytesIO(b"not found"),
+            )
+            with self.assertRaises(urllib.error.HTTPError):
+                common_source.fetch_bytes("https://example.com/missing.pdf", timeout=5)
+
+        self.assertEqual(mocked_urlopen.call_count, 1)
+        mocked_sleep.assert_not_called()
 
     def test_sync_status_tracks_issue_streak_days(self) -> None:
         prior = {"issue_streaks": {"dji:wa150": 2}}
