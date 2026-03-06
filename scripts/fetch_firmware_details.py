@@ -50,6 +50,15 @@ def is_transient_network_error(exc: Exception) -> bool:
     return False
 
 
+def is_http_404_error(exc: Exception) -> bool:
+    if isinstance(exc, urllib.error.HTTPError):
+        return int(exc.code) == 404
+    if isinstance(exc, urllib.error.URLError):
+        reason = exc.reason
+        return isinstance(reason, urllib.error.HTTPError) and int(reason.code) == 404
+    return False
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Sync tracked device firmware from official vendor pages")
     parser.add_argument("--dry-run", action="store_true", help="Show changes without writing file")
@@ -163,6 +172,21 @@ def process_device(
         try:
             releases = normalize_releases(sync_device(device_name, candidate, timeout))
         except Exception as exc:  # noqa: BLE001
+            if is_http_404_error(exc) and bool(candidate.get("treat_404_as_empty")):
+                status = "ok_empty" if bool(candidate.get("allow_empty")) else "no_entries"
+                reason = "404 treated as empty result by source policy"
+                last_result = {
+                    "device_id": device_id,
+                    "status": status,
+                    "reason": reason,
+                    "releases": [],
+                    "source_type": source_type,
+                    "vendor": vendor,
+                    "used_fallback": used_fallback,
+                }
+                if status == "ok_empty" and idx >= len(attempts) - 1:
+                    return last_result
+                continue
             status = "transient_error" if is_transient_network_error(exc) else "error"
             last_result = {
                 "device_id": device_id,
@@ -187,7 +211,8 @@ def process_device(
                 "vendor": vendor,
                 "used_fallback": used_fallback,
             }
-            if status == "ok_empty":
+            # If a fallback source exists, do not stop on an empty primary result.
+            if status == "ok_empty" and idx >= len(attempts) - 1:
                 return last_result
             continue
 

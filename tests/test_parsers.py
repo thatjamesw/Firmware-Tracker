@@ -1,6 +1,9 @@
 import json
+import io
 import sys
+import urllib.error
 import unittest
+from unittest import mock
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -13,6 +16,7 @@ import fetch_firmware_details as ffd  # noqa: E402
 from sources import apple as apple_source  # noqa: E402
 from sources import atomos as atomos_source  # noqa: E402
 from sources import bambu as bambu_source  # noqa: E402
+from sources import common as common_source  # noqa: E402
 from sources import dji as dji_source  # noqa: E402
 
 
@@ -119,6 +123,24 @@ class ParserTests(unittest.TestCase):
         # Raises on validation failure.
         ffd.validate_payload_schema(payload)
 
+    def test_fetch_bytes_does_not_retry_http_404(self) -> None:
+        with (
+            mock.patch.object(common_source.urllib.request, "urlopen") as mocked_urlopen,
+            mock.patch.object(common_source.time, "sleep") as mocked_sleep,
+        ):
+            mocked_urlopen.side_effect = urllib.error.HTTPError(
+                url="https://example.com/missing.pdf",
+                code=404,
+                msg="Not Found",
+                hdrs=None,
+                fp=io.BytesIO(b"not found"),
+            )
+            with self.assertRaises(urllib.error.HTTPError):
+                common_source.fetch_bytes("https://example.com/missing.pdf", timeout=5)
+
+        self.assertEqual(mocked_urlopen.call_count, 1)
+        mocked_sleep.assert_not_called()
+
     def test_sync_status_tracks_issue_streak_days(self) -> None:
         prior = {"issue_streaks": {"dji:wa150": 2}}
         results = [
@@ -169,6 +191,95 @@ class ParserTests(unittest.TestCase):
         self.assertEqual(result["status"], "ok")
         self.assertTrue(result["used_fallback"])
         self.assertEqual(result["releases"][0]["version"], "9.9.9")
+
+    def test_process_device_tries_fallback_after_primary_ok_empty(self) -> None:
+        original_sync_device = ffd.sync_device
+        try:
+            def fake_sync(device_name: str, source: dict[str, str], timeout: int):
+                _ = device_name, timeout
+                if source.get("url") == "https://primary-empty.example":
+                    return []
+                if source.get("url") == "https://fallback-good.example":
+                    return [
+                        {
+                            "version": "3.1.4",
+                            "released_time": "2026-03-06",
+                            "release_note": {"en": "fallback good"},
+                            "arb": None,
+                            "active": True,
+                        }
+                    ]
+                return []
+
+            ffd.sync_device = fake_sync  # type: ignore[assignment]
+            result = ffd.process_device(
+                "dev2",
+                "Device 2",
+                {
+                    "type": "apple_support",
+                    "url": "https://primary-empty.example",
+                    "allow_empty": True,
+                    "fallback_source": {
+                        "type": "apple_support",
+                        "url": "https://fallback-good.example",
+                    },
+                },
+                timeout=5,
+            )
+        finally:
+            ffd.sync_device = original_sync_device  # type: ignore[assignment]
+
+        self.assertEqual(result["status"], "ok")
+        self.assertTrue(result["used_fallback"])
+        self.assertEqual(result["releases"][0]["version"], "3.1.4")
+
+    def test_process_device_treats_404_as_empty_and_uses_fallback(self) -> None:
+        original_sync_device = ffd.sync_device
+        try:
+            def fake_sync(device_name: str, source: dict[str, str], timeout: int):
+                _ = device_name, timeout
+                if source.get("url") == "https://primary-404.example":
+                    raise urllib.error.HTTPError(
+                        url=source["url"],
+                        code=404,
+                        msg="Not Found",
+                        hdrs=None,
+                        fp=io.BytesIO(b"not found"),
+                    )
+                if source.get("url") == "https://fallback-good-2.example":
+                    return [
+                        {
+                            "version": "5.0.0",
+                            "released_time": "2026-03-06",
+                            "release_note": {"en": "fallback 2"},
+                            "arb": None,
+                            "active": True,
+                        }
+                    ]
+                return []
+
+            ffd.sync_device = fake_sync  # type: ignore[assignment]
+            result = ffd.process_device(
+                "dev3",
+                "Device 3",
+                {
+                    "type": "apple_support",
+                    "url": "https://primary-404.example",
+                    "allow_empty": True,
+                    "treat_404_as_empty": True,
+                    "fallback_source": {
+                        "type": "apple_support",
+                        "url": "https://fallback-good-2.example",
+                    },
+                },
+                timeout=5,
+            )
+        finally:
+            ffd.sync_device = original_sync_device  # type: ignore[assignment]
+
+        self.assertEqual(result["status"], "ok")
+        self.assertTrue(result["used_fallback"])
+        self.assertEqual(result["releases"][0]["version"], "5.0.0")
 
     def test_guardrail_honors_allow_regression_on_fallback_source(self) -> None:
         current = [
@@ -253,6 +364,92 @@ class ParserTests(unittest.TestCase):
         self.assertEqual(releases[0]["version"], "01.00.0500")
         self.assertIn("https://example.com/RN/rn-404.pdf", calls)
         self.assertIn("https://example.com/RN/rn-good.pdf", calls)
+
+    def test_dji_parser_returns_empty_when_all_pdf_links_404(self) -> None:
+        html = """
+        <li class="groups-download-item">
+          <div class="groups-item-name">DJI Mini 5 Pro - Release Notes</div>
+          <a href="https://example.com/RN/rn-404-a.pdf" class="download-file">Download</a>
+        </li>
+        <li class="groups-download-item">
+          <div class="groups-item-name">DJI Mini 5 Pro - Release Notes</div>
+          <a href="https://example.com/RN/rn-404-b.pdf" class="download-file">Download</a>
+        </li>
+        """
+
+        original_fetch = dji_source.fetch_bytes
+        original_parse_pdf = dji_source.parse_dji_release_pdf
+        try:
+            def fake_fetch(url: str, timeout: int) -> bytes:
+                _ = timeout
+                if url == "https://www.dji.com/mini-5-pro/downloads":
+                    return html.encode("utf-8")
+                if "rn-404" in url:
+                    raise urllib.error.HTTPError(
+                        url=url,
+                        code=404,
+                        msg="Not Found",
+                        hdrs=None,
+                        fp=io.BytesIO(b"not found"),
+                    )
+                raise RuntimeError(f"Unexpected URL: {url}")
+
+            dji_source.fetch_bytes = fake_fetch
+            dji_source.parse_dji_release_pdf = lambda _pdf, _name: []  # type: ignore[assignment]
+            releases = dji_source.sync_dji_downloads(
+                "Mini 5 Pro",
+                {"url": "https://www.dji.com/mini-5-pro/downloads"},
+                timeout=5,
+            )
+        finally:
+            dji_source.fetch_bytes = original_fetch
+            dji_source.parse_dji_release_pdf = original_parse_pdf
+
+        self.assertEqual(releases, [])
+
+    def test_dji_parser_raises_non_404_when_mixed_failures(self) -> None:
+        html = """
+        <li class="groups-download-item">
+          <div class="groups-item-name">DJI Mini 5 Pro - Release Notes</div>
+          <a href="https://example.com/RN/rn-timeout.pdf" class="download-file">Download</a>
+        </li>
+        <li class="groups-download-item">
+          <div class="groups-item-name">DJI Mini 5 Pro - Release Notes</div>
+          <a href="https://example.com/RN/rn-404.pdf" class="download-file">Download</a>
+        </li>
+        """
+
+        original_fetch = dji_source.fetch_bytes
+        original_parse_pdf = dji_source.parse_dji_release_pdf
+        try:
+            def fake_fetch(url: str, timeout: int) -> bytes:
+                _ = timeout
+                if url == "https://www.dji.com/mini-5-pro/downloads":
+                    return html.encode("utf-8")
+                if url.endswith("rn-timeout.pdf"):
+                    raise TimeoutError("timed out")
+                if url.endswith("rn-404.pdf"):
+                    raise urllib.error.HTTPError(
+                        url=url,
+                        code=404,
+                        msg="Not Found",
+                        hdrs=None,
+                        fp=io.BytesIO(b"not found"),
+                    )
+                raise RuntimeError(f"Unexpected URL: {url}")
+
+            dji_source.fetch_bytes = fake_fetch
+            dji_source.parse_dji_release_pdf = lambda _pdf, _name: []  # type: ignore[assignment]
+
+            with self.assertRaises(TimeoutError):
+                dji_source.sync_dji_downloads(
+                    "Mini 5 Pro",
+                    {"url": "https://www.dji.com/mini-5-pro/downloads"},
+                    timeout=5,
+                )
+        finally:
+            dji_source.fetch_bytes = original_fetch
+            dji_source.parse_dji_release_pdf = original_parse_pdf
 
 
 if __name__ == "__main__":

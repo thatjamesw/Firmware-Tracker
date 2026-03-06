@@ -47,6 +47,7 @@ Then open `docs/index.html` in a browser.
    - Optional resilience fields:
      - `fallback_source` (same structure as a primary source)
      - `allow_regression` (`true` to bypass release-date guardrail for that source)
+     - `treat_404_as_empty` (`true` to interpret HTTP 404 as empty source data and continue fallback)
 3. Optional: set `sources.refresh_workflow_url` so the UI "Refresh Now" button opens your workflow run page.
 4. Run:
    - `python scripts/fetch_firmware_details.py`
@@ -59,7 +60,7 @@ Then open `docs/index.html` in a browser.
 2. In GitHub repository settings:
    - Pages -> Source: `GitHub Actions`
 3. Run workflow `Update and Deploy Firmware Tracker` once (manual dispatch).
-4. The site deploys and refreshes daily at 06:15 UTC.
+4. The site deploys and refreshes daily at 08:00 Europe/Helsinki (DST-safe scheduler).
 5. CI runs parser/schema tests before sync.
 
 ## Automated Testing (No Local Setup)
@@ -72,7 +73,7 @@ Then open `docs/index.html` in a browser.
   - re-runs tests
   - fetches official firmware data
   - regenerates browser assets + markdown summary
-  - commits changes (scheduled/manual runs) and deploys to GitHub Pages
+  - deploys generated `docs/` as a Pages artifact (no push back to protected `main`)
 
 Recommended GitHub branch protection:
 
@@ -83,6 +84,9 @@ Recommended GitHub branch protection:
 ## Notes
 
 - Includes DJI, Sony, and lighting devices by default.
+- DJI Mini 5 Pro currently uses:
+  - primary: `https://www.dji.com/fi/mini-5-pro/downloads`
+  - fallback: `https://www.dji.com/fi/downloads/products/mini-5-pro#doc`
 - `Godox V860II (Sony)` is mapped to `V860IIS` firmware feed.
 - `Amaran 300c` is set as app-managed (`Sidus Link`) via static/manual entry.
 - `Dell U4025QW` remains static/manual due anti-bot protections on official support pages.
@@ -90,6 +94,7 @@ Recommended GitHub branch protection:
   - Default: app continues to serve last known good data even if a source fails.
   - Transient network failures (for example temporary DNS outages in CI) are tracked separately and do not raise persistent UI source-issue banners.
   - Per-device `allow_empty: true` can be used for feeds where no firmware is currently published; this avoids false-positive source alerts.
+  - DJI stale `404` release-note PDF links are tolerated as empty results (last known good data is retained).
   - Release guardrail prevents replacing current data with an older "latest" release date unless `allow_regression: true` is set on that source.
   - Per-device and per-vendor health is tracked (`consecutive_failures`, `last_success_utc`, `last_error_type`) for better diagnostics.
   - Optional strict mode: `python scripts/fetch_firmware_details.py --fail-on-regression`

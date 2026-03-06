@@ -32,6 +32,15 @@ def fetch_bytes(url: str, timeout: int) -> bytes:
         try:
             with urllib.request.urlopen(req, timeout=timeout) as response:
                 return response.read()
+        except urllib.error.HTTPError as exc:
+            # 404 means the resource is absent; retrying will not help.
+            if int(exc.code) == 404:
+                raise
+            last_exc = exc
+            if attempt >= FETCH_RETRIES:
+                raise
+            sleep_seconds = FETCH_RETRY_BACKOFF * (2**attempt)
+            time.sleep(sleep_seconds)
         except (urllib.error.URLError, TimeoutError) as exc:
             last_exc = exc
             if attempt >= FETCH_RETRIES:
