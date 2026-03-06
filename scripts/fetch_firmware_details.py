@@ -95,10 +95,16 @@ def get_latest_active_release(releases: list[dict[str, Any]]) -> dict[str, Any] 
 
 
 def parse_iso_date(date_text: str) -> datetime | None:
+    clean = date_text.strip()
+    if clean.endswith("Z"):
+        clean = f"{clean[:-1]}+00:00"
     try:
-        return datetime.fromisoformat(date_text).replace(tzinfo=timezone.utc)
+        parsed = datetime.fromisoformat(clean)
     except ValueError:
         return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
 
 
 def should_accept_release_update(
@@ -378,6 +384,12 @@ def main() -> int:
         reason = str(result.get("reason") or "")
         releases = result.get("releases") or []
         source = device_sources.get(device_id)
+        used_fallback = bool(result.get("used_fallback"))
+        effective_source = source
+        if used_fallback and isinstance(source, dict):
+            fallback_source = source.get("fallback_source")
+            if isinstance(fallback_source, dict):
+                effective_source = fallback_source
 
         current = normalize_releases(
             firmware_index.get(device_id, {}).get("releases", [])
@@ -390,7 +402,7 @@ def main() -> int:
                 accepted, guard_reason = should_accept_release_update(
                     current,
                     releases,
-                    source if isinstance(source, dict) else None,
+                    effective_source if isinstance(effective_source, dict) else None,
                 )
                 if accepted:
                     firmware_index[device_id] = {"releases": releases}
