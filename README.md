@@ -44,6 +44,9 @@ Then open `docs/index.html` in a browser.
    - `atomos_support`
    - `bambu_wiki`
    - `static`
+   - Optional resilience fields:
+     - `fallback_source` (same structure as a primary source)
+     - `allow_regression` (`true` to bypass release-date guardrail for that source)
 3. Optional: set `sources.refresh_workflow_url` so the UI "Refresh Now" button opens your workflow run page.
 4. Run:
    - `python scripts/fetch_firmware_details.py`
@@ -87,6 +90,8 @@ Recommended GitHub branch protection:
   - Default: app continues to serve last known good data even if a source fails.
   - Transient network failures (for example temporary DNS outages in CI) are tracked separately and do not raise persistent UI source-issue banners.
   - Per-device `allow_empty: true` can be used for feeds where no firmware is currently published; this avoids false-positive source alerts.
+  - Release guardrail prevents replacing current data with an older "latest" release date unless `allow_regression: true` is set on that source.
+  - Per-device and per-vendor health is tracked (`consecutive_failures`, `last_success_utc`, `last_error_type`) for better diagnostics.
   - Optional strict mode: `python scripts/fetch_firmware_details.py --fail-on-regression`
 - UI is single-table for all devices and includes:
   - `Refresh Now` (opens `sources.refresh_workflow_url`)

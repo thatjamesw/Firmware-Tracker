@@ -17,6 +17,39 @@ from sources import dji as dji_source  # noqa: E402
 
 
 class ParserTests(unittest.TestCase):
+    def test_release_guardrail_rejects_older_latest_date(self) -> None:
+        current = [
+            {
+                "version": "2.0.0",
+                "released_time": "2026-03-01",
+                "release_note": {"en": "current"},
+                "arb": None,
+                "active": True,
+            }
+        ]
+        incoming = [
+            {
+                "version": "1.9.0",
+                "released_time": "2026-02-10",
+                "release_note": {"en": "older"},
+                "arb": None,
+                "active": True,
+            }
+        ]
+
+        accepted, reason = ffd.should_accept_release_update(current, incoming, {"type": "apple_support"})
+        self.assertFalse(accepted)
+        self.assertIn("older latest release date", reason)
+
+    def test_parse_iso_date_preserves_instant_for_offset_aware_inputs(self) -> None:
+        parsed = ffd.parse_iso_date("2026-03-06T10:00:00+02:00")
+        self.assertIsNotNone(parsed)
+        self.assertEqual(parsed.isoformat(), "2026-03-06T08:00:00+00:00")
+
+        parsed_z = ffd.parse_iso_date("2026-03-06T08:00:00Z")
+        self.assertIsNotNone(parsed_z)
+        self.assertEqual(parsed_z.isoformat(), "2026-03-06T08:00:00+00:00")
+
     def test_bambu_wiki_parser_extracts_latest(self) -> None:
         html = (FIXTURES_DIR / "bambu_wiki.html").read_text(encoding="utf-8")
         original_fetch = bambu_source.fetch_bytes
@@ -97,6 +130,78 @@ class ParserTests(unittest.TestCase):
         self.assertEqual(status["max_issue_streak_days"], 3)
         self.assertEqual(status["issue_streaks"]["dji:wa150"], 3)
         self.assertEqual(status["issues"][0]["streak_days"], 3)
+        self.assertEqual(status["device_health"]["wa150"]["consecutive_failures"], 1)
+        self.assertEqual(status["device_health"]["wa520"]["consecutive_failures"], 0)
+
+    def test_process_device_uses_fallback_source(self) -> None:
+        original_sync_device = ffd.sync_device
+        try:
+            def fake_sync(device_name: str, source: dict[str, str], timeout: int):
+                _ = device_name, timeout
+                if source.get("url") == "https://primary.example":
+                    raise RuntimeError("primary failed")
+                if source.get("url") == "https://fallback.example":
+                    return [
+                        {
+                            "version": "9.9.9",
+                            "released_time": "2026-03-06",
+                            "release_note": {"en": "fallback"},
+                            "arb": None,
+                            "active": True,
+                        }
+                    ]
+                return []
+
+            ffd.sync_device = fake_sync  # type: ignore[assignment]
+            result = ffd.process_device(
+                "dev1",
+                "Device 1",
+                {
+                    "type": "apple_support",
+                    "url": "https://primary.example",
+                    "fallback_source": {"type": "apple_support", "url": "https://fallback.example"},
+                },
+                timeout=5,
+            )
+        finally:
+            ffd.sync_device = original_sync_device  # type: ignore[assignment]
+
+        self.assertEqual(result["status"], "ok")
+        self.assertTrue(result["used_fallback"])
+        self.assertEqual(result["releases"][0]["version"], "9.9.9")
+
+    def test_guardrail_honors_allow_regression_on_fallback_source(self) -> None:
+        current = [
+            {
+                "version": "2.0.0",
+                "released_time": "2026-03-01",
+                "release_note": {"en": "current"},
+                "arb": None,
+                "active": True,
+            }
+        ]
+        incoming_older = [
+            {
+                "version": "1.9.0",
+                "released_time": "2026-02-10",
+                "release_note": {"en": "older"},
+                "arb": None,
+                "active": True,
+            }
+        ]
+
+        accepted_primary, _ = ffd.should_accept_release_update(
+            current,
+            incoming_older,
+            {"type": "dji_downloads"},
+        )
+        accepted_fallback, _ = ffd.should_accept_release_update(
+            current,
+            incoming_older,
+            {"type": "dji_downloads", "allow_regression": True},
+        )
+        self.assertFalse(accepted_primary)
+        self.assertTrue(accepted_fallback)
 
     def test_dji_parser_falls_back_when_first_pdf_404s(self) -> None:
         html = """

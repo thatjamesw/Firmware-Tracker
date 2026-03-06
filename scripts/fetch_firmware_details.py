@@ -86,6 +86,54 @@ def sync_device(device_name: str, source: dict[str, Any], timeout: int) -> list[
     return handler(device_name, source, timeout) if source_type == "dji_downloads" else handler(source, timeout)
 
 
+def get_latest_active_release(releases: list[dict[str, Any]]) -> dict[str, Any] | None:
+    active = [r for r in releases if isinstance(r, dict) and bool(r.get("active"))]
+    if not active:
+        return None
+    active.sort(key=lambda item: str(item.get("released_time") or ""), reverse=True)
+    return active[0]
+
+
+def parse_iso_date(date_text: str) -> datetime | None:
+    clean = date_text.strip()
+    if clean.endswith("Z"):
+        clean = f"{clean[:-1]}+00:00"
+    try:
+        parsed = datetime.fromisoformat(clean)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def should_accept_release_update(
+    current_releases: list[dict[str, Any]],
+    new_releases: list[dict[str, Any]],
+    source: dict[str, Any] | None,
+) -> tuple[bool, str]:
+    if not current_releases:
+        return True, ""
+    if not new_releases:
+        return False, "guardrail: new parser output has no releases"
+    if isinstance(source, dict) and bool(source.get("allow_regression")):
+        return True, ""
+
+    current_latest = get_latest_active_release(current_releases)
+    new_latest = get_latest_active_release(new_releases)
+    if not current_latest or not new_latest:
+        return True, ""
+
+    current_date = parse_iso_date(str(current_latest.get("released_time") or ""))
+    new_date = parse_iso_date(str(new_latest.get("released_time") or ""))
+    if current_date and new_date and new_date < current_date:
+        return (
+            False,
+            "guardrail: parser returned an older latest release date than current stored data",
+        )
+    return True, ""
+
+
 def process_device(
     device_id: str,
     device_name: str,
@@ -102,47 +150,67 @@ def process_device(
             "vendor": "unknown",
         }
 
-    source_type = str(source.get("type") or "")
-    vendor = SOURCE_VENDOR.get(source_type, "unknown")
-    try:
-        releases = normalize_releases(sync_device(device_name, source, timeout))
-    except Exception as exc:  # noqa: BLE001
-        status = "transient_error" if is_transient_network_error(exc) else "error"
-        return {
-            "device_id": device_id,
-            "status": status,
-            "reason": str(exc),
-            "releases": [],
-            "source_type": source_type,
-            "vendor": vendor,
-        }
+    attempts: list[dict[str, Any]] = [source]
+    fallback_source = source.get("fallback_source")
+    if isinstance(fallback_source, dict):
+        attempts.append(fallback_source)
 
-    if not releases:
-        if bool(source.get("allow_empty")):
-            return {
+    last_result: dict[str, Any] | None = None
+    for idx, candidate in enumerate(attempts):
+        source_type = str(candidate.get("type") or "")
+        vendor = SOURCE_VENDOR.get(source_type, "unknown")
+        used_fallback = idx > 0
+        try:
+            releases = normalize_releases(sync_device(device_name, candidate, timeout))
+        except Exception as exc:  # noqa: BLE001
+            status = "transient_error" if is_transient_network_error(exc) else "error"
+            last_result = {
                 "device_id": device_id,
-                "status": "ok_empty",
-                "reason": "no firmware entries published yet",
+                "status": status,
+                "reason": str(exc),
                 "releases": [],
                 "source_type": source_type,
                 "vendor": vendor,
+                "used_fallback": used_fallback,
             }
+            continue
+
+        if not releases:
+            status = "ok_empty" if bool(candidate.get("allow_empty")) else "no_entries"
+            reason = "no firmware entries published yet" if status == "ok_empty" else "no firmware entries parsed"
+            last_result = {
+                "device_id": device_id,
+                "status": status,
+                "reason": reason,
+                "releases": [],
+                "source_type": source_type,
+                "vendor": vendor,
+                "used_fallback": used_fallback,
+            }
+            if status == "ok_empty":
+                return last_result
+            continue
+
         return {
             "device_id": device_id,
-            "status": "no_entries",
-            "reason": "no firmware entries parsed",
-            "releases": [],
+            "status": "ok",
+            "reason": "fallback source used" if used_fallback else "",
+            "releases": releases,
             "source_type": source_type,
             "vendor": vendor,
+            "used_fallback": used_fallback,
         }
 
+    if last_result:
+        return last_result
     return {
         "device_id": device_id,
-        "status": "ok",
-        "reason": "",
-        "releases": releases,
-        "source_type": source_type,
-        "vendor": vendor,
+        "status": "error",
+        "reason": "unknown source processing error",
+        "releases": [],
+        "source_type": "",
+        "vendor": "unknown",
+        "used_fallback": False,
     }
 
 
@@ -150,16 +218,21 @@ def build_sync_status(results: list[dict[str, Any]], prior_sync_status: dict[str
     issues = []
     transient_issues = []
     prior_streaks = prior_sync_status.get("issue_streaks", {}) if isinstance(prior_sync_status, dict) else {}
+    prior_device_health = prior_sync_status.get("device_health", {}) if isinstance(prior_sync_status, dict) else {}
+    prior_vendor_health = prior_sync_status.get("vendor_health", {}) if isinstance(prior_sync_status, dict) else {}
     issue_streaks: dict[str, int] = {}
+    device_health: dict[str, dict[str, Any]] = {}
     health_counts = {
         "ok": 0,
         "ok_empty": 0,
         "no_entries": 0,
         "error": 0,
         "transient_error": 0,
+        "guardrail_rejected": 0,
         "missing_source": 0,
     }
     by_vendor: dict[str, dict[str, Any]] = {}
+    run_now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     for result in results:
         status = str(result.get("status") or "")
@@ -170,11 +243,30 @@ def build_sync_status(results: list[dict[str, Any]], prior_sync_status: dict[str
         if status in health_counts:
             health_counts[status] += 1
 
-        vendor_entry = by_vendor.setdefault(vendor, {"ok": 0, "issues": []})
+        vendor_entry = by_vendor.setdefault(vendor, {"ok": 0, "issues": [], "transient_count": 0})
+        prev_device = prior_device_health.get(device_id, {}) if isinstance(prior_device_health, dict) else {}
         if status in {"ok", "ok_empty"}:
             vendor_entry["ok"] += 1
+            device_health[device_id] = {
+                "vendor": vendor,
+                "status": status,
+                "last_success_utc": run_now,
+                "consecutive_failures": 0,
+                "last_error_type": "",
+                "last_error_reason": "",
+            }
         elif status == "transient_error":
+            vendor_entry["transient_count"] += 1
             transient_issues.append({"vendor": vendor, "device_id": device_id, "status": status, "reason": reason})
+            prev_fail = int(prev_device.get("consecutive_failures", 0) or 0)
+            device_health[device_id] = {
+                "vendor": vendor,
+                "status": status,
+                "last_success_utc": str(prev_device.get("last_success_utc") or ""),
+                "consecutive_failures": prev_fail + 1,
+                "last_error_type": status,
+                "last_error_reason": reason,
+            }
         elif vendor != "static":
             vendor_entry["issues"].append({"device_id": device_id, "status": status, "reason": reason})
             streak_key = f"{vendor}:{device_id}"
@@ -194,23 +286,54 @@ def build_sync_status(results: list[dict[str, Any]], prior_sync_status: dict[str
                     "streak_days": streak_days,
                 }
             )
+            prev_fail = int(prev_device.get("consecutive_failures", 0) or 0)
+            device_health[device_id] = {
+                "vendor": vendor,
+                "status": status,
+                "last_success_utc": str(prev_device.get("last_success_utc") or ""),
+                "consecutive_failures": prev_fail + 1,
+                "last_error_type": status,
+                "last_error_reason": reason,
+            }
+        else:
+            prev_fail = int(prev_device.get("consecutive_failures", 0) or 0)
+            device_health[device_id] = {
+                "vendor": vendor,
+                "status": status,
+                "last_success_utc": str(prev_device.get("last_success_utc") or ""),
+                "consecutive_failures": prev_fail + 1,
+                "last_error_type": status,
+                "last_error_reason": reason,
+            }
 
     vendor_health = {}
     for vendor, entry in by_vendor.items():
         if vendor == "static":
             continue
+        prev_vendor = prior_vendor_health.get(vendor, {}) if isinstance(prior_vendor_health, dict) else {}
+        issue_count = len(entry["issues"])
+        transient_count = int(entry.get("transient_count", 0))
+        had_failure = issue_count > 0 or transient_count > 0
+        prev_vendor_failures = int(prev_vendor.get("consecutive_failures", 0) or 0)
         vendor_health[vendor] = {
-            "status": "issue" if entry["issues"] else "ok",
+            "status": "issue" if issue_count else ("transient_issue" if transient_count else "ok"),
             "ok_count": entry["ok"],
             "issues": entry["issues"],
+            "transient_count": transient_count,
+            "last_success_utc": str(prev_vendor.get("last_success_utc") or "") if had_failure else run_now,
+            "consecutive_failures": (prev_vendor_failures + 1) if had_failure else 0,
+            "last_error_type": (
+                entry["issues"][0]["status"] if issue_count else ("transient_error" if transient_count else "")
+            ),
         }
 
     max_issue_streak_days = max(issue_streaks.values(), default=0)
 
     return {
-        "last_run_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "last_run_utc": run_now,
         "health_counts": health_counts,
         "vendor_health": vendor_health,
+        "device_health": device_health,
         "issues": issues,
         "transient_issues": transient_issues,
         "issue_streaks": issue_streaks,
@@ -253,12 +376,20 @@ def main() -> int:
 
         results = [future.result() for future in concurrent.futures.as_completed(futures)]
 
+    processed_results: list[dict[str, Any]] = []
     for result in sorted(results, key=lambda item: str(item.get("device_id", ""))):
         device_id = str(result["device_id"])
         status = str(result["status"])
         source_type = str(result.get("source_type") or "")
         reason = str(result.get("reason") or "")
         releases = result.get("releases") or []
+        source = device_sources.get(device_id)
+        used_fallback = bool(result.get("used_fallback"))
+        effective_source = source
+        if used_fallback and isinstance(source, dict):
+            fallback_source = source.get("fallback_source")
+            if isinstance(fallback_source, dict):
+                effective_source = fallback_source
 
         current = normalize_releases(
             firmware_index.get(device_id, {}).get("releases", [])
@@ -268,16 +399,31 @@ def main() -> int:
 
         if status in {"ok", "ok_empty"}:
             if releases != current:
-                firmware_index[device_id] = {"releases": releases}
-                updated_devices.append(device_id)
-            continue
+                accepted, guard_reason = should_accept_release_update(
+                    current,
+                    releases,
+                    effective_source if isinstance(effective_source, dict) else None,
+                )
+                if accepted:
+                    firmware_index[device_id] = {"releases": releases}
+                    updated_devices.append(device_id)
+                else:
+                    result["status"] = "guardrail_rejected"
+                    result["reason"] = guard_reason
+                    status = "guardrail_rejected"
+                    reason = guard_reason
+            else:
+                processed_results.append(result)
+                continue
 
-        skipped_devices.append(f"{device_id} ({reason})")
-        if source_type != "static" and current and status in {"no_entries", "error", "missing_source"}:
+        processed_results.append(result)
+        if status not in {"ok", "ok_empty"}:
+            skipped_devices.append(f"{device_id} ({reason})")
+        if source_type != "static" and current and status in {"no_entries", "error", "missing_source", "guardrail_rejected"}:
             regressions.append(f"{device_id} ({status}: {reason})")
 
     prior_sync_status = sources_block.get("sync_status")
-    sync_status = build_sync_status(results, prior_sync_status if isinstance(prior_sync_status, dict) else None)
+    sync_status = build_sync_status(processed_results, prior_sync_status if isinstance(prior_sync_status, dict) else None)
     sources_block["sync_status"] = sync_status
 
     if updated_devices:
@@ -295,7 +441,7 @@ def main() -> int:
         "Source health summary: "
         + ", ".join(
             f"{key}={counts.get(key, 0)}"
-            for key in ["ok", "ok_empty", "no_entries", "error", "transient_error", "missing_source"]
+            for key in ["ok", "ok_empty", "no_entries", "error", "transient_error", "guardrail_rejected", "missing_source"]
         )
     )
 
