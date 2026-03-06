@@ -60,6 +60,42 @@ def pick_dji_release_notes_pdf(items: list[dict[str, str]], device_name: str) ->
     return scored[0][1]
 
 
+def pick_dji_release_notes_pdfs(items: list[dict[str, str]], device_name: str) -> list[str]:
+    if not items:
+        return []
+
+    device_norm = normalize_space(device_name).lower()
+    scored: list[tuple[int, str]] = []
+    for item in items:
+        name_norm = normalize_space(item["name"]).lower()
+        score = 0
+        if name_norm.startswith(f"dji {device_norm} - release notes"):
+            score += 100
+        elif name_norm.startswith(f"{device_norm} - release notes"):
+            score += 90
+        elif f"{device_norm}" in name_norm and "release notes" in name_norm:
+            score += 50
+
+        if any(token in name_norm for token in ["remote controller", "goggles", "motion", "rc "]):
+            score -= 40
+
+        if score > 0:
+            scored.append((score, item["href"]))
+
+    if not scored:
+        return []
+
+    scored.sort(key=lambda pair: pair[0], reverse=True)
+    ordered: list[str] = []
+    seen = set()
+    for _, href in scored:
+        if href in seen:
+            continue
+        seen.add(href)
+        ordered.append(href)
+    return ordered
+
+
 def parse_dji_release_pdf(pdf_bytes: bytes, device_name: str) -> list[dict[str, Any]]:
     reader = PdfReader(io.BytesIO(pdf_bytes))
     text = "\n".join((page.extract_text() or "") for page in reader.pages)
@@ -122,7 +158,19 @@ def sync_dji_downloads(device_name: str, source: dict[str, Any], timeout: int) -
     url = source["url"]
     html = fetch_bytes(url, timeout=timeout).decode("utf-8", errors="replace")
     items = parse_dji_release_note_items(html)
-    rn_pdf = pick_dji_release_notes_pdf(items, device_name)
-    if not rn_pdf:
+    rn_pdfs = pick_dji_release_notes_pdfs(items, device_name)
+    if not rn_pdfs:
         return []
-    return parse_dji_release_pdf(fetch_bytes(rn_pdf, timeout=timeout), device_name)
+    last_exc: Exception | None = None
+    for rn_pdf in rn_pdfs:
+        try:
+            pdf_bytes = fetch_bytes(rn_pdf, timeout=timeout)
+        except Exception as exc:  # noqa: BLE001
+            last_exc = exc
+            continue
+        releases = parse_dji_release_pdf(pdf_bytes, device_name)
+        if releases:
+            return releases
+    if last_exc:
+        raise last_exc
+    return []

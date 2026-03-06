@@ -4,7 +4,8 @@
     "device_sources": {
       "wa150": {
         "type": "dji_downloads",
-        "url": "https://www.dji.com/fi/mobile/mini-5-pro/downloads"
+        "url": "https://www.dji.com/downloads/products/mini-5-pro",
+        "allow_empty": true
       },
       "wa520": {
         "type": "dji_downloads",

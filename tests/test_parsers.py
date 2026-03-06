@@ -13,6 +13,7 @@ import fetch_firmware_details as ffd  # noqa: E402
 from sources import apple as apple_source  # noqa: E402
 from sources import atomos as atomos_source  # noqa: E402
 from sources import bambu as bambu_source  # noqa: E402
+from sources import dji as dji_source  # noqa: E402
 
 
 class ParserTests(unittest.TestCase):
@@ -84,6 +85,57 @@ class ParserTests(unittest.TestCase):
         payload = json.loads((ROOT / "data" / "devices.json").read_text(encoding="utf-8"))
         # Raises on validation failure.
         ffd.validate_payload_schema(payload)
+
+    def test_dji_parser_falls_back_when_first_pdf_404s(self) -> None:
+        html = """
+        <li class="groups-download-item">
+          <div class="groups-item-name">DJI Mini 5 Pro - Release Notes</div>
+          <a href="https://example.com/RN/rn-404.pdf" class="download-file">Download</a>
+        </li>
+        <li class="groups-download-item">
+          <div class="groups-item-name">DJI Mini 5 Pro - Release Notes</div>
+          <a href="https://example.com/RN/rn-good.pdf" class="download-file">Download</a>
+        </li>
+        """
+
+        calls: list[str] = []
+        original_fetch = dji_source.fetch_bytes
+        original_parse_pdf = dji_source.parse_dji_release_pdf
+        try:
+            def fake_fetch(url: str, timeout: int) -> bytes:
+                calls.append(url)
+                if url == "https://www.dji.com/mini-5-pro/downloads":
+                    return html.encode("utf-8")
+                if url == "https://example.com/RN/rn-404.pdf":
+                    raise RuntimeError("HTTP Error 404: Not Found")
+                if url == "https://example.com/RN/rn-good.pdf":
+                    return b"%PDF-test%"
+                raise RuntimeError(f"Unexpected URL: {url}")
+
+            dji_source.fetch_bytes = fake_fetch
+            dji_source.parse_dji_release_pdf = lambda _pdf, _name: [  # type: ignore[assignment]
+                {
+                    "version": "01.00.0500",
+                    "released_time": "2026-03-01",
+                    "release_note": {"en": "Test"},
+                    "arb": None,
+                    "active": True,
+                }
+            ]
+
+            releases = dji_source.sync_dji_downloads(
+                "Mini 5 Pro",
+                {"url": "https://www.dji.com/mini-5-pro/downloads"},
+                timeout=5,
+            )
+        finally:
+            dji_source.fetch_bytes = original_fetch
+            dji_source.parse_dji_release_pdf = original_parse_pdf
+
+        self.assertEqual(len(releases), 1)
+        self.assertEqual(releases[0]["version"], "01.00.0500")
+        self.assertIn("https://example.com/RN/rn-404.pdf", calls)
+        self.assertIn("https://example.com/RN/rn-good.pdf", calls)
 
 
 if __name__ == "__main__":
