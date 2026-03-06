@@ -1,0 +1,478 @@
+{
+  "sources": {
+    "refresh_workflow_url": "",
+    "device_sources": {
+      "wa150": {
+        "type": "dji_downloads",
+        "url": "https://www.dji.com/mini-5-pro/downloads"
+      },
+      "wa520": {
+        "type": "dji_downloads",
+        "url": "https://www.dji.com/avata-2/downloads"
+      },
+      "sony_a1ii": {
+        "type": "sony_cscs",
+        "page_url": "https://www.sony.com/electronics/support/e-mount-body-ilce-1-series/ilce-1m2/downloads",
+        "mdl": "ILCE-1M2",
+        "lang": "en",
+        "area": "us"
+      },
+      "sony_2470gm2": {
+        "type": "sony_cscs",
+        "page_url": "https://www.sony.com/electronics/support/lenses-e-mount-lenses/sel2470gm2/downloads",
+        "mdl": "SEL2470GM2",
+        "lang": "en",
+        "area": "us"
+      },
+      "sony_1635gm2": {
+        "type": "sony_cscs",
+        "page_url": "https://www.sony.com/electronics/support/lenses-e-mount-lenses/sel1635gm2/downloads",
+        "mdl": "SEL1635GM2",
+        "lang": "en",
+        "area": "us"
+      },
+      "sony_70200gm2": {
+        "type": "sony_cscs",
+        "page_url": "https://www.sony.com/electronics/support/lenses-e-mount-lenses/sel70200gm2/downloads",
+        "mdl": "SEL70200GM2",
+        "lang": "en",
+        "area": "us"
+      },
+      "sony_24f14gm": {
+        "type": "sony_cscs",
+        "page_url": "https://www.sony.com/electronics/support/lenses-e-mount-lenses/sel24f14gm/downloads",
+        "mdl": "SEL24F14GM",
+        "lang": "en",
+        "area": "us"
+      },
+      "godox_ad400proii": {
+        "type": "godox_listing",
+        "url": "https://www.godox.com/firmware-flash_4/",
+        "title_contains": "AD400ProII Firmware"
+      },
+      "godox_x3pros": {
+        "type": "godox_listing",
+        "url": "https://www.godox.com/firmware-control-system/",
+        "title_contains": "X3ProS Firmware"
+      },
+      "godox_v860iis": {
+        "type": "godox_listing",
+        "url": "https://www.godox.com/firmware-flash_11/",
+        "title_contains": "V860IIS Firmware"
+      },
+      "amaran_300c": {
+        "type": "static",
+        "page_url": "https://help.amarancreators.com/en/firmware-update",
+        "release": {
+          "version": "App-managed",
+          "released_time": "2024-01-01",
+          "release_note": {
+            "en": "Firmware is delivered via Sidus Link/amaran app. Public model-specific version feed is not consistently exposed on amaran web pages."
+          },
+          "arb": null,
+          "active": true
+        }
+      },
+      "atomos_ninja_v": {
+        "type": "atomos_support",
+        "page_url": "https://www.atomos.com/product-support/",
+        "url": "https://www.atomos.com/product-support/",
+        "article_id": "NinjaVArticle"
+      },
+      "dell_u4025qw": {
+        "type": "static",
+        "page_url": "https://www.dell.com/support/product-details/en-uk/product/u4025qw-monitor/drivers",
+        "release": {
+          "version": "Check Dell Support",
+          "released_time": "2025-10-17",
+          "release_note": {
+            "en": "Track this via the official Dell support page. Automated fetch is limited by Dell anti-bot protection from this environment."
+          },
+          "arb": null,
+          "active": true
+        }
+      },
+      "bambu_p1s": {
+        "type": "bambu_wiki",
+        "page_url": "https://bambulab.com/en/support/firmware-download/p1",
+        "url": "https://wiki.bambulab.com/en/p1/manual/p1p-firmware-release-history",
+        "series": "P1"
+      },
+      "apple_ios": {
+        "type": "apple_support",
+        "kind": "ios",
+        "page_url": "https://support.apple.com/ios",
+        "url": "https://support.apple.com/en-us/100100"
+      },
+      "apple_macos": {
+        "type": "apple_support",
+        "kind": "macos",
+        "page_url": "https://support.apple.com/macos",
+        "url": "https://support.apple.com/en-us/100100"
+      },
+      "apple_watchos": {
+        "type": "apple_support",
+        "kind": "watchos",
+        "page_url": "https://support.apple.com/watchos",
+        "url": "https://support.apple.com/en-us/100100"
+      },
+      "airpods_pro_3": {
+        "type": "apple_support",
+        "kind": "airpods",
+        "model": "AirPods Pro 3",
+        "page_url": "https://support.apple.com/106340",
+        "url": "https://support.apple.com/106340"
+      }
+    },
+    "sync_status": {
+      "last_run_utc": "2026-03-06T06:55:52Z",
+      "health_counts": {
+        "ok": 17,
+        "no_entries": 1,
+        "error": 0,
+        "missing_source": 0
+      },
+      "vendor_health": {
+        "atomos": {
+          "status": "ok",
+          "ok_count": 1,
+          "issues": []
+        },
+        "dji": {
+          "status": "ok",
+          "ok_count": 2,
+          "issues": []
+        },
+        "sony": {
+          "status": "issue",
+          "ok_count": 4,
+          "issues": [
+            {
+              "device_id": "sony_1635gm2",
+              "status": "no_entries",
+              "reason": "no firmware entries parsed"
+            }
+          ]
+        },
+        "godox": {
+          "status": "ok",
+          "ok_count": 3,
+          "issues": []
+        },
+        "bambu": {
+          "status": "ok",
+          "ok_count": 1,
+          "issues": []
+        },
+        "apple": {
+          "status": "ok",
+          "ok_count": 4,
+          "issues": []
+        }
+      },
+      "issues": [
+        {
+          "vendor": "sony",
+          "device_id": "sony_1635gm2",
+          "status": "no_entries",
+          "reason": "no firmware entries parsed"
+        }
+      ]
+    }
+  },
+  "categories": {
+    "consumer-drones": {
+      "title": "Consumer Drones",
+      "devices": {
+        "wa150": "Mini 5 Pro",
+        "wa520": "Avata 2"
+      }
+    },
+    "sony": {
+      "title": "Cameras",
+      "devices": {
+        "sony_a1ii": "Sony A1 II",
+        "sony_1635gm2": "Sony 16-35 GM II",
+        "sony_2470gm2": "Sony 24-70 GM II",
+        "sony_70200gm2": "Sony 70-200 GM II",
+        "sony_24f14gm": "Sony 24 1.4 GM",
+        "atomos_ninja_v": "Atomos Ninja V",
+        "dell_u4025qw": "Dell U4025QW Monitor"
+      }
+    },
+    "lighting": {
+      "title": "Lighting",
+      "devices": {
+        "godox_ad400proii": "Godox AD400 II Pro",
+        "godox_x3pros": "Godox X3Pro S",
+        "godox_v860iis": "Godox V860II (Sony)",
+        "amaran_300c": "Amaran 300c Video Light"
+      }
+    },
+    "maker": {
+      "title": "Maker",
+      "devices": {
+        "bambu_p1s": "Bambu Lab P1S 3D Printer"
+      }
+    },
+    "platforms": {
+      "title": "Platforms",
+      "devices": {
+        "apple_ios": "iOS",
+        "apple_macos": "macOS",
+        "apple_watchos": "watchOS",
+        "airpods_pro_3": "AirPods Pro 3"
+      }
+    }
+  },
+  "firmware_index": {
+    "wa150": {
+      "releases": [
+        {
+          "version": "01.00.0400",
+          "released_time": "2025-12-10",
+          "release_note": {
+            "en": "\u2022 Added support for the propeller guard.\n\u2022 Optimized the Low Battery RTH strategy.\n\u2022 Fixed some known issues."
+          },
+          "arb": null,
+          "active": true
+        },
+        {
+          "version": "01.00.0300",
+          "released_time": "2025-09-17",
+          "release_note": {
+            "en": "\u2022 Added MasterShots.\n\u2022 Added 48mm Med-Tele mode to video mode.\n\u2022 Added shooting scenes such a s Standard and Cycling to omnidirectional ActiveTrack, and\n\u2022 Improved low-light performance in 50MP photo mode.\n\u2022 Improved QuickTransfer speed and stability.\n\u2022 Added support for entering QuickTransfer mode by pressing the side button on the aircraft.\n\u2022 Fixed some known issues."
+          },
+          "arb": null,
+          "active": true
+        }
+      ]
+    },
+    "wa520": {
+      "releases": [
+        {
+          "version": "01.00.0400",
+          "released_time": "2024-11-06",
+          "release_note": {
+            "en": "\u2022 Added Power Loop in Easy ACRO mode when used with DJI G oggles N3/DJI Goggles 3 and DJI RC Motion 3.\n\u2022 Added support for use with DJI Goggles N3.\n\u2022 Added Landing Protection when used with DJI Goggles N3/DJI Goggles 3 and DJI RC Motion 3.\n\u2022 Fixed some known issues."
+          },
+          "arb": null,
+          "active": true
+        },
+        {
+          "version": "01.00.0300",
+          "released_time": "2024-05-28",
+          "release_note": {
+            "en": "\u2022 Added support for use with DJI Goggles Integra.\n\u2022 Added support for use with DJI Goggles 2.\n\u2022 Added support for use with DJI RC Motion 2 and DJI FPV Remote Controller 2 when used with DJI Goggles\n\u2022 Added support for recording 4K/100 vide os.\n\u2022 Added support for RID in some regions.\n\u2022 Fixed some known issues."
+          },
+          "arb": null,
+          "active": true
+        },
+        {
+          "version": "01.00.0200",
+          "released_time": "2024-04-11",
+          "release_note": {
+            "en": "\u2022 Added Easy ACRO for use with DJI Goggles 3 and DJI RC Motion 3.\n\u2022 Added Beginner mode for the aircraft when used with DJI Goggles 3 and DJI RC Motion 3.\n\u2022 Added support for Manual Mode when used with DJI FPV Remote Controller 3."
+          },
+          "arb": null,
+          "active": true
+        }
+      ]
+    },
+    "sony_a1ii": {
+      "releases": [
+        {
+          "version": "4.00",
+          "released_time": "2025-10-30",
+          "release_note": {
+            "en": "Official Sony firmware page. Download: https://support.d-imaging.sony.co.jp/download/NEX/lvb4f975ad/BODYDATA.DAT?fm=jp?fm=jp&upid=&s_tc="
+          },
+          "arb": null,
+          "active": true
+        }
+      ]
+    },
+    "sony_2470gm2": {
+      "releases": [
+        {
+          "version": "02",
+          "released_time": "2023-12-05",
+          "release_note": {
+            "en": "Official Sony firmware page. Download: https://support.d-imaging.sony.co.jp/download/NEX/YLZNm3uwnu/Update_SEL2470GM2V2D.exe?fm=jp?fm=jp&upid=&s_tc="
+          },
+          "arb": null,
+          "active": true
+        }
+      ]
+    },
+    "sony_70200gm2": {
+      "releases": [
+        {
+          "version": "04",
+          "released_time": "2023-12-05",
+          "release_note": {
+            "en": "Official Sony firmware page. Download: https://support.d-imaging.sony.co.jp/download/NEX/YLZNm3uwnu/Update_SEL70200GM2V4D.exe?fm=jp?fm=jp&upid=&s_tc="
+          },
+          "arb": null,
+          "active": true
+        }
+      ]
+    },
+    "sony_24f14gm": {
+      "releases": [
+        {
+          "version": "03",
+          "released_time": "2021-11-18",
+          "release_note": {
+            "en": "Official Sony firmware page. Download: https://support.d-imaging.sony.co.jp/download/IMT/Update_SEL24F14GMV3D.exe?fm=jp?fm=jp&upid=&s_tc="
+          },
+          "arb": null,
+          "active": true
+        }
+      ]
+    },
+    "godox_ad400proii": {
+      "releases": [
+        {
+          "version": "1.20",
+          "released_time": "2025-11-26",
+          "release_note": {
+            "en": "Official Godox firmware listing. Download: https://www.godox.com/Downloads/Godox_Firmware_AD400ProII_V1.20.zip"
+          },
+          "arb": null,
+          "active": true
+        }
+      ]
+    },
+    "godox_x3pros": {
+      "releases": [
+        {
+          "version": "1.03",
+          "released_time": "2026-01-26",
+          "release_note": {
+            "en": "Official Godox firmware listing. Download: https://www.godox.com/Downloads/Godox_Firmware_X3ProS_V1.03.zip"
+          },
+          "arb": null,
+          "active": true
+        }
+      ]
+    },
+    "godox_v860iis": {
+      "releases": [
+        {
+          "version": "1.7",
+          "released_time": "2018-10-24",
+          "release_note": {
+            "en": "Official Godox firmware listing. Download: https://www.godox.com/static/upload/other/20211126/1637908704185345.rar"
+          },
+          "arb": null,
+          "active": true
+        }
+      ]
+    },
+    "amaran_300c": {
+      "releases": [
+        {
+          "version": "App-managed",
+          "released_time": "2024-01-01",
+          "release_note": {
+            "en": "Firmware is delivered via Sidus Link/amaran app. Public model-specific version feed is not consistently exposed on amaran web pages."
+          },
+          "arb": null,
+          "active": true
+        }
+      ]
+    },
+    "atomos_ninja_v": {
+      "releases": [
+        {
+          "version": "11.18.00",
+          "released_time": "2025-11-01",
+          "release_note": {
+            "en": "Official Atomos NinjaVArticle firmware listing. Release notes: https://www.atomos.com/wp-content/uploads/2025/11/AtomOS_11.18.00_Release_Notes.html"
+          },
+          "arb": null,
+          "active": true
+        }
+      ]
+    },
+    "dell_u4025qw": {
+      "releases": [
+        {
+          "version": "Check Dell Support",
+          "released_time": "2025-10-17",
+          "release_note": {
+            "en": "Track this via the official Dell support page. Automated fetch is limited by Dell anti-bot protection from this environment."
+          },
+          "arb": null,
+          "active": true
+        }
+      ]
+    },
+    "bambu_p1s": {
+      "releases": [
+        {
+          "version": "01.09.01.00",
+          "released_time": "2026-01-14",
+          "release_note": {
+            "en": "Official Bambu Lab Wiki P1 release history. Entry: P1 series Version 01.09.01.00 (20260114)."
+          },
+          "arb": null,
+          "active": true
+        }
+      ]
+    },
+    "apple_ios": {
+      "releases": [
+        {
+          "version": "26.3.1",
+          "released_time": "2026-03-04",
+          "release_note": {
+            "en": "Official Apple support latest ios version listing."
+          },
+          "arb": null,
+          "active": true
+        }
+      ]
+    },
+    "apple_macos": {
+      "releases": [
+        {
+          "version": "26.3.1",
+          "released_time": "2026-03-04",
+          "release_note": {
+            "en": "Official Apple support latest macos version listing."
+          },
+          "arb": null,
+          "active": true
+        }
+      ]
+    },
+    "apple_watchos": {
+      "releases": [
+        {
+          "version": "26.3",
+          "released_time": "2026-02-11",
+          "release_note": {
+            "en": "Official Apple support latest watchos version listing."
+          },
+          "arb": null,
+          "active": true
+        }
+      ]
+    },
+    "airpods_pro_3": {
+      "releases": [
+        {
+          "version": "8B34",
+          "released_time": "2026-01-13",
+          "release_note": {
+            "en": "Official Apple AirPods firmware matrix listing for AirPods Pro 3."
+          },
+          "arb": null,
+          "active": true
+        }
+      ]
+    }
+  }
+}

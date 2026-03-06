@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Firmware Tracker Devices",
+  "type": "object",
+  "required": [
+    "sources",
+    "categories",
+    "firmware_index"
+  ],
+  "properties": {
+    "sources": {
+      "type": "object",
+      "required": [
+        "device_sources"
+      ],
+      "properties": {
+        "refresh_workflow_url": {
+          "type": "string"
+        },
+        "device_sources": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "dji_downloads",
+                  "sony_cscs",
+                  "godox_listing",
+                  "apple_support",
+                  "atomos_support",
+                  "bambu_wiki",
+                  "static"
+                ]
+              },
+              "url": {
+                "type": "string"
+              },
+              "page_url": {
+                "type": "string"
+              },
+              "release": {
+                "$ref": "#/$defs/release"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "categories": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "title",
+          "devices"
+        ],
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "devices": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "firmware_index": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "releases"
+        ],
+        "properties": {
+          "releases": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/release"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "release": {
+      "type": "object",
+      "required": [
+        "version",
+        "released_time",
+        "release_note",
+        "active"
+      ],
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "released_time": {
+          "type": "string"
+        },
+        "release_note": {
+          "type": "object",
+          "properties": {
+            "en": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "en"
+          ],
+          "additionalProperties": true
+        },
+        "arb": {},
+        "active": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}
