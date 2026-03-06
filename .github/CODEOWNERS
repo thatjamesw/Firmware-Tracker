@@ -1,0 +1,8 @@
+# Default owner
+* @thatjamesw
+
+# Security and automation-sensitive paths
+/.github/workflows/* @thatjamesw
+/scripts/* @thatjamesw
+/data/devices.json @thatjamesw
+/data/devices.schema.json @thatjamesw
