@@ -163,18 +163,27 @@ def sync_dji_downloads(device_name: str, source: dict[str, Any], timeout: int) -
     if not rn_pdfs:
         return []
     last_exc: Exception | None = None
+    last_non_404_exc: Exception | None = None
+    saw_fetch_error = False
+    all_fetch_errors_were_404 = True
     for rn_pdf in rn_pdfs:
         try:
             pdf_bytes = fetch_bytes(rn_pdf, timeout=timeout)
         except Exception as exc:  # noqa: BLE001
             last_exc = exc
+            saw_fetch_error = True
+            if not (isinstance(exc, urllib.error.HTTPError) and exc.code == 404):
+                all_fetch_errors_were_404 = False
+                last_non_404_exc = exc
             continue
         releases = parse_dji_release_pdf(pdf_bytes, device_name)
         if releases:
             return releases
     # Some DJI pages occasionally keep stale release-note links; treat 404-only PDF failures as no entries.
-    if isinstance(last_exc, urllib.error.HTTPError) and last_exc.code == 404:
+    if saw_fetch_error and all_fetch_errors_were_404:
         return []
+    if last_non_404_exc:
+        raise last_non_404_exc
     if last_exc:
         raise last_exc
     return []

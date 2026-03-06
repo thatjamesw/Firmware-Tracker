@@ -47,6 +47,7 @@ Then open `docs/index.html` in a browser.
    - Optional resilience fields:
      - `fallback_source` (same structure as a primary source)
      - `allow_regression` (`true` to bypass release-date guardrail for that source)
+     - `treat_404_as_empty` (`true` to interpret HTTP 404 as empty source data and continue fallback)
 3. Optional: set `sources.refresh_workflow_url` so the UI "Refresh Now" button opens your workflow run page.
 4. Run:
    - `python scripts/fetch_firmware_details.py`
