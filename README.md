@@ -74,6 +74,20 @@ Then open `docs/index.html` in a browser.
   - fetches official firmware data
   - regenerates browser assets + markdown summary
   - deploys generated `docs/` as a Pages artifact (no push back to protected `main`)
+  - opens/updates an automation PR for generated file changes and enables auto-merge
+
+### Automated Sync PR Setup (One-time)
+
+To run fully hands-off daily:
+
+1. Add these actions to your repository Actions allowlist:
+   - `peter-evans/create-pull-request@v7`
+   - `peter-evans/enable-pull-request-automerge@v3`
+2. Add repository secret `FW_BOT_TOKEN` (fine-grained PAT):
+   - Repository permissions: `Contents: Read and write`, `Pull requests: Read and write`
+3. Branch protection for `main`:
+   - Keep PR required and status checks required.
+   - Set required approvals to `0` for full automation.
 
 Recommended GitHub branch protection:
 
