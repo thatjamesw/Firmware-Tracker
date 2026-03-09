@@ -213,6 +213,8 @@ def process_device(
                     "source_type": source_type,
                     "vendor": vendor,
                     "used_fallback": used_fallback,
+                    "used_source": candidate,
+                    "used_source_index": idx,
                 }
                 if status == "ok_empty" and idx >= len(attempts) - 1:
                     if debug_enabled:
@@ -228,6 +230,8 @@ def process_device(
                 "source_type": source_type,
                 "vendor": vendor,
                 "used_fallback": used_fallback,
+                "used_source": candidate,
+                "used_source_index": idx,
             }
             continue
 
@@ -242,6 +246,8 @@ def process_device(
                 "source_type": source_type,
                 "vendor": vendor,
                 "used_fallback": used_fallback,
+                "used_source": candidate,
+                "used_source_index": idx,
             }
             # If a fallback source exists, do not stop on an empty primary result.
             if status == "ok_empty" and idx >= len(attempts) - 1:
@@ -264,6 +270,8 @@ def process_device(
             "source_type": source_type,
             "vendor": vendor,
             "used_fallback": used_fallback,
+            "used_source": candidate,
+            "used_source_index": idx,
         }
 
     if last_result:
@@ -278,6 +286,8 @@ def process_device(
         "source_type": "",
         "vendor": "unknown",
         "used_fallback": False,
+        "used_source": source,
+        "used_source_index": 0,
     }
 
 
@@ -454,12 +464,9 @@ def main() -> int:
         reason = str(result.get("reason") or "")
         releases = result.get("releases") or []
         source = device_sources.get(device_id)
-        used_fallback = bool(result.get("used_fallback"))
-        effective_source = source
-        if used_fallback and isinstance(source, dict):
-            fallback_source = source.get("fallback_source")
-            if isinstance(fallback_source, dict):
-                effective_source = fallback_source
+        effective_source = result.get("used_source")
+        if not isinstance(effective_source, dict):
+            effective_source = source if isinstance(source, dict) else None
 
         current = normalize_releases(
             firmware_index.get(device_id, {}).get("releases", [])
@@ -472,7 +479,7 @@ def main() -> int:
                 accepted, guard_reason = should_accept_release_update(
                     current,
                     releases,
-                    effective_source if isinstance(effective_source, dict) else None,
+                    effective_source,
                 )
                 if accepted:
                     firmware_index[device_id] = {"releases": releases}

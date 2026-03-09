@@ -22,7 +22,8 @@ def configure_fetch(retries: int, retry_backoff: float) -> None:
 def fetch_bytes(url: str, timeout: int) -> bytes:
     host = ""
     try:
-        host = urllib.parse.urlparse(url).netloc.lower()
+        parsed = urllib.parse.urlparse(url)
+        host = (parsed.hostname or "").lower()
     except Exception:  # noqa: BLE001
         host = ""
 
@@ -32,7 +33,7 @@ def fetch_bytes(url: str, timeout: int) -> bytes:
         "Accept-Language": "en-US,en;q=0.9",
     }
     # DJI endpoints are region-routed; sending explicit region/lang cookies improves consistency in CI.
-    if host.endswith("dji.com"):
+    if host == "dji.com" or host.endswith(".dji.com"):
         headers["Cookie"] = "region=GB; lang=en"
 
     req = urllib.request.Request(
