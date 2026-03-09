@@ -353,16 +353,17 @@
       return `${years} year${years === 1 ? "" : "s"}`;
     }
 
+    const UTC_TO_LOCAL_FORMATTER = new Intl.DateTimeFormat(undefined, {
+      dateStyle: "medium",
+      timeStyle: "short",
+      timeZoneName: "short"
+    });
+
     function formatUtcAsLocalDateTime(utcIsoText) {
       if (!utcIsoText) return "";
       const parsed = new Date(utcIsoText);
       if (Number.isNaN(parsed.getTime())) return "";
-      const formatter = new Intl.DateTimeFormat(undefined, {
-        dateStyle: "medium",
-        timeStyle: "short",
-        timeZoneName: "short"
-      });
-      return formatter.format(parsed);
+      return UTC_TO_LOCAL_FORMATTER.format(parsed);
     }
 
     function getLatestActiveRelease(releases) {
