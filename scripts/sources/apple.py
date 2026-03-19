@@ -19,9 +19,9 @@ def html_to_text(value: str) -> str:
 def extract_row_release_date(html: str, kind: str, latest_version: str) -> str:
     latest_escaped = re.escape(latest_version)
     token_patterns = {
-        "ios": re.compile(rf"\biOS\s+{latest_escaped}\b", re.I),
-        "macos": re.compile(rf"\bmacOS(?:\s+\w+)?\s+{latest_escaped}\b", re.I),
-        "watchos": re.compile(rf"\bwatchOS\s+{latest_escaped}\b", re.I),
+        "ios": re.compile(rf"\biOS\s+{latest_escaped}(?![0-9A-Za-z.\-])", re.I),
+        "macos": re.compile(rf"\bmacOS(?:\s+\w+)?\s+{latest_escaped}(?![0-9A-Za-z.\-])", re.I),
+        "watchos": re.compile(rf"\bwatchOS\s+{latest_escaped}(?![0-9A-Za-z.\-])", re.I),
     }
     token_pattern = token_patterns.get(kind)
     if token_pattern is None:

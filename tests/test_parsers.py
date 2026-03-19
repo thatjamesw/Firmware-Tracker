@@ -234,6 +234,36 @@ class ParserTests(unittest.TestCase):
         self.assertEqual(releases[0]["version"], "26.3")
         self.assertEqual(releases[0]["released_time"], "2026-02-11")
 
+    def test_apple_watchos_parser_does_not_prefix_match_patch_version_row(self) -> None:
+        html = """
+        <p>The latest version of watchOS is 26.3.</p>
+        <table>
+          <tr>
+            <td><p class="gb-paragraph">watchOS 26.3.1</p></td>
+            <td><p class="gb-paragraph">Apple Watch</p></td>
+            <td><p class="gb-paragraph">17 Mar 2026</p></td>
+          </tr>
+          <tr>
+            <td><p class="gb-paragraph">watchOS 26.3</p></td>
+            <td><p class="gb-paragraph">Apple Watch</p></td>
+            <td><p class="gb-paragraph">11 Feb 2026</p></td>
+          </tr>
+        </table>
+        """
+        original_fetch = apple_source.fetch_bytes
+        try:
+            apple_source.fetch_bytes = lambda _url, timeout: html.encode("utf-8")
+            releases = ffd.sync_apple_support(
+                {"url": "https://support.apple.com/en-us/100100", "kind": "watchos"},
+                timeout=5,
+            )
+        finally:
+            apple_source.fetch_bytes = original_fetch
+
+        self.assertEqual(len(releases), 1)
+        self.assertEqual(releases[0]["version"], "26.3")
+        self.assertEqual(releases[0]["released_time"], "2026-02-11")
+
     def test_apple_ios_parser_can_fallback_to_published_date_when_enabled(self) -> None:
         html = """
         <p>The latest version of iOS and iPadOS is 26.3.1.</p>
