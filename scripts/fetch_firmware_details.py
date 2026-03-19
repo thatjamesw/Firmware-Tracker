@@ -151,6 +151,16 @@ def should_accept_release_update(
         and new_version
         and current_version == new_version
         and current_date
+        and not new_date
+    ):
+        return False, "guardrail: apple latest version unchanged but release date is now missing"
+    if (
+        isinstance(source, dict)
+        and str(source.get("type") or "") == "apple_support"
+        and current_version
+        and new_version
+        and current_version == new_version
+        and current_date
         and new_date
         and new_date > current_date
     ):
