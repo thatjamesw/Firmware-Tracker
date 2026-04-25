@@ -1,6 +1,6 @@
 # Firmware Summary
 
-Generated (UTC): 2026-04-25T06:45:36Z
+Generated (UTC): 2026-04-25T10:48:06Z
 
 | Category | Device | Latest | Released | Age | Source | Status |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -16,7 +16,7 @@ Generated (UTC): 2026-04-25T06:45:36Z
 | Lighting | Godox V860II (Sony) | 1.7 | 2018-10-24 | 7 years | godox_listing | ok |
 | Lighting | Godox X3Pro S | 1.03 | 2026-01-26 | 2 months | godox_listing | ok |
 | Maker | Bambu Lab P1S 3D Printer | 01.10.00.00 | 2026-03-30 | 26 days | bambu_wiki | ok |
-| Platforms | AirPods Pro 3 | 8B39 | 2026-03-24 | 1 month | apple_support | guardrail: apple latest version unchanged but release date moved later |
+| Platforms | AirPods Pro 3 | 8B39 | 2026-03-24 | 1 month | apple_support | ok |
 | Platforms | iOS | 26.4.2 | 2026-04-22 | 3 days | apple_support | ok |
 | Platforms | macOS | 26.4.1 | 2026-04-09 | 16 days | apple_support | ok |
 | Platforms | watchOS | 26.4 | 2026-03-24 | 1 month | apple_support | ok |
