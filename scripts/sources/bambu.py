@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import re
-from html import unescape
 from typing import Any
 
-from .common import fetch_bytes, normalize_space
+from .common import fetch_bytes, html_to_text, make_release_candidate, resolve_release_candidates
 
 
 def sync_bambu_wiki(source: dict[str, Any], timeout: int) -> list[dict[str, Any]]:
@@ -16,35 +15,28 @@ def sync_bambu_wiki(source: dict[str, Any], timeout: int) -> list[dict[str, Any]
     html = fetch_bytes(url, timeout=timeout).decode("utf-8", errors="replace")
 
     matches = re.findall(
-        r"<h2[^>]*>\s*.*?(P1\s*series\s*(?:Version|version)\s*([0-9.]+)\s*\((\d{8})\)).*?</h2>",
+        rf"<h[23][^>]*>\s*.*?({re.escape(series)}\s*series\s*(?:Version|version)\s*([0-9.]+)\s*\((\d{{8}})\)).*?</h[23]>",
         html,
         re.I | re.S,
     )
     if not matches:
         return []
 
-    candidates: list[dict[str, str]] = []
+    candidates: list[dict[str, Any]] = []
     for full_title, version, yyyymmdd in matches:
         date_iso = f"{yyyymmdd[0:4]}-{yyyymmdd[4:6]}-{yyyymmdd[6:8]}"
+        title = html_to_text(full_title)
         candidates.append(
-            {
-                "title": normalize_space(unescape(re.sub(r"<[^>]+>", " ", full_title))),
-                "version": version.strip(),
-                "released_time": date_iso,
-            }
+            make_release_candidate(
+                version=version.strip(),
+                released_time=date_iso,
+                note=f"Official Bambu Lab Wiki {series} release history. Entry: {title}.",
+                evidence_type="bambu_wiki_heading",
+                evidence_text=title,
+                source_url=url,
+                confidence=0.9,
+                rank=88,
+            )
         )
 
-    candidates.sort(key=lambda x: (x["released_time"], x["version"]), reverse=True)
-    latest = candidates[0]
-
-    return [
-        {
-            "version": latest["version"],
-            "released_time": latest["released_time"],
-            "release_note": {
-                "en": f"Official Bambu Lab Wiki {series} release history. Entry: {latest['title']}."
-            },
-            "arb": None,
-            "active": True,
-        }
-    ]
+    return resolve_release_candidates(candidates, source)

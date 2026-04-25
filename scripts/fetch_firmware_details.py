@@ -19,7 +19,7 @@ from sources import SOURCE_VENDOR, SYNC_HANDLERS
 from sources import apple as apple_source
 from sources import atomos as atomos_source
 from sources import bambu as bambu_source
-from sources.common import configure_fetch, normalize_releases
+from sources.common import compare_versions, configure_fetch, normalize_releases, version_sort_key
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_FILE = ROOT / "data" / "devices.json"
@@ -106,7 +106,13 @@ def get_latest_active_release(releases: list[dict[str, Any]]) -> dict[str, Any] 
     active = [r for r in releases if isinstance(r, dict) and bool(r.get("active"))]
     if not active:
         return None
-    active.sort(key=lambda item: str(item.get("released_time") or ""), reverse=True)
+    active.sort(
+        key=lambda item: (
+            version_sort_key(str(item.get("version") or "")),
+            str(item.get("released_time") or ""),
+        ),
+        reverse=True,
+    )
     return active[0]
 
 
@@ -144,6 +150,17 @@ def should_accept_release_update(
     new_version = str(new_latest.get("version") or "").strip()
     current_date = parse_iso_date(str(current_latest.get("released_time") or ""))
     new_date = parse_iso_date(str(new_latest.get("released_time") or ""))
+    version_cmp = compare_versions(new_version, current_version)
+
+    if current_version and new_version and version_cmp and version_cmp > 0:
+        return True, ""
+    if current_version and new_version and version_cmp and version_cmp < 0:
+        detail = " and older latest release date" if current_date and new_date and new_date <= current_date else ""
+        return (
+            False,
+            f"guardrail: parser returned an older latest version{detail} than current stored data",
+        )
+
     if (
         isinstance(source, dict)
         and str(source.get("type") or "") == "apple_support"
@@ -171,6 +188,55 @@ def should_accept_release_update(
             "guardrail: parser returned an older latest release date than current stored data",
         )
     return True, ""
+
+
+def release_identity(release: dict[str, Any]) -> str:
+    return str(release.get("version") or "").strip().lower()
+
+
+def merge_release_metadata(
+    current_releases: list[dict[str, Any]],
+    new_releases: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Keep incoming release identity while preserving older metadata the parser can no longer see."""
+    current_by_version = {
+        release_identity(rel): rel
+        for rel in current_releases
+        if isinstance(rel, dict) and release_identity(rel)
+    }
+    merged: list[dict[str, Any]] = []
+    seen: set[str] = set()
+
+    for rel in new_releases:
+        key = release_identity(rel)
+        if not key:
+            continue
+        prior = current_by_version.get(key, {})
+        item = dict(rel)
+        if prior:
+            if not item.get("released_time") and prior.get("released_time"):
+                item["released_time"] = prior["released_time"]
+            note = item.get("release_note")
+            prior_note = prior.get("release_note")
+            if (
+                isinstance(prior_note, dict)
+                and isinstance(note, dict)
+                and not str(note.get("en") or "").strip()
+                and str(prior_note.get("en") or "").strip()
+            ):
+                item["release_note"] = prior_note
+        merged.append(item)
+        seen.add(key)
+
+    for rel in current_releases:
+        key = release_identity(rel)
+        if key and key not in seen:
+            preserved = dict(rel)
+            preserved["active"] = bool(preserved.get("active", True))
+            merged.append(preserved)
+            seen.add(key)
+
+    return normalize_releases(merged)
 
 
 def process_device(
@@ -498,6 +564,7 @@ def main() -> int:
         )
 
         if status in {"ok", "ok_empty"}:
+            releases = merge_release_metadata(current, releases)
             if releases != current:
                 accepted, guard_reason = should_accept_release_update(
                     current,

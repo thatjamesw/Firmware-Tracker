@@ -12,42 +12,46 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header>
-    <section class="hero">
-      <div>
-        <p class="eyebrow">Personal Firmware Monitor</p>
-        <h1>Firmware Tracker</h1>
-        <p class="subtitle lede">One place to watch cameras, drones, lighting, platforms, and maker gear without bouncing between vendor portals.</p>
-      </div>
-      <div class="hero-chips">
-        <div class="chip"><strong id="hero-device-count">0</strong> tracked devices</div>
-        <div class="chip"><strong id="hero-category-count">0</strong> categories</div>
-        <div class="chip"><strong id="hero-fresh-count">0</strong> current releases detected</div>
-      </div>
-    </section>
-  </header>
+  <main class="shell">
+    <header class="masthead" aria-label="Tracker overview">
+      <h1>Firmware Tracker</h1>
+    </header>
 
-  <main class="container">
-    <section class="panel">
+    <section class="workflow-strip" aria-label="Tracker metrics">
+      <article class="workflow-step">
+        <span class="workflow-kicker">Devices</span>
+        <strong id="hero-device-count">0</strong>
+      </article>
+      <article class="workflow-step">
+        <span class="workflow-kicker">Categories</span>
+        <strong id="hero-category-count">0</strong>
+      </article>
+      <article class="workflow-step">
+        <span class="workflow-kicker">Current</span>
+        <strong id="hero-fresh-count">0</strong>
+      </article>
+      <article class="workflow-step">
+        <span class="workflow-kicker">Source Health</span>
+        <strong id="hero-health-count">0</strong>
+      </article>
+    </section>
+
+    <section class="tracker-surface">
       <div class="source-banner" id="source-banner">
         <div id="source-banner-text"></div>
         <div class="updates-actions">
-          <button class="btn secondary" id="hide-source-banner">Hide</button>
+          <button class="ghost" id="hide-source-banner">Hide</button>
         </div>
       </div>
       <div class="updates-banner" id="updates-banner">
         <div id="updates-text"></div>
         <div class="updates-actions">
-          <button class="btn" id="mark-updates-seen">Mark as Seen</button>
-          <button class="btn secondary" id="hide-updates-banner">Hide</button>
+          <button class="primary" id="mark-updates-seen">Mark as Seen</button>
+          <button class="ghost" id="hide-updates-banner">Hide</button>
         </div>
       </div>
       <div class="toolbar">
-        <div class="toolbar-left">
-          <button class="btn" id="refresh-now">Refresh Now</button>
-          <button class="btn secondary" id="reload-data">Reload Data</button>
-        </div>
-        <div class="meta" id="meta"></div>
+        <div class="meta" id="meta">Last generated: unknown</div>
       </div>
       <div class="table-wrap" id="table-container"></div>
     </section>
@@ -57,7 +61,7 @@
     <div class="modal-body">
       <div class="modal-header">
         <h3 id="modal-title">Firmware Versions</h3>
-        <button class="btn secondary" id="close-modal">Close</button>
+        <button class="ghost" id="close-modal">Close</button>
       </div>
       <div class="modal-content" id="modal-content"></div>
     </div>
@@ -106,11 +110,15 @@
     }
 
     function ageInDays(dateText) {
-      const ms = Date.now() - new Date(dateText + "T00:00:00Z").getTime();
+      if (!dateText) return null;
+      const parsed = new Date(dateText + "T00:00:00Z").getTime();
+      if (Number.isNaN(parsed)) return null;
+      const ms = Date.now() - parsed;
       return Math.floor(ms / (1000 * 60 * 60 * 24));
     }
 
     function formatAge(days) {
+      if (days === null || Number.isNaN(days)) return "unknown";
       if (days <= 0) return "today";
       if (days === 1) return "1 day";
       if (days < 30) return `${days} days`;
@@ -142,12 +150,40 @@
       return UTC_TO_LOCAL_FORMATTER.format(parsed);
     }
 
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    function versionSortKey(version) {
+      const clean = String(version || "").trim().replace(/^v/i, "");
+      const parts = clean.match(/\d+|[A-Za-z]+/g) || [];
+      return parts.map((part) => /^\d+$/.test(part) ? [1, Number(part)] : [0, part.toLowerCase()]);
+    }
+
+    function compareVersionKeys(left, right) {
+      const length = Math.max(left.length, right.length);
+      for (let idx = 0; idx < length; idx += 1) {
+        const a = left[idx] || [0, ""];
+        const b = right[idx] || [0, ""];
+        if (a[0] !== b[0]) return a[0] - b[0];
+        if (a[1] < b[1]) return -1;
+        if (a[1] > b[1]) return 1;
+      }
+      return 0;
+    }
+
     function getLatestActiveRelease(releases) {
       const active = releases.filter((r) => r.active === true);
       if (!active.length) return null;
-      return active.reduce((a, b) =>
-        new Date(a.released_time) > new Date(b.released_time) ? a : b
-      );
+      return active.reduce((a, b) => {
+        const versionCompare = compareVersionKeys(versionSortKey(a.version), versionSortKey(b.version));
+        if (versionCompare !== 0) return versionCompare > 0 ? a : b;
+        return new Date(a.released_time) > new Date(b.released_time) ? a : b;
+      });
     }
 
     function getAllRows() {
@@ -211,14 +247,18 @@
       const deviceCount = rows.length;
       const categoryCount = new Set(rows.map((row) => row.categoryId)).size;
       const freshCount = rows.filter((row) => row.latest).length;
+      const vendorHealth = (TRACKER_CONFIG && TRACKER_CONFIG.source_sync_status && TRACKER_CONFIG.source_sync_status.vendor_health) || {};
+      const healthyVendors = Object.values(vendorHealth).filter((entry) => entry && entry.status === "ok").length;
 
       const deviceCountEl = document.getElementById("hero-device-count");
       const categoryCountEl = document.getElementById("hero-category-count");
       const freshCountEl = document.getElementById("hero-fresh-count");
+      const healthCountEl = document.getElementById("hero-health-count");
 
       if (deviceCountEl) deviceCountEl.textContent = String(deviceCount);
       if (categoryCountEl) categoryCountEl.textContent = String(categoryCount);
       if (freshCountEl) freshCountEl.textContent = String(freshCount);
+      if (healthCountEl) healthCountEl.textContent = String(healthyVendors);
     }
 
     function getDeviceDownloadPage(deviceId) {
@@ -244,7 +284,7 @@
         item.innerHTML = `
           <div class="release-title">No published firmware yet</div>
           <div>This device is tracked, but no release entry is currently published in the configured source.</div>
-          ${pageUrl ? `<a class="release-link" href="${pageUrl}" target="_blank" rel="noopener noreferrer">Open official download page</a>` : ""}
+          ${pageUrl ? `<a class="release-link" href="${escapeHtml(pageUrl)}" target="_blank" rel="noopener noreferrer">Open official download page</a>` : ""}
         `;
         content.appendChild(item);
       }
@@ -253,11 +293,11 @@
         const item = document.createElement("div");
         item.className = "release-item";
         item.innerHTML = `
-          <div class="release-title">${rel.version} <span class="badge ${rel.active ? "" : "old"}">${rel.active ? "active" : "inactive"}</span></div>
-          <div><strong>Released:</strong> ${rel.released_time}</div>
-          <div><strong>ARB:</strong> ${rel.arb ?? "N/A"}</div>
-          <div style="margin-top:0.4rem">${(rel.release_note && rel.release_note.en) || "No release notes."}</div>
-          ${pageUrl ? `<a class="release-link" href="${pageUrl}" target="_blank" rel="noopener noreferrer">Open official download page</a>` : ""}
+          <div class="release-title">${escapeHtml(rel.version)} <span class="badge ${rel.active ? "" : "old"}">${rel.active ? "active" : "inactive"}</span></div>
+          <div><strong>Released:</strong> ${escapeHtml(rel.released_time || "unknown")}</div>
+          <div><strong>ARB:</strong> ${escapeHtml(rel.arb ?? "N/A")}</div>
+          <div style="margin-top:0.4rem">${escapeHtml((rel.release_note && rel.release_note.en) || "No release notes.")}</div>
+          ${pageUrl ? `<a class="release-link" href="${escapeHtml(pageUrl)}" target="_blank" rel="noopener noreferrer">Open official download page</a>` : ""}
         `;
         content.appendChild(item);
       }
@@ -322,12 +362,12 @@
           const releasedText = r.latest ? r.latest.released_time : "—";
           const ageText = r.age !== null ? formatAge(r.age) : "—";
           tr.innerHTML = `
-            <td>${r.category}</td>
-            <td>${r.deviceName}</td>
-            <td>${latestText}${isNew ? ' <span class="badge new">new</span>' : ""}</td>
-            <td>${releasedText}</td>
+            <td>${escapeHtml(r.category)}</td>
+            <td><span class="device-name">${escapeHtml(r.deviceName)}</span></td>
+            <td><span class="latest-version">${escapeHtml(latestText)}</span>${isNew ? ' <span class="badge new">new</span>' : ""}</td>
+            <td>${escapeHtml(releasedText)}</td>
             <td><span class="${ageClass}">${ageText}</span></td>
-            <td><button class="btn">View All (${r.releases.length})</button></td>
+            <td><button class="ghost">View All (${r.releases.length})</button></td>
           `;
           tr.querySelector("button").addEventListener("click", () => renderModal(r.deviceId, r.deviceName, r.releases));
           tbody.appendChild(tr);
@@ -407,26 +447,6 @@
         meta.textContent = "Last generated: unknown";
         meta.title = "";
       }
-
-      const refreshBtn = document.getElementById("refresh-now");
-      const reloadBtn = document.getElementById("reload-data");
-
-      const workflowUrl = (TRACKER_CONFIG && TRACKER_CONFIG.refresh_workflow_url) || "";
-      if (!workflowUrl) {
-        refreshBtn.disabled = true;
-        refreshBtn.title = "Set sources.refresh_workflow_url in data/devices.json to enable.";
-      }
-
-      refreshBtn.addEventListener("click", () => {
-        if (!workflowUrl) return;
-        window.open(workflowUrl, "_blank", "noopener,noreferrer");
-      });
-
-      reloadBtn.addEventListener("click", () => {
-        const url = new URL(window.location.href);
-        url.searchParams.set("t", String(Date.now()));
-        window.location.href = url.toString();
-      });
     }
 
     function getDeviceNameById(deviceId) {

@@ -3,11 +3,11 @@ name: Update and Deploy Firmware Tracker
 on:
   workflow_dispatch:
   schedule:
-    # 08:00 Europe/Helsinki across DST changes (EET/EEST):
-    # - 05:00 UTC hits 08:00 during EEST (UTC+3)
-    # - 06:00 UTC hits 08:00 during EET  (UTC+2)
+    # 07:00 Europe/Helsinki across DST changes (EET/EEST):
+    # - 04:00 UTC hits 07:00 during EEST (UTC+3)
+    # - 05:00 UTC hits 07:00 during EET  (UTC+2)
+    - cron: '0 4 * * *'
     - cron: '0 5 * * *'
-    - cron: '0 6 * * *'
 
 permissions:
   contents: read
@@ -23,7 +23,7 @@ jobs:
     outputs:
       run_now: ${{ steps.gate.outputs.run_now }}
     steps:
-      - name: Decide whether to run now (08:00 Europe/Helsinki)
+      - name: Decide whether to run now (07:00 Europe/Helsinki)
         id: gate
         run: |
           if [[ "${{ github.event_name }}" != "schedule" ]]; then
@@ -31,12 +31,12 @@ jobs:
             exit 0
           fi
           local_hour="$(TZ=Europe/Helsinki date +%H)"
-          if [[ "$local_hour" == "08" ]]; then
+          if [[ "$local_hour" == "07" ]]; then
             echo "run_now=true" >> "$GITHUB_OUTPUT"
-            echo "It is 08:00 Europe/Helsinki. Proceeding."
+            echo "It is 07:00 Europe/Helsinki. Proceeding."
           else
             echo "run_now=false" >> "$GITHUB_OUTPUT"
-            echo "Not 08:00 Europe/Helsinki (current hour: $local_hour). Skipping this run."
+            echo "Not 07:00 Europe/Helsinki (current hour: $local_hour). Skipping this run."
           fi
 
   build:
@@ -66,10 +66,10 @@ jobs:
 
       - name: Fetch tracked firmware details from official sources
         run: |
-          python scripts/fetch_firmware_details.py || (
+          python scripts/fetch_firmware_details.py --fail-on-regression || (
             echo "First fetch attempt failed, retrying after 20s..."
             sleep 20
-            python scripts/fetch_firmware_details.py
+            python scripts/fetch_firmware_details.py --fail-on-regression
           )
 
       - name: Generate browser assets
