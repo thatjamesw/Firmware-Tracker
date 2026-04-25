@@ -48,11 +48,10 @@ Then open `docs/index.html` in a browser.
      - `fallback_source` (same structure as a primary source)
      - `allow_regression` (`true` to bypass release-date guardrail for that source)
      - `treat_404_as_empty` (`true` to interpret HTTP 404 as empty source data and continue fallback)
-3. Optional: set `sources.refresh_workflow_url` so the UI "Refresh Now" button opens your workflow run page.
-4. Run:
+3. Run:
    - `python scripts/fetch_firmware_details.py`
    - `python scripts/generate_index.py`
-5. Commit and push.
+4. Commit and push.
 
 ## GitHub Pages setup
 
@@ -116,8 +115,8 @@ Recommended GitHub branch protection:
   - Per-device and per-vendor health is tracked (`consecutive_failures`, `last_success_utc`, `last_error_type`) for better diagnostics.
   - Strict mode: `python scripts/fetch_firmware_details.py --fail-on-regression` is used by the scheduled deploy workflow.
 - UI is single-table for all devices and includes:
-  - `Refresh Now` (opens `sources.refresh_workflow_url`)
-  - `Reload Data` (reloads latest deployed assets)
+  - Compact metrics for tracked devices, categories, current releases, and source health
+  - Last generated timestamp
   - Source issue banner when a vendor feed is failing (for example DJI parsing errors)
   - New-firmware banner and row highlights based on what your browser has previously seen (`Mark as Seen` to clear)
   - `View All` cards include an `Open official download page` link (landing page, not direct binary URL)

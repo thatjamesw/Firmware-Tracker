@@ -4,9 +4,10 @@
 from __future__ import annotations
 
 import json
-import re
 from datetime import datetime, timezone
 from pathlib import Path
+
+from sources.common import version_sort_key
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_FILE = ROOT / "data" / "devices.json"
@@ -63,17 +64,6 @@ def get_latest_active_release(releases: list[dict]) -> dict | None:
         reverse=True,
     )
     return active[0]
-
-
-def version_sort_key(version: str) -> tuple:
-    clean = str(version or "").strip().lstrip("Vv")
-    if not clean:
-        return ()
-    parts = re.findall(r"\d+|[A-Za-z]+", clean)
-    out = []
-    for part in parts:
-        out.append((1, int(part)) if part.isdigit() else (0, part.lower()))
-    return tuple(out)
 
 
 def age_days(released_time: str) -> int | None:

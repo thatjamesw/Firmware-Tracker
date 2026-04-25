@@ -179,11 +179,15 @@
     function getLatestActiveRelease(releases) {
       const active = releases.filter((r) => r.active === true);
       if (!active.length) return null;
-      return active.reduce((a, b) => {
-        const versionCompare = compareVersionKeys(versionSortKey(a.version), versionSortKey(b.version));
-        if (versionCompare !== 0) return versionCompare > 0 ? a : b;
-        return new Date(a.released_time) > new Date(b.released_time) ? a : b;
-      });
+      return [...active].sort(compareReleasesDesc)[0];
+    }
+
+    function compareReleasesDesc(a, b) {
+      const versionCompare = compareVersionKeys(versionSortKey(a.version), versionSortKey(b.version));
+      if (versionCompare !== 0) return -versionCompare;
+      const at = a.released_time ? new Date(a.released_time).getTime() : -1;
+      const bt = b.released_time ? new Date(b.released_time).getTime() : -1;
+      return bt - at;
     }
 
     function getAllRows() {
@@ -274,9 +278,7 @@
       title.textContent = `${deviceName} firmware history`;
       content.innerHTML = "";
 
-      const sorted = [...releases].sort(
-        (a, b) => new Date(b.released_time) - new Date(a.released_time)
-      );
+      const sorted = [...releases].sort(compareReleasesDesc);
 
       if (!sorted.length) {
         const item = document.createElement("div");
@@ -342,7 +344,15 @@
             }
           }
           if (sortKey === "name") { av = a.deviceName.toLowerCase(); bv = b.deviceName.toLowerCase(); }
-          if (sortKey === "version") { av = a.latest ? a.latest.version : ""; bv = b.latest ? b.latest.version : ""; }
+          if (sortKey === "version") {
+            const versionCompare = compareVersionKeys(
+              versionSortKey(a.latest ? a.latest.version : ""),
+              versionSortKey(b.latest ? b.latest.version : "")
+            );
+            if (versionCompare !== 0) return sortDir === "asc" ? versionCompare : -versionCompare;
+            av = a.latest ? new Date(a.latest.released_time).getTime() : -1;
+            bv = b.latest ? new Date(b.latest.released_time).getTime() : -1;
+          }
           if (sortKey === "date") { av = a.latest ? new Date(a.latest.released_time).getTime() : -1; bv = b.latest ? new Date(b.latest.released_time).getTime() : -1; }
           if (sortKey === "age") { av = a.age ?? 999999; bv = b.age ?? 999999; }
           if (av < bv) return sortDir === "asc" ? -1 : 1;

@@ -152,9 +152,9 @@ def should_accept_release_update(
     new_date = parse_iso_date(str(new_latest.get("released_time") or ""))
     version_cmp = compare_versions(new_version, current_version)
 
-    if current_version and new_version and version_cmp and version_cmp > 0:
+    if current_version and new_version and version_cmp is not None and version_cmp > 0:
         return True, ""
-    if current_version and new_version and version_cmp and version_cmp < 0:
+    if current_version and new_version and version_cmp is not None and version_cmp < 0:
         detail = " and older latest release date" if current_date and new_date and new_date <= current_date else ""
         return (
             False,

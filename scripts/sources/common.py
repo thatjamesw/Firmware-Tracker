@@ -232,8 +232,6 @@ def resolve_release_candidates(
             continue
         errors = _candidate_contract_errors(candidate, source)
         if errors:
-            rejected = dict(candidate)
-            rejected["contract_errors"] = errors
             continue
         valid.append(candidate)
 
