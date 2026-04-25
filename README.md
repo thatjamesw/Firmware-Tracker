@@ -48,11 +48,10 @@ Then open `docs/index.html` in a browser.
      - `fallback_source` (same structure as a primary source)
      - `allow_regression` (`true` to bypass release-date guardrail for that source)
      - `treat_404_as_empty` (`true` to interpret HTTP 404 as empty source data and continue fallback)
-3. Optional: set `sources.refresh_workflow_url` so the UI "Refresh Now" button opens your workflow run page.
-4. Run:
+3. Run:
    - `python scripts/fetch_firmware_details.py`
    - `python scripts/generate_index.py`
-5. Commit and push.
+4. Commit and push.
 
 ## GitHub Pages setup
 
@@ -60,7 +59,7 @@ Then open `docs/index.html` in a browser.
 2. In GitHub repository settings:
    - Pages -> Source: `GitHub Actions`
 3. Run workflow `Update and Deploy Firmware Tracker` once (manual dispatch).
-4. The site deploys and refreshes daily at 08:00 Europe/Helsinki (DST-safe scheduler).
+4. The site deploys and refreshes daily at 07:00 Europe/Helsinki (DST-safe scheduler).
 5. CI runs parser/schema tests before sync.
 
 ## Automated Testing (No Local Setup)
@@ -71,7 +70,7 @@ Then open `docs/index.html` in a browser.
   - runs `scripts/generate_index.py` as a build smoke test
 - `Update and Deploy Firmware Tracker` workflow (`.github/workflows/update-and-deploy.yml`) runs daily + manual:
   - re-runs tests
-  - fetches official firmware data
+  - fetches official firmware data with regression guardrails enabled
   - regenerates browser assets + markdown summary
   - deploys generated `docs/` as a Pages artifact (no push back to protected `main`)
   - opens/updates an automation PR for generated file changes and enables auto-merge
@@ -81,7 +80,7 @@ Then open `docs/index.html` in a browser.
 To run fully hands-off daily:
 
 1. Add these actions to your repository Actions allowlist:
-   - `peter-evans/create-pull-request@v7`
+   - `peter-evans/create-pull-request@v8`
    - `peter-evans/enable-pull-request-automerge@v3`
 2. Add repository secret `FW_BOT_TOKEN` (fine-grained PAT):
    - Repository permissions: `Contents: Read and write`, `Pull requests: Read and write`
@@ -110,11 +109,14 @@ Recommended GitHub branch protection:
   - Per-device `allow_empty: true` can be used for feeds where no firmware is currently published; this avoids false-positive source alerts.
   - DJI stale `404` release-note PDF links are tolerated as empty results (last known good data is retained).
   - Release guardrail prevents replacing current data with an older "latest" release date unless `allow_regression: true` is set on that source.
+  - Version-aware guardrails prioritize new firmware versions over stale vendor dates, reject apparent downgrades, and preserve previous release metadata when a parser can only see the latest row.
+  - Parsers now extract ranked release candidates from official evidence (tables, visible text, links, filenames, and PDFs) before a shared resolver chooses the best firmware value.
+  - Vendor HTML parsers use shared text/date/link helpers and tolerate common markup changes in Apple, Sony, Godox, Atomos, and Bambu pages.
   - Per-device and per-vendor health is tracked (`consecutive_failures`, `last_success_utc`, `last_error_type`) for better diagnostics.
-  - Optional strict mode: `python scripts/fetch_firmware_details.py --fail-on-regression`
+  - Strict mode: `python scripts/fetch_firmware_details.py --fail-on-regression` is used by the scheduled deploy workflow.
 - UI is single-table for all devices and includes:
-  - `Refresh Now` (opens `sources.refresh_workflow_url`)
-  - `Reload Data` (reloads latest deployed assets)
+  - Compact metrics for tracked devices, categories, current releases, and source health
+  - Last generated timestamp
   - Source issue banner when a vendor feed is failing (for example DJI parsing errors)
   - New-firmware banner and row highlights based on what your browser has previously seen (`Mark as Seen` to clear)
   - `View All` cards include an `Open official download page` link (landing page, not direct binary URL)

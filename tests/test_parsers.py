@@ -117,6 +117,191 @@ class ParserTests(unittest.TestCase):
         self.assertTrue(accepted)
         self.assertEqual(reason, "")
 
+    def test_release_guardrail_accepts_newer_version_even_when_date_is_older(self) -> None:
+        current = [
+            {
+                "version": "1.9.0",
+                "released_time": "2026-03-04",
+                "release_note": {"en": "current"},
+                "arb": None,
+                "active": True,
+            }
+        ]
+        incoming = [
+            {
+                "version": "2.0.0",
+                "released_time": "2026-02-28",
+                "release_note": {"en": "newer firmware but stale vendor date"},
+                "arb": None,
+                "active": True,
+            }
+        ]
+
+        accepted, reason = ffd.should_accept_release_update(current, incoming, {"type": "sony_cscs"})
+        self.assertTrue(accepted)
+        self.assertEqual(reason, "")
+
+    def test_release_guardrail_rejects_older_version_even_when_date_is_newer(self) -> None:
+        current = [
+            {
+                "version": "2.0.0",
+                "released_time": "2026-03-04",
+                "release_note": {"en": "current"},
+                "arb": None,
+                "active": True,
+            }
+        ]
+        incoming = [
+            {
+                "version": "1.9.0",
+                "released_time": "2026-04-01",
+                "release_note": {"en": "article date moved"},
+                "arb": None,
+                "active": True,
+            }
+        ]
+
+        accepted, reason = ffd.should_accept_release_update(current, incoming, {"type": "sony_cscs"})
+        self.assertFalse(accepted)
+        self.assertIn("older latest version", reason)
+
+    def test_merge_release_metadata_preserves_history_and_missing_date(self) -> None:
+        current = [
+            {
+                "version": "1.9.0",
+                "released_time": "2026-03-04",
+                "release_note": {"en": "current note"},
+                "arb": None,
+                "active": True,
+            },
+            {
+                "version": "1.8.0",
+                "released_time": "2026-01-01",
+                "release_note": {"en": "older note"},
+                "arb": None,
+                "active": True,
+            },
+        ]
+        incoming = [
+            {
+                "version": "1.9.0",
+                "released_time": "",
+                "release_note": {"en": ""},
+                "arb": None,
+                "active": True,
+            }
+        ]
+
+        merged = ffd.merge_release_metadata(current, incoming)
+        self.assertEqual(merged[0]["version"], "1.9.0")
+        self.assertEqual(merged[0]["released_time"], "2026-03-04")
+        self.assertEqual(merged[0]["release_note"]["en"], "current note")
+        self.assertEqual(merged[1]["version"], "1.8.0")
+
+    def test_latest_release_prefers_newer_version_over_newer_date(self) -> None:
+        releases = [
+            {
+                "version": "1.9.0",
+                "released_time": "2026-03-04",
+                "release_note": {"en": "older version"},
+                "arb": None,
+                "active": True,
+            },
+            {
+                "version": "2.0.0",
+                "released_time": "2026-02-28",
+                "release_note": {"en": "newer version"},
+                "arb": None,
+                "active": True,
+            },
+        ]
+
+        latest = ffd.get_latest_active_release(releases)
+        self.assertIsNotNone(latest)
+        self.assertEqual(latest["version"], "2.0.0")
+
+    def test_candidate_resolver_prefers_stronger_evidence(self) -> None:
+        candidates = [
+            common_source.make_release_candidate(
+                version="2.0.0",
+                released_time="2026-04-01",
+                note="filename clue",
+                evidence_type="download_filename",
+                evidence_text="firmware_v2.0.0.zip",
+                source_url="https://example.com/downloads",
+                confidence=0.55,
+                rank=40,
+            ),
+            common_source.make_release_candidate(
+                version="1.9.0",
+                released_time="2026-03-04",
+                note="official table row",
+                evidence_type="firmware_table_row",
+                evidence_text="Firmware Version 1.9.0 Released 2026-03-04",
+                source_url="https://example.com/downloads",
+                confidence=0.92,
+                rank=90,
+            ),
+        ]
+
+        releases = common_source.resolve_release_candidates(candidates, {})
+        self.assertEqual(len(releases), 1)
+        self.assertEqual(releases[0]["version"], "1.9.0")
+        self.assertEqual(releases[0]["confidence"], 0.92)
+        self.assertEqual(releases[0]["evidence"]["type"], "firmware_table_row")
+
+    def test_candidate_resolver_applies_source_contract(self) -> None:
+        candidates = [
+            common_source.make_release_candidate(
+                version="release-candidate",
+                evidence_type="loose_text",
+                evidence_text="release-candidate",
+                confidence=0.95,
+                rank=99,
+            ),
+            common_source.make_release_candidate(
+                version="1.2.3",
+                released_time="2026-04-01",
+                evidence_type="table_row",
+                evidence_text="Version 1.2.3",
+                confidence=0.8,
+                rank=80,
+            ),
+        ]
+
+        releases = common_source.resolve_release_candidates(
+            candidates,
+            {"expected_version_pattern": r"\d+(?:\.\d+)+"},
+        )
+        self.assertEqual(len(releases), 1)
+        self.assertEqual(releases[0]["version"], "1.2.3")
+
+    def test_candidate_resolver_applies_default_source_contracts(self) -> None:
+        releases = common_source.resolve_release_candidates(
+            [
+                common_source.make_release_candidate(
+                    version="release-candidate",
+                    released_time="2026-04-01",
+                    evidence_type="loose_text",
+                    evidence_text="release-candidate",
+                    confidence=0.95,
+                    rank=99,
+                ),
+                common_source.make_release_candidate(
+                    version="11.19.00",
+                    released_time="2026-04-01",
+                    evidence_type="current_firmware",
+                    evidence_text="AtomOS 11.19.00",
+                    confidence=0.88,
+                    rank=88,
+                ),
+            ],
+            {"type": "atomos_support"},
+        )
+
+        self.assertEqual(len(releases), 1)
+        self.assertEqual(releases[0]["version"], "11.19.00")
+
     def test_parse_iso_date_preserves_instant_for_offset_aware_inputs(self) -> None:
         parsed = ffd.parse_iso_date("2026-03-06T10:00:00+02:00")
         self.assertIsNotNone(parsed)
@@ -142,6 +327,25 @@ class ParserTests(unittest.TestCase):
         self.assertEqual(releases[0]["version"], "01.09.01.00")
         self.assertEqual(releases[0]["released_time"], "2026-01-14")
 
+    def test_bambu_wiki_parser_honors_configured_series(self) -> None:
+        html = """
+        <h2>A1 series Version 01.05.00.00 (20260401)</h2>
+        <h2>P1 series Version 01.09.01.00 (20260114)</h2>
+        """
+        original_fetch = bambu_source.fetch_bytes
+        try:
+            bambu_source.fetch_bytes = lambda _url, timeout: html.encode("utf-8")
+            releases = bambu_source.sync_bambu_wiki(
+                {"url": "https://wiki.bambulab.com/en/a1/manual/release-history", "series": "A1"},
+                timeout=5,
+            )
+        finally:
+            bambu_source.fetch_bytes = original_fetch
+
+        self.assertEqual(len(releases), 1)
+        self.assertEqual(releases[0]["version"], "01.05.00.00")
+        self.assertEqual(releases[0]["released_time"], "2026-04-01")
+
     def test_atomos_parser_extracts_current(self) -> None:
         html = (FIXTURES_DIR / "atomos_ninjav.html").read_text(encoding="utf-8")
         original_fetch = atomos_source.fetch_bytes
@@ -157,6 +361,29 @@ class ParserTests(unittest.TestCase):
         self.assertEqual(len(releases), 1)
         self.assertEqual(releases[0]["version"], "11.18.00")
         self.assertEqual(releases[0]["released_time"], "2025-11-01")
+
+    def test_atomos_parser_handles_release_link_without_span(self) -> None:
+        html = """
+        <div class="support-product-article " id="NinjaVArticle">
+          <h2>Current Firmware</h2>
+          <p><b>AtomOS 11.19.00</b></p>
+          <a href="https://www.atomos.com/wp-content/uploads/2026/04/AtomOS_11.19.00_Release_Notes.html">Download release notes</a>
+        </div>
+        <div class="support-product-article " id="OtherArticle"></div>
+        """
+        original_fetch = atomos_source.fetch_bytes
+        try:
+            atomos_source.fetch_bytes = lambda _url, timeout: html.encode("utf-8")
+            releases = atomos_source.sync_atomos_support(
+                {"url": "https://www.atomos.com/product-support/", "article_id": "NinjaVArticle"},
+                timeout=5,
+            )
+        finally:
+            atomos_source.fetch_bytes = original_fetch
+
+        self.assertEqual(len(releases), 1)
+        self.assertEqual(releases[0]["version"], "11.19.00")
+        self.assertEqual(releases[0]["released_time"], "2026-04-01")
 
     def test_apple_ios_parser_extracts_latest_and_release_date(self) -> None:
         html = (FIXTURES_DIR / "apple_100100.html").read_text(encoding="utf-8")

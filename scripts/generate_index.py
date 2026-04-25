@@ -7,6 +7,8 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
+from sources.common import version_sort_key
+
 ROOT = Path(__file__).resolve().parents[1]
 DATA_FILE = ROOT / "data" / "devices.json"
 OUTPUT_DIR = ROOT / "docs" / "devices"
@@ -57,7 +59,10 @@ def get_latest_active_release(releases: list[dict]) -> dict | None:
     active = [r for r in releases if isinstance(r, dict) and r.get("active") is True]
     if not active:
         return None
-    active.sort(key=lambda r: str(r.get("released_time") or ""), reverse=True)
+    active.sort(
+        key=lambda r: (version_sort_key(str(r.get("version") or "")), str(r.get("released_time") or "")),
+        reverse=True,
+    )
     return active[0]
 
 

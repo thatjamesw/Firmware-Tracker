@@ -8,7 +8,7 @@ from typing import Any
 
 from pypdf import PdfReader
 
-from .common import as_iso_date, fetch_bytes, normalize_releases, normalize_space
+from .common import as_iso_date, fetch_bytes, make_release_candidate, normalize_releases, normalize_space, release_from_candidate
 
 
 def parse_dji_release_note_items(downloads_html: str) -> list[dict[str, str]]:
@@ -139,13 +139,18 @@ def parse_dji_release_pdf(pdf_bytes: bytes, device_name: str) -> list[dict[str, 
             note = "\n".join(bullet_lines) if bullet_lines else normalize_space(note_block)
 
         releases.append(
-            {
-                "version": version,
-                "released_time": as_iso_date(raw_date),
-                "release_note": {"en": note},
-                "arb": None,
-                "active": True,
-            }
+            release_from_candidate(
+                make_release_candidate(
+                    version=version,
+                    released_time=as_iso_date(raw_date),
+                    note=note,
+                    evidence_type="dji_release_notes_pdf",
+                    evidence_text=section[:500],
+                    source_url="",
+                    confidence=0.9,
+                    rank=88,
+                )
+            )
         )
 
     deduped: dict[tuple[str, str], dict[str, Any]] = {}
