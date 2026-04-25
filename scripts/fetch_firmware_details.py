@@ -151,6 +151,11 @@ def should_accept_release_update(
     current_date = parse_iso_date(str(current_latest.get("released_time") or ""))
     new_date = parse_iso_date(str(new_latest.get("released_time") or ""))
     version_cmp = compare_versions(new_version, current_version)
+    is_airpods_article_source = (
+        isinstance(source, dict)
+        and str(source.get("type") or "") == "apple_support"
+        and str(source.get("kind") or "") == "airpods"
+    )
 
     if current_version and new_version and version_cmp is not None and version_cmp > 0:
         return True, ""
@@ -170,6 +175,8 @@ def should_accept_release_update(
         and current_date
         and not new_date
     ):
+        if is_airpods_article_source:
+            return True, ""
         return False, "guardrail: apple latest version unchanged but release date is now missing"
     if (
         isinstance(source, dict)
@@ -181,6 +188,8 @@ def should_accept_release_update(
         and new_date
         and new_date > current_date
     ):
+        if is_airpods_article_source:
+            return True, ""
         return False, "guardrail: apple latest version unchanged but release date moved later"
     if current_date and new_date and new_date < current_date:
         return (
@@ -197,8 +206,14 @@ def release_identity(release: dict[str, Any]) -> str:
 def merge_release_metadata(
     current_releases: list[dict[str, Any]],
     new_releases: list[dict[str, Any]],
+    source: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     """Keep incoming release identity while preserving older metadata the parser can no longer see."""
+    is_airpods_article_source = (
+        isinstance(source, dict)
+        and str(source.get("type") or "") == "apple_support"
+        and str(source.get("kind") or "") == "airpods"
+    )
     current_by_version = {
         release_identity(rel): rel
         for rel in current_releases
@@ -214,7 +229,13 @@ def merge_release_metadata(
         prior = current_by_version.get(key, {})
         item = dict(rel)
         if prior:
-            if not item.get("released_time") and prior.get("released_time"):
+            if (
+                is_airpods_article_source
+                and item.get("released_time")
+                and prior.get("released_time")
+            ):
+                item["released_time"] = prior["released_time"]
+            elif not item.get("released_time") and prior.get("released_time"):
                 item["released_time"] = prior["released_time"]
             note = item.get("release_note")
             prior_note = prior.get("release_note")
@@ -564,7 +585,7 @@ def main() -> int:
         )
 
         if status in {"ok", "ok_empty"}:
-            releases = merge_release_metadata(current, releases)
+            releases = merge_release_metadata(current, releases, effective_source)
             if releases != current:
                 accepted, guard_reason = should_accept_release_update(
                     current,

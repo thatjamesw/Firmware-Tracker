@@ -69,6 +69,34 @@ class ParserTests(unittest.TestCase):
         self.assertFalse(accepted)
         self.assertIn("release date moved later", reason)
 
+    def test_release_guardrail_allows_airpods_same_version_with_later_article_date(self) -> None:
+        current = [
+            {
+                "version": "8B34",
+                "released_time": "2026-01-13",
+                "release_note": {"en": "current"},
+                "arb": None,
+                "active": True,
+            }
+        ]
+        incoming = [
+            {
+                "version": "8B34",
+                "released_time": "2026-04-25",
+                "release_note": {"en": "article date changed"},
+                "arb": None,
+                "active": True,
+            }
+        ]
+
+        accepted, reason = ffd.should_accept_release_update(
+            current,
+            incoming,
+            {"type": "apple_support", "kind": "airpods"},
+        )
+        self.assertTrue(accepted)
+        self.assertEqual(reason, "")
+
     def test_release_guardrail_rejects_apple_same_version_when_date_disappears(self) -> None:
         current = [
             {
@@ -197,6 +225,34 @@ class ParserTests(unittest.TestCase):
         self.assertEqual(merged[0]["released_time"], "2026-03-04")
         self.assertEqual(merged[0]["release_note"]["en"], "current note")
         self.assertEqual(merged[1]["version"], "1.8.0")
+
+    def test_merge_release_metadata_preserves_airpods_same_version_date(self) -> None:
+        current = [
+            {
+                "version": "8B34",
+                "released_time": "2026-01-13",
+                "release_note": {"en": "current note"},
+                "arb": None,
+                "active": True,
+            }
+        ]
+        incoming = [
+            {
+                "version": "8B34",
+                "released_time": "2026-04-25",
+                "release_note": {"en": "article was republished"},
+                "arb": None,
+                "active": True,
+            }
+        ]
+
+        merged = ffd.merge_release_metadata(
+            current,
+            incoming,
+            {"type": "apple_support", "kind": "airpods"},
+        )
+        self.assertEqual(merged[0]["version"], "8B34")
+        self.assertEqual(merged[0]["released_time"], "2026-01-13")
 
     def test_latest_release_prefers_newer_version_over_newer_date(self) -> None:
         releases = [
