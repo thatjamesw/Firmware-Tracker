@@ -7,12 +7,13 @@ Static firmware-tracking site that deploys on GitHub Pages and syncs from offici
 - Source of truth: `data/devices.json`
 - Schema: `data/devices.schema.json` (validated before sync)
 - Official sync: `scripts/fetch_firmware_details.py`
-  - DJI: downloads pages + release-notes PDFs
+  - DJI: downloads pages and release-notes PDFs
   - Sony: official `support.d-imaging.sony.co.jp` firmware pages (model-code based)
   - Godox: official firmware listing pages
   - Apple: official support pages for iOS/macOS/watchOS/AirPods
   - Atomos: official product-support firmware sections (device article based)
   - Bambu: official wiki release-history pages
+  - TP-Link: official support/download firmware pages
   - Static/manual entries for devices without stable public firmware feeds
 - Generator: `scripts/generate_index.py`
 - Generated browser assets:
@@ -27,11 +28,19 @@ Static firmware-tracking site that deploys on GitHub Pages and syncs from offici
 ```bash
 python -m pip install -r requirements.txt
 python -m unittest discover -s tests -p 'test_*.py' -v
+python scripts/smoke_test_frontend.py
 python scripts/fetch_firmware_details.py
 python scripts/generate_index.py
 ```
 
 Then open `docs/index.html` in a browser.
+
+Optional workflow linting:
+
+```bash
+.venv/bin/python -m pip install actionlint-py
+.venv/bin/actionlint .github/workflows/update-and-deploy.yml
+```
 
 ## Add devices
 
@@ -43,14 +52,19 @@ Then open `docs/index.html` in a browser.
    - `apple_support`
    - `atomos_support`
    - `bambu_wiki`
+   - `tplink_downloads`
    - `static`
    - Optional resilience fields:
      - `fallback_source` (same structure as a primary source)
+     - `fallback_sources` (ordered list of fallback sources)
      - `allow_regression` (`true` to bypass release-date guardrail for that source)
+     - `allow_empty` (`true` when a valid feed may publish no firmware entries)
      - `treat_404_as_empty` (`true` to interpret HTTP 404 as empty source data and continue fallback)
 3. Run:
    - `python scripts/fetch_firmware_details.py`
    - `python scripts/generate_index.py`
+   - `python -m unittest discover -s tests -p 'test_*.py' -v`
+   - `python scripts/smoke_test_frontend.py`
 4. Commit and push.
 
 ## GitHub Pages setup
@@ -59,8 +73,9 @@ Then open `docs/index.html` in a browser.
 2. In GitHub repository settings:
    - Pages -> Source: `GitHub Actions`
 3. Run workflow `Update and Deploy Firmware Tracker` once (manual dispatch).
-4. The site deploys and refreshes daily at 07:00 Europe/Helsinki (DST-safe scheduler).
-5. CI runs parser/schema tests before sync.
+4. The site deploys from the generated `docs/` artifact.
+5. The sync workflow tries early daily slots at 05:07, 06:17, and 07:27 Europe/Helsinki. A gate job allows only one successful scheduled sync per Finland calendar day, while manual dispatch always runs.
+6. CI runs parser/schema tests and a frontend smoke test before generated changes are merged.
 
 ## Automated Testing (No Local Setup)
 
@@ -68,7 +83,9 @@ Then open `docs/index.html` in a browser.
   - installs dependencies
   - runs unit/parser/schema tests
   - runs `scripts/generate_index.py` as a build smoke test
+  - runs `scripts/smoke_test_frontend.py` to verify generated browser assets and script wiring
 - `Update and Deploy Firmware Tracker` workflow (`.github/workflows/update-and-deploy.yml`) runs daily + manual:
+  - checks whether a scheduled sync is already active or has already succeeded today in Europe/Helsinki
   - re-runs tests
   - fetches official firmware data with regression guardrails enabled
   - regenerates browser assets + markdown summary
@@ -96,10 +113,10 @@ Recommended GitHub branch protection:
 
 ## Notes
 
-- Includes DJI, Sony, and lighting devices by default.
+- Includes DJI drones, Sony cameras, lighting devices, Apple software platforms, Atomos recorders, Bambu printers, and TP-Link network devices by default.
 - DJI Mini 5 Pro currently uses:
   - primary: `https://www.dji.com/fi/mini-5-pro/downloads`
-  - fallback: `https://www.dji.com/fi/downloads/products/mini-5-pro#doc`
+  - fallbacks: regional/product download pages listed in `data/devices.json`
 - `Godox V860II (Sony)` is mapped to `V860IIS` firmware feed.
 - `Amaran 300c` is set as app-managed (`Sidus Link`) via static/manual entry.
 - `Dell U4025QW` remains static/manual due anti-bot protections on official support pages.
@@ -111,7 +128,7 @@ Recommended GitHub branch protection:
   - Release guardrail prevents replacing current data with an older "latest" release date unless `allow_regression: true` is set on that source.
   - Version-aware guardrails prioritize new firmware versions over stale vendor dates, reject apparent downgrades, and preserve previous release metadata when a parser can only see the latest row.
   - Parsers now extract ranked release candidates from official evidence (tables, visible text, links, filenames, and PDFs) before a shared resolver chooses the best firmware value.
-  - Vendor HTML parsers use shared text/date/link helpers and tolerate common markup changes in Apple, Sony, Godox, Atomos, and Bambu pages.
+  - Vendor HTML parsers use shared text/date/link helpers and tolerate common markup changes in Apple, Sony, Godox, Atomos, Bambu, and TP-Link pages.
   - Per-device and per-vendor health is tracked (`consecutive_failures`, `last_success_utc`, `last_error_type`) for better diagnostics.
   - Strict mode: `python scripts/fetch_firmware_details.py --fail-on-regression` is used by the scheduled deploy workflow.
 - UI is single-table for all devices and includes:
