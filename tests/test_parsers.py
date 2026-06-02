@@ -497,6 +497,70 @@ class ParserTests(unittest.TestCase):
         self.assertEqual(releases[0]["version"], "26.3.1")
         self.assertEqual(releases[0]["released_time"], "2026-03-04")
 
+    def test_apple_ios_parser_handles_split_ios_ipados_latest_phrase(self) -> None:
+        html = """
+        <p>
+          The latest version of iOS is 26.5.1 for iPhone 17 (all models)
+          and iPhone Air, and 26.5 for iPhone 11 through iPhone 16e.
+          The latest version of iPadOS is 26.5.
+        </p>
+        <table>
+          <tr>
+            <td><p class="gb-paragraph">iOS 26.5.1</p></td>
+            <td><p class="gb-paragraph">iPhone 17 (all models) and iPhone Air</p></td>
+            <td><p class="gb-paragraph">01 Jun 2026</p></td>
+          </tr>
+          <tr>
+            <td><p class="gb-paragraph">iOS 26.5 and iPadOS 26.5</p></td>
+            <td><p class="gb-paragraph">iPhone 11 and later</p></td>
+            <td><p class="gb-paragraph">11 May 2026</p></td>
+          </tr>
+        </table>
+        """
+        original_fetch = apple_source.fetch_bytes
+        try:
+            apple_source.fetch_bytes = lambda _url, timeout: html.encode("utf-8")
+            releases = ffd.sync_apple_support(
+                {"url": "https://support.apple.com/en-us/100100", "kind": "ios"},
+                timeout=5,
+            )
+        finally:
+            apple_source.fetch_bytes = original_fetch
+
+        self.assertEqual(len(releases), 1)
+        self.assertEqual(releases[0]["version"], "26.5.1")
+        self.assertEqual(releases[0]["released_time"], "2026-06-01")
+
+    def test_apple_ios_parser_falls_back_to_security_release_table(self) -> None:
+        html = """
+        <table>
+          <tr>
+            <td><p class="gb-paragraph">iOS 26.5.1</p></td>
+            <td><p class="gb-paragraph">iPhone 17 (all models) and iPhone Air</p></td>
+            <td><p class="gb-paragraph">01 Jun 2026</p></td>
+          </tr>
+          <tr>
+            <td><p class="gb-paragraph">iOS 26.5 and iPadOS 26.5</p></td>
+            <td><p class="gb-paragraph">iPhone 11 and later</p></td>
+            <td><p class="gb-paragraph">11 May 2026</p></td>
+          </tr>
+        </table>
+        """
+        original_fetch = apple_source.fetch_bytes
+        try:
+            apple_source.fetch_bytes = lambda _url, timeout: html.encode("utf-8")
+            releases = ffd.sync_apple_support(
+                {"url": "https://support.apple.com/en-us/100100", "kind": "ios"},
+                timeout=5,
+            )
+        finally:
+            apple_source.fetch_bytes = original_fetch
+
+        self.assertEqual(len(releases), 1)
+        self.assertEqual(releases[0]["version"], "26.5.1")
+        self.assertEqual(releases[0]["released_time"], "2026-06-01")
+        self.assertEqual(releases[0]["evidence"]["type"], "apple_security_release_table")
+
     def test_apple_ios_parser_does_not_use_published_date_by_default(self) -> None:
         html = """
         <p>The latest version of iOS and iPadOS is 26.3.1.</p>

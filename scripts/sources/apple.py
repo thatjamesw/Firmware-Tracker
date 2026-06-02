@@ -3,7 +3,13 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from .common import fetch_bytes, html_to_text, make_release_candidate, parse_human_date_to_iso, resolve_release_candidates
+from .common import (
+    fetch_bytes,
+    html_to_text,
+    make_release_candidate,
+    parse_human_date_to_iso,
+    resolve_release_candidates,
+)
 
 
 ROW_RE = re.compile(r"<tr[^>]*>.*?</tr>", re.I | re.S)
@@ -38,6 +44,39 @@ def extract_row_release_date(html: str, kind: str, latest_version: str) -> str:
     return ""
 
 
+def extract_table_release_candidates(html: str, kind: str, source_url: str) -> list[dict[str, Any]]:
+    version_patterns = {
+        "ios": re.compile(r"\biOS\s+([0-9][0-9A-Za-z.\-]*)", re.I),
+        "macos": re.compile(r"\bmacOS(?:\s+\w+)?\s+([0-9][0-9A-Za-z.\-]*)", re.I),
+        "watchos": re.compile(r"\bwatchOS\s+([0-9][0-9A-Za-z.\-]*)", re.I),
+    }
+    version_pattern = version_patterns.get(kind)
+    if version_pattern is None:
+        return []
+
+    candidates: list[dict[str, Any]] = []
+    for row_html in ROW_RE.findall(html):
+        row_text = html_to_text(row_html)
+        version_match = version_pattern.search(row_text)
+        if not version_match:
+            continue
+        date_match = DATE_RE.search(row_text)
+        date_iso = parse_human_date_to_iso(date_match.group(1)) if date_match else ""
+        candidates.append(
+            make_release_candidate(
+                version=version_match.group(1),
+                released_time=date_iso,
+                note=f"Official Apple security release table listing for {kind}.",
+                evidence_type="apple_security_release_table",
+                evidence_text=row_text,
+                source_url=source_url,
+                confidence=0.88 if date_iso else 0.78,
+                rank=84,
+            )
+        )
+    return candidates
+
+
 def sync_apple_support(source: dict[str, Any], timeout: int) -> list[dict[str, Any]]:
     kind = str(source.get("kind") or "").lower()
     url = source.get("url")
@@ -48,14 +87,14 @@ def sync_apple_support(source: dict[str, Any], timeout: int) -> list[dict[str, A
 
     if kind in {"ios", "macos", "watchos"}:
         phrase_map = {
-            "ios": r"The latest version of iOS and iPadOS is\s+([0-9][0-9A-Za-z.\-]*)",
+            "ios": r"The latest version of iOS(?: and iPadOS)? is\s+([0-9][0-9A-Za-z.\-]*)",
             "macos": r"The latest version of macOS is\s+([0-9][0-9A-Za-z.\-]*)",
             "watchos": r"The latest version of watchOS is\s+([0-9][0-9A-Za-z.\-]*)",
         }
         latest_match = re.search(phrase_map[kind], html, re.I)
         latest_version = latest_match.group(1).strip().rstrip(".") if latest_match else ""
         if not latest_version:
-            return []
+            return resolve_release_candidates(extract_table_release_candidates(html, kind, url), source)
 
         latest_release_date = extract_row_release_date(html, kind, latest_version)
 
