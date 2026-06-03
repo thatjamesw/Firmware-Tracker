@@ -60,6 +60,16 @@ def is_http_404_error(exc: Exception) -> bool:
     return False
 
 
+def is_http_forbidden_reason(reason: str) -> bool:
+    return "http error 403" in str(reason or "").lower()
+
+
+def should_fail_on_source_regression(status: str, reason: str) -> bool:
+    if status == "error" and is_http_forbidden_reason(reason):
+        return False
+    return status in {"no_entries", "error", "missing_source", "guardrail_rejected"}
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Sync tracked device firmware from official vendor pages")
     parser.add_argument("--dry-run", action="store_true", help="Show changes without writing file")
@@ -608,7 +618,7 @@ def main() -> int:
         processed_results.append(result)
         if status not in {"ok", "ok_empty"}:
             skipped_devices.append(f"{device_id} ({reason})")
-        if source_type != "static" and current and status in {"no_entries", "error", "missing_source", "guardrail_rejected"}:
+        if source_type != "static" and current and should_fail_on_source_regression(status, reason):
             regressions.append(f"{device_id} ({status}: {reason})")
 
     prior_sync_status = sources_block.get("sync_status")

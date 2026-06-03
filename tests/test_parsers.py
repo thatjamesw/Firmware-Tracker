@@ -928,6 +928,34 @@ class ParserTests(unittest.TestCase):
         self.assertFalse(accepted_primary)
         self.assertTrue(accepted_fallback)
 
+    def test_strict_regression_does_not_fail_on_vendor_403(self) -> None:
+        self.assertFalse(
+            ffd.should_fail_on_source_regression(
+                "error",
+                "HTTP Error 403: Forbidden",
+            )
+        )
+
+    def test_strict_regression_still_fails_parser_regressions(self) -> None:
+        self.assertTrue(
+            ffd.should_fail_on_source_regression(
+                "no_entries",
+                "no firmware entries parsed",
+            )
+        )
+        self.assertTrue(
+            ffd.should_fail_on_source_regression(
+                "guardrail_rejected",
+                "guardrail: parser returned an older latest release date than current stored data",
+            )
+        )
+        self.assertTrue(
+            ffd.should_fail_on_source_regression(
+                "error",
+                "parser exploded",
+            )
+        )
+
     def test_dji_parser_falls_back_when_first_pdf_404s(self) -> None:
         html = """
         <li class="groups-download-item">
