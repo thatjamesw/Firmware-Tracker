@@ -1,6 +1,6 @@
 # Firmware Summary
 
-Generated (UTC): 2026-06-03T03:24:37Z
+Generated (UTC): 2026-06-03T21:31:49Z
 
 | Category | Device | Latest | Released | Age | Source | Status |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -20,4 +20,4 @@ Generated (UTC): 2026-06-03T03:24:37Z
 | Lighting | Godox AD400 II Pro | 1.21 | 2026-04-28 | 1 month | godox_listing | ok |
 | Lighting | Godox V860II (Sony) | 1.7 | 2018-10-24 | 7 years | godox_listing | ok |
 | Lighting | Godox X3Pro S | 1.03 | 2026-01-26 | 4 months | godox_listing | ok |
-| Networking | TP-Link Deco BE65 v2 | 1.3.2 | 2026-05-14 | 20 days | tplink_downloads | ok |
+| Networking | TP-Link Deco BE65 v2 | 1.3.2 | 2026-05-14 | 20 days | tplink_downloads | HTTP Error 403: Forbidden |
