@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import urllib.parse
 from typing import Any
 
 from .common import (
@@ -13,12 +14,26 @@ from .common import (
 )
 
 
+def resolve_hardware_version_url(url: str, hardware_version: str) -> str:
+    clean_hw = hardware_version.strip().lower()
+    if not clean_hw:
+        return url
+
+    parsed = urllib.parse.urlparse(url)
+    if re.search(rf"/{re.escape(clean_hw)}/?$", parsed.path, re.I):
+        return url
+
+    path = parsed.path.rstrip("/") + f"/{clean_hw}/"
+    return urllib.parse.urlunparse(parsed._replace(path=path))
+
+
 def sync_tplink_downloads(source: dict[str, Any], timeout: int) -> list[dict[str, Any]]:
     url = source["url"]
     model = str(source.get("model") or "").strip()
     hardware_version = str(source.get("hardware_version") or "").strip()
+    fetch_url = resolve_hardware_version_url(url, hardware_version)
 
-    html = fetch_bytes(url, timeout=timeout).decode("utf-8", errors="replace")
+    html = fetch_bytes(fetch_url, timeout=timeout).decode("utf-8", errors="replace")
     text = html_to_text(html)
     escaped_model = re.escape(model) if model else r"[A-Za-z0-9 ]+"
     escaped_hw = re.escape(hardware_version) if hardware_version else r"V[0-9][0-9A-Za-z.]*"
@@ -73,7 +88,7 @@ def sync_tplink_downloads(source: dict[str, Any], timeout: int) -> list[dict[str
                 note=note,
                 evidence_type="tplink_download_item",
                 evidence_text=heading,
-                source_url=url,
+                source_url=fetch_url,
                 confidence=0.9 if release_date else 0.78,
                 rank=86,
             )
