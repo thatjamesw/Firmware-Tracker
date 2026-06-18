@@ -1,13 +1,13 @@
 # Firmware Summary
 
-Generated (UTC): 2026-06-17T04:58:12Z
+Generated (UTC): 2026-06-18T12:16:37Z
 
 | Category | Device | Latest | Released | Age | Source | Status |
 | --- | --- | --- | --- | --- | --- | --- |
 | 3D Printer | Bambu Lab P1S 3D Printer | 01.10.00.00 | 2026-03-30 | 2 months | bambu_wiki | ok |
-| Apple | AirPods Pro 3 | 8B41 | 2026-06-16 | 1 day | apple_support | ok |
-| Apple | iOS | 26.5.1 | 2026-06-01 | 16 days | apple_support | ok |
-| Apple | macOS | 26.5.1 | 2026-06-01 | 16 days | apple_support | ok |
+| Apple | AirPods Pro 3 | 8B41 | 2026-06-16 | 2 days | apple_support | ok |
+| Apple | iOS | 26.5.1 | 2026-06-01 | 17 days | apple_support | ok |
+| Apple | macOS | 26.5.1 | 2026-06-01 | 17 days | apple_support | ok |
 | Apple | watchOS | 26.5 | 2026-05-11 | 1 month | apple_support | ok |
 | Cameras | Atomos Ninja V | 11.18.00 | 2025-11-01 | 7 months | atomos_support | ok |
 | Cameras | Sony 16-35 GM II | - | - | - | sony_cscs | ok |
@@ -20,4 +20,4 @@ Generated (UTC): 2026-06-17T04:58:12Z
 | Lighting | Godox AD400 II Pro | 1.21 | 2026-04-28 | 1 month | godox_listing | ok |
 | Lighting | Godox V860II (Sony) | 1.7 | 2018-10-24 | 7 years | godox_listing | ok |
 | Lighting | Godox X3Pro S | 1.03 | 2026-01-26 | 4 months | godox_listing | ok |
-| Networking | TP-Link Deco BE65 v2 | 1.3.2 | 2026-05-14 | 1 month | tplink_downloads | HTTP Error 403: Forbidden |
+| Networking | TP-Link Deco BE65 v2 | 1.3.2 | 2026-05-14 | 1 month | tplink_downloads | ok |
