@@ -398,6 +398,40 @@ class ParserTests(unittest.TestCase):
         self.assertEqual(releases[0]["evidence"]["type"], "tplink_download_item")
         self.assertIn("Build: 20250718", releases[0]["release_note"]["en"])
 
+    def test_tplink_download_parser_fetches_configured_hardware_version_page(self) -> None:
+        html = """
+        <h2>Firmware</h2>
+        Deco BE65(EU)_V2_1.3.2 Build 26040912
+        Download
+        Published Date: 2026-05-14  Language: Multi-language  File Size: 46.12 MB
+        Modifications and Bug Fixes:
+        1. Improved system stability.
+        """
+        fetched_urls: list[str] = []
+        original_fetch = tplink_source.fetch_bytes
+        try:
+            def fake_fetch(url: str, timeout: int) -> bytes:
+                fetched_urls.append(url)
+                return html.encode("utf-8")
+
+            tplink_source.fetch_bytes = fake_fetch
+            releases = ffd.sync_tplink_downloads(
+                {
+                    "type": "tplink_downloads",
+                    "url": "https://www.tp-link.com/nordic/support/download/deco-be65/#Firmware",
+                    "model": "Deco BE65",
+                    "hardware_version": "V2",
+                },
+                timeout=5,
+            )
+        finally:
+            tplink_source.fetch_bytes = original_fetch
+
+        self.assertEqual(fetched_urls, ["https://www.tp-link.com/nordic/support/download/deco-be65/v2/#Firmware"])
+        self.assertEqual(len(releases), 1)
+        self.assertEqual(releases[0]["version"], "1.3.2")
+        self.assertEqual(releases[0]["released_time"], "2026-05-14")
+
     def test_parse_iso_date_preserves_instant_for_offset_aware_inputs(self) -> None:
         parsed = ffd.parse_iso_date("2026-03-06T10:00:00+02:00")
         self.assertIsNotNone(parsed)
