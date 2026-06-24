@@ -1,13 +1,13 @@
 # Firmware Summary
 
-Generated (UTC): 2026-06-23T03:20:42Z
+Generated (UTC): 2026-06-24T03:21:05Z
 
 | Category | Device | Latest | Released | Age | Source | Status |
 | --- | --- | --- | --- | --- | --- | --- |
 | 3D Printer | Bambu Lab P1S 3D Printer | 01.10.00.00 | 2026-03-30 | 2 months | bambu_wiki | ok |
-| Apple | AirPods Pro 3 | 8B41 | 2026-06-16 | 7 days | apple_support | ok |
-| Apple | iOS | 26.5.1 | 2026-06-01 | 22 days | apple_support | ok |
-| Apple | macOS | 26.5.1 | 2026-06-01 | 22 days | apple_support | ok |
+| Apple | AirPods Pro 3 | 8B41 | 2026-06-16 | 8 days | apple_support | ok |
+| Apple | iOS | 26.5.1 | 2026-06-01 | 23 days | apple_support | ok |
+| Apple | macOS | 26.5.1 | 2026-06-01 | 23 days | apple_support | ok |
 | Apple | watchOS | 26.5 | 2026-05-11 | 1 month | apple_support | ok |
 | Cameras | Atomos Ninja V | 11.18.00 | 2025-11-01 | 7 months | atomos_support | ok |
 | Cameras | Sony 16-35 GM II | - | - | - | sony_cscs | ok |
@@ -16,7 +16,7 @@ Generated (UTC): 2026-06-23T03:20:42Z
 | Cameras | Sony 70-200 GM II | 04 | 2023-12-05 | 2 years | sony_cscs | ok |
 | Cameras | Sony A1 II | 4.00 | 2025-10-30 | 7 months | sony_cscs | ok |
 | Drones | Avata 2 | 01.00.0400 | 2024-11-06 | 1 year | dji_downloads | ok |
-| Drones | Mini 5 Pro | 01.00.0600 | 2026-04-25 | 1 month | dji_downloads | ok |
+| Drones | Mini 5 Pro | 01.00.0600 | 2026-04-25 | 2 months | dji_downloads | ok |
 | Lighting | Godox AD400 II Pro | 1.21 | 2026-04-28 | 1 month | godox_listing | ok |
 | Lighting | Godox V860II (Sony) | 1.7 | 2018-10-24 | 7 years | godox_listing | ok |
 | Lighting | Godox X3Pro S | 1.03 | 2026-01-26 | 4 months | godox_listing | ok |
