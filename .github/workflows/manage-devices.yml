@@ -1,0 +1,120 @@
+name: Manage Devices
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'What would you like to do?'
+        type: choice
+        options: [add, update, remove]
+        default: add
+        required: true
+      name:
+        description: 'Device name (required for add), e.g. Osmo Pocket 4P'
+        type: string
+      device_id:
+        description: 'Device ID (required for update/remove; generated from name for add)'
+        type: string
+      category:
+        description: 'Category title, e.g. Cameras or Drones (blank keeps existing or uses vendor default)'
+        type: string
+      source_url:
+        description: 'Official HTTPS support/download page (required for add; blank keeps existing)'
+        type: string
+      source_type:
+        description: 'Source (auto detects the vendor for add; keeps existing for update)'
+        type: choice
+        options: [auto, dji_downloads, sony_cscs, godox_listing, apple_support, atomos_support, bambu_wiki, tplink_downloads, static]
+        default: auto
+      model:
+        description: 'Optional model: Sony code, Godox listing title, TP-Link model, or exact DJI/AirPods name'
+        type: string
+      variant:
+        description: 'If needed: TP-Link V2, Bambu P1, Atomos NinjaVArticle, or Apple ios/macos/watchos/airpods'
+        type: string
+      empty_policy:
+        description: 'If no firmware is found (keep defaults to reject for new devices)'
+        type: choice
+        options: [keep, allow, reject]
+        default: keep
+      manual_version:
+        description: 'Static sources only: version or status, e.g. App-managed'
+        type: string
+      manual_note:
+        description: 'Static sources only: update instructions (one line)'
+        type: string
+      preview_only:
+        description: 'Check and preview without creating a pull request'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: device-management
+  cancel-in-progress: false
+
+jobs:
+  manage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Check and prepare device change
+        id: device
+        env:
+          DEVICE_FORM_JSON: ${{ toJSON(inputs) }}
+        run: python scripts/manage_devices.py --report device-change.json
+      - name: Show source preview
+        env:
+          REPORT_PATH: device-change.json
+        run: |
+          python - <<'PY'
+          import html, os
+          from pathlib import Path
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
+              summary.write('## Device change preview\n\n<pre>' + html.escape(Path(os.environ['REPORT_PATH']).read_text()) + '</pre>\n')
+          PY
+      - name: Generate site assets
+        run: python scripts/generate_index.py
+      - name: Validate change
+        run: |
+          python -m unittest discover -s tests -p 'test_*.py'
+          python scripts/smoke_test_frontend.py
+          node --test tests/frontend.test.js
+      - name: Create device pull request
+        if: ${{ !inputs.preview_only }}
+        id: pr
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.FW_BOT_TOKEN || github.token }}
+          branch: automation/device-${{ steps.device.outputs.device_id }}
+          commit-message: 'chore: ${{ steps.device.outputs.action }} device ${{ steps.device.outputs.device_id }}'
+          title: '${{ steps.device.outputs.action }} device: ${{ steps.device.outputs.device_id }}'
+          body: |
+            Device management request. Review the source and detected release before merging.
+
+            [Source check and preview](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+            Merging updates the tracked devices and publishes the generated site.
+          add-paths: |
+            data/devices.json
+            docs/devices/*.js
+            docs/FIRMWARE_SUMMARY.md
+      - name: Link pull request
+        if: steps.pr.outputs.pull-request-url
+        env:
+          PR_URL: ${{ steps.pr.outputs.pull-request-url }}
+        run: echo "Review the [device change pull request]($PR_URL)." >> "$GITHUB_STEP_SUMMARY"

@@ -8,6 +8,7 @@ import concurrent.futures
 import json
 import socket
 import sys
+import time
 import urllib.error
 from datetime import datetime, timezone
 from pathlib import Path
@@ -20,7 +21,10 @@ from sources import apple as apple_source
 from sources import atomos as atomos_source
 from sources import bambu as bambu_source
 from sources import tplink as tplink_source
-from sources.common import compare_versions, configure_fetch, normalize_releases, version_sort_key
+from sources.common import (
+    compare_versions, configure_fetch, device_fetch_seconds, fetch_budget,
+    fetch_metrics, normalize_releases, version_sort_key,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_FILE = ROOT / "data" / "devices.json"
@@ -80,6 +84,8 @@ def parse_args() -> argparse.Namespace:
         default=[],
         help="Device ID to emit detailed diagnostics for (can be repeated)",
     )
+    parser.add_argument("--metrics-file", type=Path, help="Write scan timing and request metrics as JSON")
+    parser.add_argument("--device-budget", type=float, default=120, help="Network budget per device across retries and fallbacks, in seconds")
     parser.add_argument("--timeout", type=int, default=30, help="HTTP timeout seconds")
     parser.add_argument("--max-workers", type=int, default=8, help="Max parallel device workers")
     parser.add_argument("--retries", type=int, default=3, help="HTTP retries per request")
@@ -246,7 +252,7 @@ def merge_release_metadata(
                 and prior.get("released_time")
             ):
                 item["released_time"] = prior["released_time"]
-            elif not item.get("released_time") and prior.get("released_time"):
+            elif not item.get("released_time") and prior.get("released_time") and item.get("date_precision") != "unknown":
                 item["released_time"] = prior["released_time"]
             note = item.get("release_note")
             prior_note = prior.get("release_note")
@@ -272,6 +278,39 @@ def merge_release_metadata(
 
 
 def process_device(
+    device_id: str,
+    device_name: str,
+    source: dict[str, Any] | None,
+    timeout: int,
+    verbose: bool = False,
+    debug_devices: set[str] | None = None,
+    budget: float = 120,
+) -> dict[str, Any]:
+    started = time.monotonic()
+    with fetch_budget(budget):
+        result = _process_device(device_id, device_name, source, timeout, verbose, debug_devices)
+        elapsed = time.monotonic() - started
+        fetch_elapsed = device_fetch_seconds()
+    result["timing"] = {
+        "total_seconds": round(elapsed, 3),
+        "fetch_seconds": round(fetch_elapsed, 3),
+        "parse_seconds": round(max(0, elapsed - fetch_elapsed), 3),
+    }
+    return result
+
+
+def prepare_release_update(
+    current: list[dict[str, Any]], incoming: list[dict[str, Any]],
+    source: dict[str, Any] | None, status: str = "ok",
+) -> tuple[bool, str, list[dict[str, Any]]]:
+    """Validate raw parser output before history can conceal a regression."""
+    if status == "ok_empty":
+        return True, "", current
+    accepted, reason = should_accept_release_update(current, incoming, source)
+    return accepted, reason, merge_release_metadata(current, incoming, source) if accepted else current
+
+
+def _process_device(
     device_id: str,
     device_name: str,
     source: dict[str, Any] | None,
@@ -541,6 +580,7 @@ def build_sync_status(results: list[dict[str, Any]], prior_sync_status: dict[str
 
 def main() -> int:
     args = parse_args()
+    scan_started = time.monotonic()
     payload = json.loads(DATA_FILE.read_text(encoding="utf-8"))
     try:
         validate_payload_schema(payload)
@@ -572,6 +612,7 @@ def main() -> int:
                     args.timeout,
                     args.verbose,
                     debug_devices,
+                    args.device_budget,
                 )
             )
 
@@ -596,24 +637,13 @@ def main() -> int:
         )
 
         if status in {"ok", "ok_empty"}:
-            releases = merge_release_metadata(current, releases, effective_source)
-            if releases != current:
-                accepted, guard_reason = should_accept_release_update(
-                    current,
-                    releases,
-                    effective_source,
-                )
-                if accepted:
-                    firmware_index[device_id] = {"releases": releases}
-                    updated_devices.append(device_id)
-                else:
-                    result["status"] = "guardrail_rejected"
-                    result["reason"] = guard_reason
-                    status = "guardrail_rejected"
-                    reason = guard_reason
-            else:
-                processed_results.append(result)
-                continue
+            accepted, guard_reason, releases = prepare_release_update(current, releases, effective_source, status)
+            if not accepted:
+                result["status"] = status = "guardrail_rejected"
+                result["reason"] = reason = guard_reason
+            elif releases != current:
+                firmware_index[device_id] = {"releases": releases}
+                updated_devices.append(device_id)
 
         processed_results.append(result)
         if status not in {"ok", "ok_empty"}:
@@ -664,6 +694,15 @@ def main() -> int:
     if should_write and not args.dry_run:
         DATA_FILE.write_text(json.dumps(payload, indent=2, ensure_ascii=True) + "\n", encoding="utf-8")
         print(f"Wrote updates to {DATA_FILE}")
+
+    metrics = {
+        "elapsed_seconds": round(time.monotonic() - scan_started, 3),
+        "fetch": fetch_metrics(),
+        "devices": {r["device_id"]: r.get("timing", {}) for r in processed_results},
+    }
+    print("Scan metrics: " + json.dumps({"elapsed_seconds": metrics["elapsed_seconds"], **metrics["fetch"]}))
+    if args.metrics_file:
+        args.metrics_file.write_text(json.dumps(metrics, indent=2) + "\n", encoding="utf-8")
 
     if regressions and args.fail_on_regression:
         print("Regressions detected and --fail-on-regression is set.", file=sys.stderr)

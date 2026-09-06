@@ -13,3 +13,8 @@ venv/
 
 # OS/editor
 .DS_Store
+
+# Browser test dependencies and output
+node_modules/
+playwright-report/
+test-results/

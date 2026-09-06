@@ -39,5 +39,23 @@ jobs:
       - name: Validate build script output generation
         run: python scripts/generate_index.py
 
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Frontend behavior tests
+        run: node --test tests/frontend.test.js
+
       - name: Frontend smoke test
         run: python scripts/smoke_test_frontend.py
+
+      - name: Install browser test dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Desktop and mobile browser tests
+        run: npm run test:browser

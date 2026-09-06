@@ -20,35 +20,7 @@
         "device_sources": {
           "type": "object",
           "additionalProperties": {
-            "type": "object",
-            "required": [
-              "type"
-            ],
-            "properties": {
-              "type": {
-                "type": "string",
-                "enum": [
-                  "dji_downloads",
-                  "sony_cscs",
-                  "godox_listing",
-                  "apple_support",
-                  "atomos_support",
-                  "bambu_wiki",
-                  "tplink_downloads",
-                  "static"
-                ]
-              },
-              "url": {
-                "type": "string"
-              },
-              "page_url": {
-                "type": "string"
-              },
-              "release": {
-                "$ref": "#/$defs/release"
-              }
-            },
-            "additionalProperties": true
+            "$ref": "#/$defs/source"
           }
         }
       },
@@ -129,6 +101,249 @@
         }
       },
       "additionalProperties": true
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "dji_downloads",
+            "sony_cscs",
+            "godox_listing",
+            "apple_support",
+            "atomos_support",
+            "bambu_wiki",
+            "tplink_downloads",
+            "static"
+          ]
+        },
+        "url": {
+          "type": "string",
+          "minLength": 1
+        },
+        "page_url": {
+          "type": "string",
+          "minLength": 1
+        },
+        "release": {
+          "$ref": "#/$defs/release"
+        },
+        "mdl": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title_contains": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "article_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "series": {
+          "type": "string",
+          "minLength": 1
+        },
+        "hardware_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "allow_empty": {
+          "type": "boolean"
+        },
+        "allow_regression": {
+          "type": "boolean"
+        },
+        "treat_404_as_empty": {
+          "type": "boolean"
+        },
+        "requires_date": {
+          "type": "boolean"
+        },
+        "fallback_source": {
+          "$ref": "#/$defs/source"
+        },
+        "fallback_sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/source"
+          }
+        }
+      },
+      "additionalProperties": true,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "dji_downloads"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "url"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "sony_cscs"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "mdl"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "godox_listing"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "url",
+              "title_contains"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "apple_support"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "url",
+              "kind"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "atomos_support"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "url",
+              "article_id"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "bambu_wiki"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "url",
+              "series"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "tplink_downloads"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "url",
+              "model",
+              "hardware_version"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "static"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "release"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "apple_support"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "ios",
+                  "macos",
+                  "watchos",
+                  "airpods"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "apple_support"
+              },
+              "kind": {
+                "const": "airpods"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "model"
+            ]
+          }
+        }
+      ]
     }
   },
   "additionalProperties": false

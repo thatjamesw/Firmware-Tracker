@@ -2,6 +2,9 @@ name: Update and Deploy Firmware Tracker
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["docs/**", "data/**", "scripts/**", "requirements.txt", ".github/workflows/update-and-deploy.yml"]
   schedule:
     # Try several early slots so the generated site is usually ready before
     # the workday in Europe/Helsinki. Avoid :00 because GitHub scheduled
@@ -105,15 +108,25 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_*.py' -v
 
       - name: Fetch tracked firmware details from official sources
-        run: |
-          python scripts/fetch_firmware_details.py --fail-on-regression || (
-            echo "First fetch attempt failed, retrying after 20s..."
-            sleep 20
-            python scripts/fetch_firmware_details.py --fail-on-regression
-          )
+        if: github.event_name != 'push'
+        run: python scripts/fetch_firmware_details.py --fail-on-regression --metrics-file scan-metrics.json
+
+      - name: Upload scan metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scan-metrics
+          path: scan-metrics.json
+          if-no-files-found: ignore
 
       - name: Generate browser assets
         run: python scripts/generate_index.py
+
+      - name: Frontend behavior tests
+        run: node --test tests/frontend.test.js
+
+      - name: Frontend smoke test
+        run: python scripts/smoke_test_frontend.py
 
       - name: Show generated changes (no repo push)
         run: |
@@ -125,6 +138,7 @@ jobs:
           fi
 
       - name: Create or Update Sync PR
+        if: github.event_name != 'push'
         id: cpr
         uses: peter-evans/create-pull-request@v8
         with:

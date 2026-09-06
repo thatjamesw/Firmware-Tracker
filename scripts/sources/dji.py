@@ -3,62 +3,44 @@ from __future__ import annotations
 import io
 import re
 import urllib.error
-from html import unescape
+import urllib.parse
 from typing import Any
 
 from pypdf import PdfReader
 
-from .common import as_iso_date, fetch_bytes, make_release_candidate, normalize_releases, normalize_space, release_from_candidate
+from .common import (
+    as_iso_date, fetch_bytes, make_release_candidate, normalize_releases,
+    normalize_space, parse_html, resolve_release_candidates,
+)
 
 
 def parse_dji_release_note_items(downloads_html: str) -> list[dict[str, str]]:
     items: list[dict[str, str]] = []
-    for block in re.findall(r'<li class="groups-download-item">(.*?)</li>', downloads_html, re.S):
-        name_match = re.search(r'<div[^>]*class="groups-item-name"[^>]*>(.*?)</div>', block, re.S)
-        href_match = re.search(r'<a[^>]+href="([^"]+)"[^>]*class="[^"]*download-file', block, re.S)
-        if not (name_match and href_match):
-            continue
-
-        name = normalize_space(unescape(re.sub(r"<[^>]+>", " ", name_match.group(1))))
-        href = unescape(href_match.group(1)).strip()
-
+    soup = parse_html(downloads_html)
+    for block in soup.select('.groups-download-item, [class*="document-item___"]'):
+        title = block.select_one('.groups-item-name, [class*="document-name___"]')
+        name = title.get_text(" ", strip=True) if title else block.get_text(" ", strip=True)
         if "release notes" not in name.lower():
             continue
-        if "/RN/" not in href or not href.lower().endswith(".pdf"):
-            continue
+        for link in block.select("a[href]"):
+            href = str(link["href"]).strip()
+            if urllib.parse.urlparse(href).path.lower().endswith(".pdf"):
+                items.append({"name": normalize_space(name), "href": href})
 
-        items.append({"name": name, "href": href})
-
+    # A filename is useful fallback evidence when vendors rename layout classes.
+    known = {item["href"] for item in items}
+    for link in soup.find_all("a", href=True):
+        href = str(link["href"])
+        filename = urllib.parse.unquote(urllib.parse.urlparse(href).path.rsplit("/", 1)[-1])
+        if href not in known and re.search(r"release[_ -]+notes.*\.pdf$", filename, re.I):
+            items.append({"name": filename[:-4].replace("_", " "), "href": href})
+            known.add(href)
     return items
 
 
 def pick_dji_release_notes_pdf(items: list[dict[str, str]], device_name: str) -> str | None:
-    if not items:
-        return None
-
-    device_norm = normalize_space(device_name).lower()
-    scored: list[tuple[int, str]] = []
-    for item in items:
-        name_norm = normalize_space(item["name"]).lower()
-        score = 0
-        if name_norm.startswith(f"dji {device_norm} - release notes"):
-            score += 100
-        elif name_norm.startswith(f"{device_norm} - release notes"):
-            score += 90
-        elif f"{device_norm}" in name_norm and "release notes" in name_norm:
-            score += 50
-
-        if any(token in name_norm for token in ["remote controller", "goggles", "motion", "rc "]):
-            score -= 40
-
-        if score > 0:
-            scored.append((score, item["href"]))
-
-    if not scored:
-        return None
-
-    scored.sort(key=lambda pair: pair[0], reverse=True)
-    return scored[0][1]
+    urls = pick_dji_release_notes_pdfs(items, device_name)
+    return urls[0] if urls else None
 
 
 def pick_dji_release_notes_pdfs(items: list[dict[str, str]], device_name: str) -> list[str]:
@@ -74,7 +56,7 @@ def pick_dji_release_notes_pdfs(items: list[dict[str, str]], device_name: str) -
             score += 100
         elif name_norm.startswith(f"{device_norm} - release notes"):
             score += 90
-        elif f"{device_norm}" in name_norm and "release notes" in name_norm:
+        elif re.search(rf"(?<!\w){re.escape(device_norm)}(?!\w)", name_norm) and "release notes" in name_norm:
             score += 50
 
         if any(token in name_norm for token in ["remote controller", "goggles", "motion", "rc "]):
@@ -102,7 +84,7 @@ def parse_dji_release_pdf(pdf_bytes: bytes, device_name: str) -> list[dict[str, 
     text = "\n".join((page.extract_text() or "") for page in reader.pages)
     text = text.replace("’", "'").replace("：", ":")
 
-    date_matches = list(re.finditer(r"Date:\s*(\d{4}[.-]\d{1,2}[.-]\d{1,2})", text))
+    date_matches = list(re.finditer(r"Date\s*:\s*(\d{4}[.-]\d{1,2}[.-]\d{1,2})", text))
     sections: list[tuple[str, str]] = []
     if date_matches:
         for idx, match in enumerate(date_matches):
@@ -117,6 +99,7 @@ def parse_dji_release_pdf(pdf_bytes: bytes, device_name: str) -> list[dict[str, 
     version_patterns = [
         rf"{device_pattern}\s+Firmware\s*:\s*[Vv]?{version_token}",
         rf"Aircraft\s+Firmware\s*:\s*[Vv]?{version_token}",
+        rf"(?m)^\s*Firmware(?:\s+Version)?\s*:\s*[Vv]?{version_token}",
     ]
 
     releases: list[dict[str, Any]] = []
@@ -134,13 +117,13 @@ def parse_dji_release_pdf(pdf_bytes: bytes, device_name: str) -> list[dict[str, 
         whats_new_match = re.search(r"What's New\s*(.*?)(?:\n\s*Notes\s*:|\Z)", section, re.I | re.S)
         if whats_new_match:
             note_block = whats_new_match.group(1)
-            lines = [normalize_space(line) for line in note_block.splitlines()]
-            bullet_lines = [line for line in lines if line.startswith("•") or line.startswith("-")]
-            note = "\n".join(bullet_lines) if bullet_lines else normalize_space(note_block)
+            # Join wrapped lines inside each bullet instead of dropping continuations.
+            bullets = re.split(r"(?m)(?=^\s*[•-]\s)", note_block)
+            note = "\n".join(normalize_space(bullet) for bullet in bullets if normalize_space(bullet))
 
-        releases.append(
-            release_from_candidate(
-                make_release_candidate(
+        releases.extend(
+            resolve_release_candidates(
+                [make_release_candidate(
                     version=version,
                     released_time=as_iso_date(raw_date),
                     note=note,
@@ -149,7 +132,8 @@ def parse_dji_release_pdf(pdf_bytes: bytes, device_name: str) -> list[dict[str, 
                     source_url="",
                     confidence=0.9,
                     rank=88,
-                )
+                )],
+                {"type": "dji_downloads"},
             )
         )
 
@@ -171,7 +155,7 @@ def sync_dji_downloads(device_name: str, source: dict[str, Any], timeout: int) -
     items = parse_dji_release_note_items(html)
     if debug:
         print(f"{debug_prefix} dji release-note items={len(items)}")
-    rn_pdfs = pick_dji_release_notes_pdfs(items, device_name)
+    rn_pdfs = pick_dji_release_notes_pdfs(items, str(source.get("model") or device_name))
     if debug:
         print(f"{debug_prefix} dji candidate pdfs={len(rn_pdfs)}")
         for idx, rn_pdf in enumerate(rn_pdfs[:5], start=1):
@@ -186,7 +170,11 @@ def sync_dji_downloads(device_name: str, source: dict[str, Any], timeout: int) -
         try:
             if debug:
                 print(f"{debug_prefix} dji fetching pdf={rn_pdf}")
+            rn_pdf = urllib.parse.urljoin(url, rn_pdf)
             pdf_bytes = fetch_bytes(rn_pdf, timeout=timeout)
+            releases = parse_dji_release_pdf(pdf_bytes, str(source.get("model") or device_name))
+            for release in releases:
+                release.setdefault("evidence", {})["source_url"] = rn_pdf
         except Exception as exc:  # noqa: BLE001
             last_exc = exc
             if debug:
@@ -196,7 +184,6 @@ def sync_dji_downloads(device_name: str, source: dict[str, Any], timeout: int) -
                 all_fetch_errors_were_404 = False
                 last_non_404_exc = exc
             continue
-        releases = parse_dji_release_pdf(pdf_bytes, device_name)
         if debug:
             print(f"{debug_prefix} dji pdf parsed releases={len(releases)}")
         if releases:

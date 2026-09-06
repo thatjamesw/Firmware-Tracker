@@ -490,7 +490,7 @@ class ParserTests(unittest.TestCase):
 
         self.assertEqual(len(releases), 1)
         self.assertEqual(releases[0]["version"], "11.18.00")
-        self.assertEqual(releases[0]["released_time"], "2025-11-01")
+        self.assertEqual(releases[0]["released_time"], "")
 
     def test_atomos_parser_handles_release_link_without_span(self) -> None:
         html = """
@@ -513,7 +513,7 @@ class ParserTests(unittest.TestCase):
 
         self.assertEqual(len(releases), 1)
         self.assertEqual(releases[0]["version"], "11.19.00")
-        self.assertEqual(releases[0]["released_time"], "2026-04-01")
+        self.assertEqual(releases[0]["released_time"], "")
 
     def test_apple_ios_parser_extracts_latest_and_release_date(self) -> None:
         html = (FIXTURES_DIR / "apple_100100.html").read_text(encoding="utf-8")

@@ -196,6 +196,7 @@ def main() -> None:
         {
             "generated_at_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "refresh_workflow_url": refresh_workflow_url,
+            "manage_devices_url": sources.get("manage_devices_url", ""),
             "device_download_pages": device_download_pages,
             "device_source_types": device_source_types,
             "source_sync_status": sync_status,
