@@ -1,7 +1,13 @@
 from __future__ import annotations
 
+import random
 import re
+import ssl
+import threading
 import time
+from concurrent.futures import Future
+from contextlib import contextmanager
+from email.utils import parsedate_to_datetime
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -9,61 +15,155 @@ from datetime import datetime, timezone
 from html import unescape
 from typing import Any
 
+from bs4 import BeautifulSoup
+
 USER_AGENT = "firmware-tracker-sync/1.0 (+https://github.com/)"
 FETCH_RETRIES = 3
 FETCH_RETRY_BACKOFF = 1.5
 
 
+# A session lasts one scan. Futures coalesce concurrent requests, including failures.
+_FETCH_LOCK = threading.Lock()
+_FETCH_CACHE: dict[str, Future] = {}
+_HOST_SLOTS: dict[str, threading.BoundedSemaphore] = {}
+_FETCH_METRICS: dict[str, float] = {}
+_LOCAL = threading.local()
+MAX_RESPONSE_BYTES = 32 * 1024 * 1024
+RETRYABLE_HTTP = {408, 429, 500, 502, 503, 504}
+
+
 def configure_fetch(retries: int, retry_backoff: float) -> None:
+    """Start a fresh scan; call before starting workers, never during a scan."""
     global FETCH_RETRIES, FETCH_RETRY_BACKOFF
     FETCH_RETRIES = max(0, int(retries))
     FETCH_RETRY_BACKOFF = max(0.1, float(retry_backoff))
+    with _FETCH_LOCK:
+        _FETCH_CACHE.clear()
+        _HOST_SLOTS.clear()
+        _FETCH_METRICS.clear()
 
 
-def fetch_bytes(url: str, timeout: int) -> bytes:
-    host = ""
+def _metric(name: str, amount: float = 1) -> None:
+    with _FETCH_LOCK:
+        _FETCH_METRICS[name] = _FETCH_METRICS.get(name, 0) + amount
+
+
+def fetch_metrics() -> dict[str, float]:
+    with _FETCH_LOCK:
+        return {**dict.fromkeys(("requests", "retries", "cache_hits", "bytes_downloaded", "network_seconds"), 0), **_FETCH_METRICS}
+
+
+@contextmanager
+def fetch_budget(seconds: float = 120):
+    """Bound network waits/retries across all fallbacks for one device."""
+    previous = getattr(_LOCAL, "deadline", None)
+    _LOCAL.deadline = time.monotonic() + seconds
+    _LOCAL.fetch_seconds = 0.0
     try:
-        parsed = urllib.parse.urlparse(url)
-        host = (parsed.hostname or "").lower()
-    except Exception:  # noqa: BLE001
-        host = ""
+        yield
+    finally:
+        _LOCAL.deadline = previous
 
+
+def device_fetch_seconds() -> float:
+    return getattr(_LOCAL, "fetch_seconds", 0.0)
+
+
+def _remaining(timeout: float) -> float:
+    deadline = getattr(_LOCAL, "deadline", None)
+    remaining = timeout if deadline is None else min(timeout, deadline - time.monotonic())
+    if remaining <= 0:
+        raise TimeoutError("Device fetch budget exhausted")
+    return remaining
+
+
+def _retry_delay(attempt: int, retry_after: str = "") -> float:
+    if retry_after:
+        try:
+            return max(0.0, float(retry_after))
+        except ValueError:
+            try:
+                return max(0.0, (parsedate_to_datetime(retry_after) - datetime.now(timezone.utc)).total_seconds())
+            except (TypeError, ValueError, OverflowError):
+                pass
+    return FETCH_RETRY_BACKOFF * (2**attempt) + random.uniform(0, FETCH_RETRY_BACKOFF)
+
+
+def _download(url: str, timeout: int) -> bytes:
+    parsed = urllib.parse.urlparse(url)
+    if parsed.scheme not in {"https", "http"} or not parsed.hostname:
+        raise ValueError("Source URL must be HTTP(S)")
+    host = parsed.hostname.lower()
+    with _FETCH_LOCK:
+        slots = _HOST_SLOTS.setdefault(host, threading.BoundedSemaphore(2))
     headers = {
         "User-Agent": USER_AGENT,
         "Accept": "text/html,application/pdf,*/*;q=0.8",
         "Accept-Language": "en-US,en;q=0.9",
     }
-    # DJI endpoints are region-routed; sending explicit region/lang cookies improves consistency in CI.
     if host == "dji.com" or host.endswith(".dji.com"):
         headers["Cookie"] = "region=GB; lang=en"
-
-    req = urllib.request.Request(
-        url,
-        headers=headers,
-    )
-    last_exc: Exception | None = None
+    req = urllib.request.Request(url, headers=headers)
     for attempt in range(FETCH_RETRIES + 1):
+        retry_after = ""
+        if not slots.acquire(timeout=_remaining(timeout)):
+            raise TimeoutError("Timed out waiting for vendor request slot")
+        started = time.monotonic()
         try:
-            with urllib.request.urlopen(req, timeout=timeout) as response:
-                return response.read()
+            _metric("requests")
+            with urllib.request.urlopen(req, timeout=_remaining(timeout)) as response:
+                data = response.read(MAX_RESPONSE_BYTES + 1)
+                _metric("bytes_downloaded", len(data))
+                if len(data) > MAX_RESPONSE_BYTES:
+                    raise ValueError("Source response exceeds 32 MiB limit")
+                _remaining(timeout)
+                return data
         except urllib.error.HTTPError as exc:
-            # 404 means the resource is absent; retrying will not help.
-            if int(exc.code) == 404:
+            retry_after = str(exc.headers.get("Retry-After", "")) if exc.headers else ""
+            exc.close()
+            if exc.code not in RETRYABLE_HTTP or attempt >= FETCH_RETRIES:
                 raise
-            last_exc = exc
-            if attempt >= FETCH_RETRIES:
-                raise
-            sleep_seconds = FETCH_RETRY_BACKOFF * (2**attempt)
-            time.sleep(sleep_seconds)
         except (urllib.error.URLError, TimeoutError) as exc:
-            last_exc = exc
-            if attempt >= FETCH_RETRIES:
+            if isinstance(getattr(exc, "reason", None), (ssl.SSLError, ValueError)) or attempt >= FETCH_RETRIES:
                 raise
-            sleep_seconds = FETCH_RETRY_BACKOFF * (2**attempt)
-            time.sleep(sleep_seconds)
-    if last_exc:
-        raise last_exc
+        finally:
+            _metric("network_seconds", time.monotonic() - started)
+            slots.release()
+        delay = _retry_delay(attempt, retry_after)
+        if delay >= _remaining(float("inf")):
+            raise TimeoutError("Retry delay exceeds remaining device fetch budget")
+        _metric("retries")
+        time.sleep(delay)
     raise RuntimeError(f"Failed to fetch URL: {url}")
+
+
+def fetch_bytes(url: str, timeout: int) -> bytes:
+    # Fragments are browser-only and must not cause duplicate downloads.
+    url = urllib.parse.urldefrag(url)[0]
+    started = time.monotonic()
+    with _FETCH_LOCK:
+        future = _FETCH_CACHE.get(url)
+        owner = future is None
+        if owner:
+            future = Future()
+            _FETCH_CACHE[url] = future
+    try:
+        if not owner:
+            _metric("cache_hits")
+            return future.result(timeout=_remaining(120))
+        try:
+            data = _download(url, timeout)
+        except Exception as exc:
+            future.set_exception(exc)
+            raise
+        future.set_result(data)
+        return data
+    finally:
+        _LOCAL.fetch_seconds = getattr(_LOCAL, "fetch_seconds", 0.0) + time.monotonic() - started
+
+
+def parse_html(value: str) -> BeautifulSoup:
+    return BeautifulSoup(value, "html.parser")
 
 
 def normalize_space(text: str) -> str:
@@ -88,7 +188,10 @@ def as_iso_date(date_text: str) -> str:
     if not match:
         return ""
     year, month, day = match.groups()
-    return f"{year}-{int(month):02d}-{int(day):02d}"
+    try:
+        return datetime(int(year), int(month), int(day)).date().isoformat()
+    except ValueError:
+        return ""
 
 
 def parse_human_date_to_iso(date_text: str) -> str:
@@ -177,6 +280,11 @@ def _candidate_contract_errors(candidate: dict[str, Any], source: dict[str, Any]
     requires_date = source.get("requires_date")
     if requires_date is None:
         requires_date = default_requires_date(source)
+    if released_time:
+        try:
+            datetime.fromisoformat(released_time)
+        except ValueError:
+            errors.append("invalid_date")
     if bool(requires_date) and not released_time:
         errors.append("missing_date")
     return errors
@@ -203,7 +311,6 @@ def default_requires_date(source: dict[str, Any]) -> bool:
         "dji_downloads",
         "sony_cscs",
         "godox_listing",
-        "atomos_support",
         "bambu_wiki",
         "tplink_downloads",
     }
@@ -268,6 +375,8 @@ def normalize_release(raw: dict[str, Any]) -> dict[str, Any]:
         "arb": raw.get("arb"),
         "active": bool(raw.get("active", False)),
     }
+    if raw.get("date_precision") == "unknown":
+        release["date_precision"] = "unknown"
     evidence = raw.get("evidence")
     if isinstance(evidence, dict):
         release["evidence"] = {

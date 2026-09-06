@@ -1,6 +1,6 @@
 # Firmware Summary
 
-Generated (UTC): 2026-09-06T07:04:17Z
+Generated (UTC): 2026-09-06T13:46:04Z
 
 | Category | Device | Latest | Released | Age | Source | Status |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -9,7 +9,8 @@ Generated (UTC): 2026-09-06T07:04:17Z
 | Apple | iOS | 26.6.1 | 2026-08-17 | 20 days | apple_support | ok |
 | Apple | macOS | 26.6.2 | 2026-08-17 | 20 days | apple_support | ok |
 | Apple | watchOS | 26.6 | 2026-07-27 | 1 month | apple_support | ok |
-| Cameras | Atomos Ninja V | 11.18.00 | 2025-11-01 | 10 months | atomos_support | ok |
+| Cameras | Atomos Ninja V | 11.18.00 | - | - | atomos_support | ok |
+| Cameras | Osmo Pocket 4P | 01.01.71.31 | 2026-09-03 | 3 days | dji_downloads | ok |
 | Cameras | Sony 16-35 GM II | - | - | - | sony_cscs | ok |
 | Cameras | Sony 24 1.4 GM | 03 | 2021-11-18 | 4 years | sony_cscs | ok |
 | Cameras | Sony 24-70 GM II | 02 | 2023-12-05 | 2 years | sony_cscs | ok |

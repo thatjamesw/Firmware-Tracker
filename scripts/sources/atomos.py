@@ -3,14 +3,9 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from .common import extract_attr, fetch_bytes, html_to_text, make_release_candidate, resolve_release_candidates
+from urllib.parse import urljoin
 
-
-def date_from_release_notes_url(url: str) -> str:
-    path_match = re.search(r"/(\d{4})/(\d{2})/", url)
-    if path_match:
-        return f"{path_match.group(1)}-{path_match.group(2)}-01"
-    return ""
+from .common import fetch_bytes, make_release_candidate, resolve_release_candidates, parse_html
 
 
 def sync_atomos_support(source: dict[str, Any], timeout: int) -> list[dict[str, Any]]:
@@ -22,24 +17,13 @@ def sync_atomos_support(source: dict[str, Any], timeout: int) -> list[dict[str, 
         return []
 
     html = fetch_bytes(url, timeout=timeout).decode("utf-8", errors="replace")
-    article_match = re.search(
-        rf'<div class="support-product-article\s*" id="{re.escape(article_id)}">(.*?)</div>\s*</div>\s*</div>\s*</div>',
-        html,
-        re.I | re.S,
-    )
-    if not article_match:
-        start_match = re.search(rf'<div class="support-product-article\s*" id="{re.escape(article_id)}">', html, re.I)
-        if not start_match:
-            return []
-        rest = html[start_match.start() :]
-        end_match = re.search(r'<div class="support-product-article\s*" id="[^"]+">', rest[1:], re.I)
-        article_html = rest if not end_match else rest[: end_match.start() + 1]
-    else:
-        article_html = article_match.group(1)
+    article = parse_html(html).find(id=article_id)
+    if article is None:
+        return []
 
     current_match = re.search(
         r"Current Firmware.*?AtomOS\s*([0-9][0-9A-Za-z.\-]+)",
-        html_to_text(article_html),
+        article.get_text(" ", strip=True),
         re.I | re.S,
     )
     version = current_match.group(1).strip() if current_match else ""
@@ -47,15 +31,13 @@ def sync_atomos_support(source: dict[str, Any], timeout: int) -> list[dict[str, 
         return []
 
     release_notes_url = ""
-    for tag_html in re.findall(r"<a\b[^>]*>.*?</a>", article_html, re.I | re.S):
-        if "release" not in html_to_text(tag_html).lower():
-            continue
-        href = extract_attr(tag_html, "href")
-        if href:
-            release_notes_url = href
+    for link in article.find_all("a", href=True):
+        if "release" in link.get_text(" ", strip=True).lower():
+            release_notes_url = urljoin(url, str(link["href"]))
             break
 
-    released_time = date_from_release_notes_url(release_notes_url) if release_notes_url else ""
+    # The upload path only identifies a month; do not fabricate a release day.
+    released_time = ""
 
     candidates = []
     note = f"Official Atomos {article_id} firmware listing."
@@ -89,4 +71,7 @@ def sync_atomos_support(source: dict[str, Any], timeout: int) -> list[dict[str, 
             )
         )
 
-    return resolve_release_candidates(candidates, source)
+    releases = resolve_release_candidates(candidates, source)
+    for release in releases:
+        release["date_precision"] = "unknown"
+    return releases

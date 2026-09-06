@@ -1,0 +1,197 @@
+{
+  "categories": {
+    "sony": {
+      "title": "Cameras",
+      "devices": {
+        "sony_a1ii": "Sony A1 II",
+        "atomos_ninja_v": "Atomos Ninja V",
+        "dell_u4025qw": "Dell U4025QW Monitor",
+        "osmo_pocket_4p": "Osmo Pocket 4P"
+      }
+    },
+    "lighting": {
+      "title": "Lighting",
+      "devices": {
+        "amaran_300c": "Amaran 300c Video Light"
+      }
+    },
+    "maker": {
+      "title": "3D Printer",
+      "devices": {
+        "bambu_p1s": "Bambu Lab P1S 3D Printer"
+      }
+    },
+    "platforms": {
+      "title": "Apple",
+      "devices": {
+        "apple_ios": "iOS"
+      }
+    }
+  },
+  "firmware_index": {
+    "sony_a1ii": {
+      "releases": [
+        {
+          "version": "4.00",
+          "released_time": "2025-10-30",
+          "release_note": {
+            "en": "Official Sony firmware page. Download: https://support.d-imaging.sony.co.jp/download/NEX/lvb4f975ad/BODYDATA.DAT?fm=jp?fm=jp&upid=&s_tc="
+          },
+          "arb": null,
+          "active": true
+        }
+      ]
+    },
+    "amaran_300c": {
+      "releases": [
+        {
+          "version": "App-managed",
+          "released_time": "2024-01-01",
+          "release_note": {
+            "en": "Firmware is delivered via Sidus Link/amaran app. Public model-specific version feed is not consistently exposed on amaran web pages."
+          },
+          "arb": null,
+          "active": true
+        }
+      ]
+    },
+    "apple_ios": {
+      "releases": [
+        {
+          "version": "26.6.1",
+          "released_time": "2026-08-17",
+          "release_note": {
+            "en": "Official Apple support latest ios version listing."
+          },
+          "arb": null,
+          "active": true
+        },
+        {
+          "version": "26.6",
+          "released_time": "2026-07-27",
+          "release_note": {
+            "en": "Official Apple support latest ios version listing."
+          },
+          "arb": null,
+          "active": true
+        }
+      ]
+    },
+    "bambu_p1s": {
+      "releases": [
+        {
+          "version": "01.10.00.00",
+          "released_time": "2026-03-30",
+          "release_note": {
+            "en": "Official Bambu Lab Wiki P1 release history. Entry: P1 series Version 01.10.00.00 (20260330)."
+          },
+          "arb": null,
+          "active": true
+        }
+      ]
+    },
+    "atomos_ninja_v": {
+      "releases": [
+        {
+          "version": "11.18.00",
+          "released_time": "",
+          "release_note": {
+            "en": "Official Atomos NinjaVArticle firmware listing. Release notes: https://www.atomos.com/wp-content/uploads/2025/11/AtomOS_11.18.00_Release_Notes.html"
+          },
+          "arb": null,
+          "active": true
+        }
+      ]
+    },
+    "osmo_pocket_4p": {
+      "releases": [
+        {
+          "version": "01.01.71.31",
+          "released_time": "2026-09-03",
+          "release_note": {
+            "en": "\u2022 Added Camera Cloud Service, supporting uploading camera files to cloud storage. The supported cloud services vary depending on country/region and mobile device type. Currently supported services include Google Drive, OneDrive, and the user's own NAS. Suppo rted services may be adjusted in future updates.\n\u2022 Added joystick support for 45\u00b0 diagonal gimbal movement.\n\u2022 Updated the D -Log to Rec.709 and D -Log to Rec.709 vivid LUT files to v2.0, improving the accuracy and consistency of color reproduction.\n\u2022 Added a D-Log 10-bit color mode for slow motion. It is recommended to use with the updated v2.0 LUT files.\n\u2022 Optimized the interaction experience and image quality in certain scenarios.\n\u2022 Fixed some known issues."
+          },
+          "arb": null,
+          "active": true
+        },
+        {
+          "version": "01.01.65.13",
+          "released_time": "2026-07-30",
+          "release_note": {
+            "en": "\u2022 Added support for HDR Enhancement in Photo mode. Play back footage on a device that supports high dynamic range display for the best viewing experience.\n\u2022 Fixed some known issues."
+          },
+          "arb": null,
+          "active": true
+        }
+      ]
+    },
+    "dell_u4025qw": {
+      "releases": [
+        {
+          "version": "Check Dell Support",
+          "released_time": "2025-10-17",
+          "release_note": {
+            "en": "Track this via the official Dell support page. Automated fetch is limited by Dell anti-bot protection from this environment."
+          },
+          "arb": null,
+          "active": true
+        }
+      ]
+    }
+  },
+  "config": {
+    "manage_devices_url": "https://github.com/thatjamesw/Firmware-Tracker/actions/workflows/manage-devices.yml",
+    "device_source_types": {
+      "sony_a1ii": "sony_cscs",
+      "amaran_300c": "static",
+      "apple_ios": "apple_support",
+      "bambu_p1s": "bambu_wiki",
+      "atomos_ninja_v": "atomos_support",
+      "osmo_pocket_4p": "dji_downloads",
+      "dell_u4025qw": "static"
+    },
+    "device_download_pages": {
+      "sony_a1ii": "https://www.sony.com/electronics/support/e-mount-body-ilce-1-series/ilce-1m2/downloads",
+      "amaran_300c": "https://help.amarancreators.com/en/firmware-update",
+      "apple_ios": "https://support.apple.com/en-us/100100",
+      "bambu_p1s": "https://bambulab.com/en/support/firmware-download/p1",
+      "atomos_ninja_v": "https://www.atomos.com/product-support/",
+      "osmo_pocket_4p": "https://www.dji.com/global/downloads/products/osmo-pocket-4p",
+      "dell_u4025qw": "https://www.dell.com/support/product-details/en-uk/product/u4025qw-monitor/drivers"
+    },
+    "source_sync_status": {
+      "last_run_utc": "2026-09-06T12:00:00Z",
+      "device_health": {
+        "sony_a1ii": {
+          "status": "ok",
+          "last_success_utc": "2026-09-06T12:00:00Z"
+        },
+        "amaran_300c": {
+          "status": "ok",
+          "last_success_utc": "2026-09-06T12:00:00Z"
+        },
+        "apple_ios": {
+          "status": "ok",
+          "last_success_utc": "2026-09-06T12:00:00Z"
+        },
+        "bambu_p1s": {
+          "status": "ok",
+          "last_success_utc": "2026-09-06T12:00:00Z"
+        },
+        "atomos_ninja_v": {
+          "status": "ok",
+          "last_success_utc": "2026-09-06T12:00:00Z"
+        },
+        "osmo_pocket_4p": {
+          "status": "ok",
+          "last_success_utc": "2026-09-06T12:00:00Z"
+        },
+        "dell_u4025qw": {
+          "status": "ok",
+          "last_success_utc": "2026-09-06T12:00:00Z"
+        }
+      },
+      "issues": []
+    }
+  }
+}

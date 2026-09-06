@@ -50,6 +50,7 @@ def check_index_script_refs(html: str) -> None:
         "devices/categories.js",
         "devices/index.js",
         "devices/config.js",
+        "app.js",
     }
     missing = required - script_refs
     if missing:
@@ -62,6 +63,7 @@ def main() -> int:
     firmware_js = read_text(FIRMWARE_JS)
     config_js = read_text(CONFIG_JS)
 
+    read_text(DOCS_DIR / "app.js")
     check_index_script_refs(html)
 
     categories = extract_const_json(categories_js, "CATEGORIES")

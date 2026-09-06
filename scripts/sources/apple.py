@@ -9,10 +9,10 @@ from .common import (
     make_release_candidate,
     parse_human_date_to_iso,
     resolve_release_candidates,
+    parse_html,
 )
 
 
-ROW_RE = re.compile(r"<tr[^>]*>.*?</tr>", re.I | re.S)
 DATE_RE = re.compile(r"\b([0-9]{1,2}\s+[A-Za-z]{3,9}\s+[0-9]{4})\b")
 
 
@@ -27,12 +27,11 @@ def extract_row_release_date(html: str, kind: str, latest_version: str) -> str:
     if token_pattern is None:
         return ""
 
-    searchable_blocks = ROW_RE.findall(html)
-    if not searchable_blocks:
-        searchable_blocks = re.findall(r"<li[^>]*>.*?</li>|<p[^>]*>.*?</p>", html, re.I | re.S)
+    soup = parse_html(html)
+    searchable_blocks = soup.find_all("tr") or soup.find_all(["li", "p"])
 
-    for block_html in searchable_blocks:
-        row_text = html_to_text(block_html)
+    for block in searchable_blocks:
+        row_text = block.get_text(" ", strip=True)
         if not token_pattern.search(row_text):
             continue
         date_match = DATE_RE.search(row_text)
@@ -55,8 +54,8 @@ def extract_table_release_candidates(html: str, kind: str, source_url: str) -> l
         return []
 
     candidates: list[dict[str, Any]] = []
-    for row_html in ROW_RE.findall(html):
-        row_text = html_to_text(row_html)
+    for row in parse_html(html).find_all("tr"):
+        row_text = row.get_text(" ", strip=True)
         version_match = version_pattern.search(row_text)
         if not version_match:
             continue
@@ -91,7 +90,7 @@ def sync_apple_support(source: dict[str, Any], timeout: int) -> list[dict[str, A
             "macos": r"The latest version of macOS is\s+([0-9][0-9A-Za-z.\-]*)",
             "watchos": r"The latest version of watchOS is\s+([0-9][0-9A-Za-z.\-]*)",
         }
-        latest_match = re.search(phrase_map[kind], html, re.I)
+        latest_match = re.search(phrase_map[kind], parse_html(html).get_text(" ", strip=True), re.I)
         latest_version = latest_match.group(1).strip().rstrip(".") if latest_match else ""
         if not latest_version:
             return resolve_release_candidates(extract_table_release_candidates(html, kind, url), source)

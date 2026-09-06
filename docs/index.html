@@ -7,7 +7,7 @@
   <link rel="icon" href="favicon.ico" sizes="any" />
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="manifest" href="site.webmanifest" />
   <link rel="stylesheet" href="styles.css" />
 </head>
@@ -15,512 +15,73 @@
   <main class="shell">
     <header class="masthead" aria-label="Tracker overview">
       <h1>Firmware Tracker</h1>
+      <a id="manage-devices" class="ghost" hidden>Manage devices on GitHub <span aria-hidden="true">↗</span></a>
     </header>
 
-    <section class="firmware-status" id="firmware-status" aria-label="Firmware update status">
+    <section class="firmware-status" id="firmware-status" aria-label="Unseen release status">
       <div>
-        <span class="section-label">Firmware Status</span>
-        <strong id="firmware-status-title">No new firmware</strong>
-        <p id="firmware-status-detail" hidden></p>
-        <span class="firmware-status-meta" id="firmware-status-meta">Last generated: unknown</span>
+        <span class="section-label">Your firmware watchlist</span>
+        <strong id="firmware-status-title" role="status">No unseen releases</strong>
+        <p id="firmware-status-detail">Compared with what you’ve seen in this browser. Installed versions aren’t tracked.</p>
+        <span class="firmware-status-meta" id="firmware-status-meta">Sources checked: unknown</span>
       </div>
       <div class="updates-actions" id="firmware-status-actions" hidden>
-        <button class="primary" id="mark-updates-seen">Mark as Seen</button>
+        <button class="primary" id="mark-updates-seen">Mark all as seen</button>
       </div>
     </section>
 
-    <section class="tracker-surface">
+    <section class="tracker-surface" aria-label="Devices">
       <div class="source-banner" id="source-banner">
         <div id="source-banner-text"></div>
-        <div class="updates-actions">
-          <button class="ghost" id="hide-source-banner">Hide</button>
+        <button class="ghost" id="hide-source-banner">Hide</button>
+      </div>
+      <div class="toolbar" role="search" aria-label="Find devices">
+        <label class="search-field">Search devices
+          <input type="search" id="device-search" placeholder="Search by name or category" autocomplete="off" />
+        </label>
+        <div class="control"><label for="category-filter">Category</label>
+          <select id="category-filter"><option value="">All categories</option></select>
+        </div>
+        <label class="check-filter"><input type="checkbox" id="unseen-filter" /> Unseen releases only</label>
+        <div class="control"><label for="sort-order">Sort by</label>
+          <select id="sort-order">
+            <option value="category:asc">Category · A–Z</option>
+            <option value="category:desc">Category · Z–A</option>
+            <option value="name:asc">Device · A–Z</option>
+            <option value="name:desc">Device · Z–A</option>
+            <option value="version:desc">Version · highest first</option>
+            <option value="version:asc">Version · lowest first</option>
+            <option value="date:desc">Release · newest first</option>
+            <option value="date:asc">Release · oldest first</option>
+            <option value="age:asc">Age · youngest first</option>
+            <option value="age:desc">Age · oldest first</option>
+          </select>
         </div>
       </div>
+      <div class="results-summary">
+        <span id="result-count" role="status" aria-atomic="true"></span>
+        <button class="text-button" id="clear-filters" hidden>Clear filters</button>
+      </div>
       <div class="table-wrap" id="table-container"></div>
+      <div id="empty-results" class="empty-results" hidden>
+        <h2>No matching devices</h2>
+        <p>Try another search or clear the filters.</p>
+      </div>
     </section>
+    <noscript><p>Enable JavaScript to browse this tracker, or read the <a href="FIRMWARE_SUMMARY.md">firmware summary</a>.</p></noscript>
   </main>
 
-  <div class="modal" id="modal">
-    <div class="modal-body">
-      <div class="modal-header">
-        <h3 id="modal-title">Firmware Versions</h3>
-        <button class="ghost" id="close-modal">Close</button>
-      </div>
-      <div class="modal-content" id="modal-content"></div>
+  <dialog class="modal" id="modal" aria-labelledby="modal-title">
+    <div class="modal-header">
+      <div><span class="section-label">Release history</span><h2 id="modal-title">Device</h2></div>
+      <button class="ghost" id="close-modal" autofocus>Close</button>
     </div>
-  </div>
+    <div class="modal-content" id="modal-content"></div>
+  </dialog>
 
   <script src="devices/categories.js"></script>
   <script src="devices/index.js"></script>
   <script src="devices/config.js"></script>
-  <script>
-    const SEEN_VERSIONS_KEY = "firmware_tracker_seen_versions_v1";
-    const SEEN_SOURCE_ISSUES_KEY = "firmware_tracker_seen_source_issues_v1";
-
-    function loadSeenVersions() {
-      try {
-        const raw = localStorage.getItem(SEEN_VERSIONS_KEY);
-        if (!raw) return {};
-        const parsed = JSON.parse(raw);
-        return parsed && typeof parsed === "object" ? parsed : {};
-      } catch (_err) {
-        return {};
-      }
-    }
-
-    function saveSeenVersions(versionsByDevice) {
-      try {
-        localStorage.setItem(SEEN_VERSIONS_KEY, JSON.stringify(versionsByDevice));
-      } catch (_err) {
-        // Ignore localStorage errors.
-      }
-    }
-
-    function loadSeenSourceIssuesSignature() {
-      try {
-        return localStorage.getItem(SEEN_SOURCE_ISSUES_KEY) || "";
-      } catch (_err) {
-        return "";
-      }
-    }
-
-    function saveSeenSourceIssuesSignature(signature) {
-      try {
-        localStorage.setItem(SEEN_SOURCE_ISSUES_KEY, signature);
-      } catch (_err) {
-        // Ignore localStorage errors.
-      }
-    }
-
-    function ageInDays(dateText) {
-      if (!dateText) return null;
-      const parsed = new Date(dateText + "T00:00:00Z").getTime();
-      if (Number.isNaN(parsed)) return null;
-      const ms = Date.now() - parsed;
-      return Math.floor(ms / (1000 * 60 * 60 * 24));
-    }
-
-    function formatAge(days) {
-      if (days === null || Number.isNaN(days)) return "unknown";
-      if (days <= 0) return "today";
-      if (days === 1) return "1 day";
-      if (days < 30) return `${days} days`;
-      const months = Math.floor(days / 30);
-      if (months < 12) return `${months} month${months === 1 ? "" : "s"}`;
-      const years = Math.floor(days / 365);
-      return `${years} year${years === 1 ? "" : "s"}`;
-    }
-
-    const UTC_TO_LOCAL_FORMATTER = (() => {
-      try {
-        return new Intl.DateTimeFormat(undefined, {
-          dateStyle: "medium",
-          timeStyle: "short",
-          timeZoneName: "short"
-        });
-      } catch (_err) {
-        return new Intl.DateTimeFormat(undefined, {
-          dateStyle: "medium",
-          timeStyle: "short"
-        });
-      }
-    })();
-
-    function formatUtcAsLocalDateTime(utcIsoText) {
-      if (!utcIsoText) return "";
-      const parsed = new Date(utcIsoText);
-      if (Number.isNaN(parsed.getTime())) return "";
-      return UTC_TO_LOCAL_FORMATTER.format(parsed);
-    }
-
-    function escapeHtml(value) {
-      return String(value ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;");
-    }
-
-    function versionSortKey(version) {
-      const clean = String(version || "").trim().replace(/^v/i, "");
-      const parts = clean.match(/\d+|[A-Za-z]+/g) || [];
-      return parts.map((part) => /^\d+$/.test(part) ? [1, Number(part)] : [0, part.toLowerCase()]);
-    }
-
-    function compareVersionKeys(left, right) {
-      const length = Math.max(left.length, right.length);
-      for (let idx = 0; idx < length; idx += 1) {
-        const a = left[idx] || [0, ""];
-        const b = right[idx] || [0, ""];
-        if (a[0] !== b[0]) return a[0] - b[0];
-        if (a[1] < b[1]) return -1;
-        if (a[1] > b[1]) return 1;
-      }
-      return 0;
-    }
-
-    function getLatestActiveRelease(releases) {
-      const active = releases.filter((r) => r.active === true);
-      if (!active.length) return null;
-      return [...active].sort(compareReleasesDesc)[0];
-    }
-
-    function compareReleasesDesc(a, b) {
-      const versionCompare = compareVersionKeys(versionSortKey(a.version), versionSortKey(b.version));
-      if (versionCompare !== 0) return -versionCompare;
-      const at = a.released_time ? new Date(a.released_time).getTime() : -1;
-      const bt = b.released_time ? new Date(b.released_time).getTime() : -1;
-      return bt - at;
-    }
-
-    function getAllRows() {
-      const rows = [];
-      for (const [categoryId, category] of Object.entries(CATEGORIES)) {
-        for (const [deviceId, deviceName] of Object.entries(category.devices)) {
-          const sourceType =
-            (TRACKER_CONFIG &&
-              TRACKER_CONFIG.device_source_types &&
-              TRACKER_CONFIG.device_source_types[deviceId]) ||
-            "";
-          if (sourceType === "static") continue;
-          const data = FIRMWARE_INDEX[deviceId];
-          const releases = data && Array.isArray(data.releases) ? data.releases : [];
-          const latest = releases.length ? getLatestActiveRelease(releases) : null;
-          rows.push({
-            categoryId,
-            category: category.title,
-            deviceId,
-            deviceName,
-            releases,
-            latest,
-            age: latest ? ageInDays(latest.released_time) : null
-          });
-        }
-      }
-      return rows;
-    }
-
-    function buildVersionSnapshot(rows) {
-      const snapshot = {};
-      for (const row of rows) {
-        if (!row.latest) continue;
-        snapshot[row.deviceId] = row.latest.version;
-      }
-      return snapshot;
-    }
-
-    function detectNewFirmware(rows) {
-      const current = buildVersionSnapshot(rows);
-      const seen = loadSeenVersions();
-      const seenKeys = Object.keys(seen);
-
-      if (!seenKeys.length) {
-        saveSeenVersions(current);
-        return { newDeviceIds: new Set(), current, hasBaseline: false };
-      }
-
-      const newDeviceIds = new Set();
-      for (const row of rows) {
-        if (!row.latest) continue;
-        if (seen[row.deviceId] && seen[row.deviceId] !== row.latest.version) {
-          newDeviceIds.add(row.deviceId);
-        }
-      }
-
-      return { newDeviceIds, current, hasBaseline: true };
-    }
-
-    function updateFirmwareStatus(rows, newDeviceIds) {
-      const statusEl = document.getElementById("firmware-status");
-      const titleEl = document.getElementById("firmware-status-title");
-      const detailEl = document.getElementById("firmware-status-detail");
-      const actionsEl = document.getElementById("firmware-status-actions");
-      if (!statusEl || !titleEl || !detailEl || !actionsEl) return;
-
-      const newCount = newDeviceIds && newDeviceIds.size ? newDeviceIds.size : 0;
-      statusEl.classList.toggle("has-updates", newCount > 0);
-      actionsEl.hidden = newCount === 0;
-
-      if (!newCount) {
-        titleEl.textContent = "No new firmware";
-        detailEl.textContent = "";
-        detailEl.hidden = true;
-        return;
-      }
-
-      const changedDevices = rows
-        .filter((row) => newDeviceIds.has(row.deviceId))
-        .map((row) => row.deviceName);
-      const preview = changedDevices.slice(0, 4).join(", ");
-      const extraCount = changedDevices.length - Math.min(changedDevices.length, 4);
-      titleEl.textContent = newCount === 1 ? "1 new firmware update" : `${newCount} new firmware updates`;
-      detailEl.textContent = extraCount > 0
-        ? `${preview}, +${extraCount} more.`
-        : preview;
-      detailEl.hidden = false;
-    }
-
-    function initFirmwareStatus(rows, newDeviceIds, currentSnapshot) {
-      const markSeenBtn = document.getElementById("mark-updates-seen");
-      updateFirmwareStatus(rows, newDeviceIds);
-
-      if (!markSeenBtn) return;
-      markSeenBtn.addEventListener("click", () => {
-        saveSeenVersions(currentSnapshot);
-        updateFirmwareStatus(rows, new Set());
-        renderTable(new Set());
-      });
-    }
-
-    function getDeviceDownloadPage(deviceId) {
-      if (!TRACKER_CONFIG || !TRACKER_CONFIG.device_download_pages) return "";
-      return TRACKER_CONFIG.device_download_pages[deviceId] || "";
-    }
-
-    function renderModal(deviceId, deviceName, releases) {
-      const title = document.getElementById("modal-title");
-      const content = document.getElementById("modal-content");
-      const modal = document.getElementById("modal");
-      const pageUrl = getDeviceDownloadPage(deviceId);
-      title.textContent = `${deviceName} firmware history`;
-      content.innerHTML = "";
-
-      const sorted = [...releases].sort(compareReleasesDesc);
-
-      if (!sorted.length) {
-        const item = document.createElement("div");
-        item.className = "release-item";
-        item.innerHTML = `
-          <div class="release-title">No published firmware yet</div>
-          <div>This device is tracked, but no release entry is currently published in the configured source.</div>
-          ${pageUrl ? `<a class="release-link" href="${escapeHtml(pageUrl)}" target="_blank" rel="noopener noreferrer">Open official download page</a>` : ""}
-        `;
-        content.appendChild(item);
-      }
-
-      for (const rel of sorted) {
-        const item = document.createElement("div");
-        item.className = "release-item";
-        item.innerHTML = `
-          <div class="release-title">${escapeHtml(rel.version)} <span class="badge ${rel.active ? "" : "old"}">${rel.active ? "active" : "inactive"}</span></div>
-          <div><strong>Released:</strong> ${escapeHtml(rel.released_time || "unknown")}</div>
-          <div><strong>ARB:</strong> ${escapeHtml(rel.arb ?? "N/A")}</div>
-          <div style="margin-top:0.4rem">${escapeHtml((rel.release_note && rel.release_note.en) || "No release notes.")}</div>
-          ${pageUrl ? `<a class="release-link" href="${escapeHtml(pageUrl)}" target="_blank" rel="noopener noreferrer">Open official download page</a>` : ""}
-        `;
-        content.appendChild(item);
-      }
-
-      modal.classList.add("active");
-    }
-
-    function renderTable(newDeviceIds) {
-      const container = document.getElementById("table-container");
-      const table = document.createElement("table");
-      const thead = document.createElement("thead");
-      const tbody = document.createElement("tbody");
-      const categoryOrder = {
-        sony: 0,
-        "consumer-drones": 1,
-        lighting: 2
-      };
-
-      const headers = [
-        ["Category", "category"],
-        ["Device", "name"],
-        ["Latest", "version"],
-        ["Released", "date"],
-        ["Age", "age"],
-        ["History", null]
-      ];
-
-      let rows = getAllRows();
-      let sortKey = "category";
-      let sortDir = "asc";
-
-      function sortRows() {
-        rows.sort((a, b) => {
-          let av;
-          let bv;
-          if (sortKey === "category") {
-            av = categoryOrder[a.categoryId] ?? 99;
-            bv = categoryOrder[b.categoryId] ?? 99;
-            if (av === bv) {
-              av = a.category.toLowerCase();
-              bv = b.category.toLowerCase();
-            }
-          }
-          if (sortKey === "name") { av = a.deviceName.toLowerCase(); bv = b.deviceName.toLowerCase(); }
-          if (sortKey === "version") {
-            const versionCompare = compareVersionKeys(
-              versionSortKey(a.latest ? a.latest.version : ""),
-              versionSortKey(b.latest ? b.latest.version : "")
-            );
-            if (versionCompare !== 0) return sortDir === "asc" ? versionCompare : -versionCompare;
-            av = a.latest ? new Date(a.latest.released_time).getTime() : -1;
-            bv = b.latest ? new Date(b.latest.released_time).getTime() : -1;
-          }
-          if (sortKey === "date") { av = a.latest ? new Date(a.latest.released_time).getTime() : -1; bv = b.latest ? new Date(b.latest.released_time).getTime() : -1; }
-          if (sortKey === "age") { av = a.age ?? 999999; bv = b.age ?? 999999; }
-          if (av < bv) return sortDir === "asc" ? -1 : 1;
-          if (av > bv) return sortDir === "asc" ? 1 : -1;
-          return 0;
-        });
-      }
-
-      function renderBody() {
-        tbody.innerHTML = "";
-        for (const r of rows) {
-          const tr = document.createElement("tr");
-          const isNew = newDeviceIds && newDeviceIds.has(r.deviceId);
-          if (isNew) tr.classList.add("row-new");
-          const ageClass = r.age !== null && r.age > 730 ? "badge old" : "badge";
-          const latestText = r.latest ? r.latest.version : "—";
-          const releasedText = r.latest ? r.latest.released_time : "—";
-          const ageText = r.age !== null ? formatAge(r.age) : "—";
-          tr.innerHTML = `
-            <td data-label="Category">${escapeHtml(r.category)}</td>
-            <td data-label="Device"><span class="device-name">${escapeHtml(r.deviceName)}</span></td>
-            <td data-label="Latest"><span class="latest-version">${escapeHtml(latestText)}</span>${isNew ? ' <span class="badge new">new</span>' : ""}</td>
-            <td data-label="Released">${escapeHtml(releasedText)}</td>
-            <td data-label="Age"><span class="${ageClass}">${ageText}</span></td>
-            <td data-label="History"><button class="ghost">View All (${r.releases.length})</button></td>
-          `;
-          tr.querySelector("button").addEventListener("click", () => renderModal(r.deviceId, r.deviceName, r.releases));
-          tbody.appendChild(tr);
-        }
-      }
-
-      const hr = document.createElement("tr");
-      for (const [title, key] of headers) {
-        const th = document.createElement("th");
-        th.textContent = title;
-        if (key) {
-          th.addEventListener("click", () => {
-            if (sortKey === key) sortDir = sortDir === "asc" ? "desc" : "asc";
-            else { sortKey = key; sortDir = "asc"; }
-            sortRows();
-            renderBody();
-          });
-        }
-        hr.appendChild(th);
-      }
-
-      thead.appendChild(hr);
-      sortRows();
-      renderBody();
-      table.appendChild(thead);
-      table.appendChild(tbody);
-      container.innerHTML = "";
-      container.appendChild(table);
-    }
-
-    function initGeneratedAtStatus() {
-      const meta = document.getElementById("firmware-status-meta");
-      if (!meta) return;
-      if (TRACKER_CONFIG && TRACKER_CONFIG.generated_at_utc) {
-        const utcText = TRACKER_CONFIG.generated_at_utc;
-        const localText = formatUtcAsLocalDateTime(utcText);
-        if (localText) {
-          meta.textContent = `Last generated (local): ${localText}`;
-          meta.title = `UTC: ${utcText}`;
-        } else {
-          meta.textContent = `Last generated (UTC): ${utcText}`;
-          meta.title = "";
-        }
-      } else {
-        meta.textContent = "Last generated: unknown";
-        meta.title = "";
-      }
-    }
-
-    function getDeviceNameById(deviceId) {
-      for (const category of Object.values(CATEGORIES || {})) {
-        if (category && category.devices && category.devices[deviceId]) {
-          return category.devices[deviceId];
-        }
-      }
-      return deviceId;
-    }
-
-    function getSourceIssueSignature(issues) {
-      if (!Array.isArray(issues) || !issues.length) return "";
-      const normalized = issues
-        .map((item) => ({
-          vendor: String(item.vendor || "").toLowerCase(),
-          device_id: String(item.device_id || "").toLowerCase(),
-          status: String(item.status || "").toLowerCase(),
-          reason: String(item.reason || "").toLowerCase()
-        }))
-        .sort((a, b) => {
-          const ak = `${a.vendor}|${a.device_id}|${a.status}|${a.reason}`;
-          const bk = `${b.vendor}|${b.device_id}|${b.status}|${b.reason}`;
-          return ak < bk ? -1 : ak > bk ? 1 : 0;
-        });
-      return JSON.stringify(normalized);
-    }
-
-    function initSourceBanner() {
-      const banner = document.getElementById("source-banner");
-      const text = document.getElementById("source-banner-text");
-      const hideBtn = document.getElementById("hide-source-banner");
-      const status = (TRACKER_CONFIG && TRACKER_CONFIG.source_sync_status) || {};
-      const issues = Array.isArray(status.issues) ? status.issues : [];
-
-      if (!issues.length) {
-        banner.classList.remove("active");
-        return;
-      }
-      const issueSignature = getSourceIssueSignature(issues);
-      const seenSignature = loadSeenSourceIssuesSignature();
-      if (issueSignature && seenSignature === issueSignature) {
-        banner.classList.remove("active");
-        return;
-      }
-
-      const previewItems = issues.slice(0, 3).map((item) => {
-        const vendor = (item.vendor || "source").toUpperCase();
-        const deviceName = getDeviceNameById(item.device_id || "");
-        const reason = item.reason || item.status || "issue detected";
-        const streak = Number(item.streak_days || 0);
-        const streakText = streak > 1 ? ` (${streak} runs)` : "";
-        return `${vendor} / ${deviceName}: ${reason}${streakText}`;
-      });
-      const previewText = previewItems.join(" | ");
-      const moreCount = issues.length - previewItems.length;
-      const runText = status.last_run_utc ? ` Last check: ${status.last_run_utc}.` : "";
-      const moreText = moreCount > 0 ? ` +${moreCount} more.` : "";
-      const maxStreak = Number(status.max_issue_streak_days || 0);
-      const prefix = maxStreak >= 3
-        ? "Persistent source issues detected (3+ runs)"
-        : "Source issues detected";
-      text.textContent = `${prefix}: ${previewText}.${moreText}${runText} Existing data is still shown.`;
-      banner.classList.add("active");
-
-      hideBtn.addEventListener("click", () => {
-        if (issueSignature) saveSeenSourceIssuesSignature(issueSignature);
-        banner.classList.remove("active");
-      });
-    }
-
-    document.getElementById("close-modal").addEventListener("click", () => {
-      document.getElementById("modal").classList.remove("active");
-    });
-
-    document.getElementById("modal").addEventListener("click", (e) => {
-      if (e.target.id === "modal") document.getElementById("modal").classList.remove("active");
-    });
-
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") document.getElementById("modal").classList.remove("active");
-    });
-
-    const rows = getAllRows();
-    const detection = detectNewFirmware(rows);
-    initFirmwareStatus(rows, detection.newDeviceIds, detection.current);
-    initSourceBanner();
-    initGeneratedAtStatus();
-    renderTable(detection.newDeviceIds);
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
