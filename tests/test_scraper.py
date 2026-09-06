@@ -38,6 +38,32 @@ class FetchTests(unittest.TestCase):
             self.assertEqual(request.call_count, 1)
             self.assertEqual(common.fetch_metrics()['cache_hits'], 2)
 
+    def test_shared_download_wait_respects_timeout_and_device_budget(self):
+        for timeout, budget in [(0.03, 5), (5, 0.03)]:
+            with self.subTest(timeout=timeout, budget=budget):
+                common.configure_fetch(2, 0.1)
+                entered, release = threading.Event(), threading.Event()
+
+                def download(*args):
+                    entered.set()
+                    release.wait(2)
+                    return b'page'
+
+                with patch.object(common, '_download', side_effect=download) as request:
+                    with ThreadPoolExecutor(1) as pool:
+                        owner = pool.submit(common.fetch_bytes, 'https://example.com/shared', 5)
+                        try:
+                            self.assertTrue(entered.wait(2))
+                            with common.fetch_budget(budget), self.assertRaises(TimeoutError):
+                                common.fetch_bytes('https://example.com/shared', timeout)
+                            self.assertFalse(owner.done())
+                        finally:
+                            release.set()
+                        self.assertEqual(owner.result(timeout=2), b'page')
+                    # A waiter's timeout must not cancel or poison the shared result.
+                    self.assertEqual(common.fetch_bytes('https://example.com/shared', 5), b'page')
+                    self.assertEqual(request.call_count, 1)
+
     def test_permanent_http_errors_are_not_retried_and_failures_are_shared(self):
         for code in (400, 401, 403, 404, 410):
             with self.subTest(code=code):

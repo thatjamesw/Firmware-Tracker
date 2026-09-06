@@ -253,7 +253,7 @@ function sourceFreshness(deviceId, now = Date.now()) {
   const lastSuccess = health?.last_success_utc || "";
   const timestamp = Date.parse(lastSuccess);
   const stale = !Number.isFinite(timestamp) || now - timestamp > STALE_AFTER_MS;
-  const issue = health && !["ok", "ok_empty", "transient_error"].includes(health.status);
+  const issue = health && !["ok", "ok_empty"].includes(health.status);
   const checked = formatUtcAsLocalDateTime(lastSuccess);
   return {
     warning: stale || Boolean(issue),

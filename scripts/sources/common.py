@@ -150,7 +150,7 @@ def fetch_bytes(url: str, timeout: int) -> bytes:
     try:
         if not owner:
             _metric("cache_hits")
-            return future.result(timeout=_remaining(120))
+            return future.result(timeout=_remaining(timeout))
         try:
             data = _download(url, timeout)
         except Exception as exc:

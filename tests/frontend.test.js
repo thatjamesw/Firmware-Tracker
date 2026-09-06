@@ -60,6 +60,21 @@ test('no successful source check is explicitly unknown', () => {
   assert.equal(freshness.label, 'Not checked yet');
 });
 
+test('recent source failures warn per device while successful checks remain clear', () => {
+  const ctx = app();
+  const now = Date.parse('2026-09-06T12:00:00Z');
+  for (const status of ['ok', 'ok_empty', 'transient_error', 'error']) {
+    ctx.TRACKER_CONFIG.source_sync_status = {device_health: {
+      camera: {status, last_success_utc: '2026-09-06T11:00:00Z'}
+    }};
+    const freshness = ctx.sourceFreshness('camera', now);
+    const failed = !['ok', 'ok_empty'].includes(status);
+    assert.equal(freshness.warning, failed, status);
+    assert.equal(freshness.label, failed ? 'Source issue' : '', status);
+    assert.equal(freshness.detail.includes('Latest check failed; stored data is shown.'), failed, status);
+  }
+});
+
 test('release notes are escaped and empty metadata omitted', () => {
   const markup = app().releaseMarkup({version:'1.0', active:true, release_note:{en:'<script>alert(1)</script>'}, arb:null});
   assert.ok(markup.includes('&lt;script&gt;'));
