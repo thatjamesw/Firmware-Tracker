@@ -4,6 +4,7 @@ import re
 from typing import Any
 
 from urllib.parse import urljoin
+from urllib.error import HTTPError
 
 from .common import fetch_bytes, make_release_candidate, resolve_release_candidates, parse_html
 
@@ -16,7 +17,15 @@ def sync_atomos_support(source: dict[str, Any], timeout: int) -> list[dict[str, 
     if not isinstance(article_id, str) or not article_id:
         return []
 
-    html = fetch_bytes(url, timeout=timeout).decode("utf-8", errors="replace")
+    try:
+        html = fetch_bytes(url, timeout=timeout).decode("utf-8", errors="replace")
+    except HTTPError as exc:
+        if exc.code == 403:
+            raise RuntimeError(
+                "Atomos blocked automated firmware checks (HTTP 403). "
+                "Last known firmware is retained; check the official download page manually."
+            ) from exc
+        raise
     article = parse_html(html).find(id=article_id)
     if article is None:
         return []

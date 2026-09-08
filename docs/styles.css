@@ -9,6 +9,8 @@
   --warning: #805012;
 }
 * { box-sizing: border-box; }
+/* Keep centered content fixed when filtering removes the vertical scrollbar. */
+html { scrollbar-gutter: stable; }
 [hidden] { display: none !important; }
 body {
   margin: 0;

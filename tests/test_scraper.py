@@ -163,6 +163,21 @@ class RobustParserTests(unittest.TestCase):
         self.assertEqual(releases[0]['version'], '11.19.00')
         self.assertEqual(releases[0]['released_time'], '')
 
+    def test_atomos_access_denied_explains_the_source_failure(self):
+        url = 'https://www.atomos.com/product-support/'
+        error = urllib.error.HTTPError(url, 403, 'Forbidden', {}, None)
+        with patch.object(atomos, 'fetch_bytes', side_effect=error):
+            with self.assertRaisesRegex(RuntimeError, 'blocked automated firmware checks.*403'):
+                atomos.sync_atomos_support({'url': url}, 5)
+
+    def test_atomos_other_http_errors_are_preserved(self):
+        url = 'https://www.atomos.com/product-support/'
+        error = urllib.error.HTTPError(url, 503, 'Unavailable', {}, None)
+        with patch.object(atomos, 'fetch_bytes', side_effect=error):
+            with self.assertRaises(urllib.error.HTTPError) as caught:
+                atomos.sync_atomos_support({'url': url}, 5)
+        self.assertEqual(caught.exception.code, 503)
+
     def test_invalid_calendar_dates_rejected(self):
         for value in ('2026-02-30', '2026-13-01', '2025-02-29'):
             self.assertEqual(common.as_iso_date(value), '')
