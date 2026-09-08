@@ -105,6 +105,22 @@ test('mark one device seen preserves filters and other unseen releases', async (
   await expect(page.getByRole('heading', {name:'No matching devices'})).toBeVisible();
 });
 
+test('unseen filtering keeps the page horizontally aligned', async ({page}) => {
+  await seedUnseen(page);
+  await page.goto('/');
+  const positions = () => page.locator('.shell, .masthead, .toolbar').evaluateAll(elements =>
+    elements.map(element => {
+      const {x, width} = element.getBoundingClientRect();
+      return {x, width};
+    }));
+  const before = await positions();
+  await page.getByLabel('Unseen releases only').check();
+  await expect(page.locator('tbody tr')).toHaveCount(2);
+  expect(await positions()).toEqual(before);
+  await page.getByLabel('Unseen releases only').uncheck();
+  expect(await positions()).toEqual(before);
+});
+
 test('fresh generation cannot hide stale source checks', async ({page}) => {
   await page.route('**/devices/config.js', async route => {
     const config = structuredClone(data.config);
