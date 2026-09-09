@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import concurrent.futures
 import json
+import re
 import socket
 import sys
 import time
@@ -65,7 +66,11 @@ def is_http_404_error(exc: Exception) -> bool:
 
 
 def is_http_forbidden_reason(reason: str) -> bool:
-    return "http error 403" in str(reason or "").lower()
+    # Source adapters may preserve urllib's "HTTP Error 403" wording or wrap
+    # it in a clearer message such as "blocked ... (HTTP 403)". Treat both as
+    # the same external access restriction so a vendor's bot protection does
+    # not fail the entire multi-vendor sync.
+    return bool(re.search(r"\bhttp(?:\s+error)?\s*403\b", str(reason or ""), re.I))
 
 
 def should_fail_on_source_regression(status: str, reason: str) -> bool:

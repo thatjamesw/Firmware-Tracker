@@ -66,12 +66,14 @@ def validate_source(source: dict) -> None:
             raise ValueError(f"Use an official {SOURCE_VENDOR[kind]} domain for this source")
     fields = {
         "sony_cscs": ("mdl",), "godox_listing": ("title_contains",),
-        "apple_support": ("kind",), "atomos_support": ("article_id",),
+        "apple_support": ("kind",),
         "bambu_wiki": ("series",), "tplink_downloads": ("model", "hardware_version"),
     }
     for field in fields.get(kind, ()):
         if not source.get(field):
             raise ValueError(f"{kind} needs {field}; fill in the model or variant field")
+    if kind == "atomos_support" and not (source.get("model") or source.get("article_id")):
+        raise ValueError("atomos_support needs model; use the exact product heading, for example Ninja V")
     if kind == "apple_support":
         if source["kind"] not in {"ios", "macos", "watchos", "airpods"}:
             raise ValueError("Apple variant must be ios, macos, watchos, or airpods")
@@ -109,7 +111,13 @@ def build_source(form: dict, name: str, existing: dict | None = None) -> dict:
         if source["kind"] == "airpods":
             source["model"] = model or source.get("model") or name
     elif kind == "atomos_support":
-        source["article_id"] = variant or source.get("article_id", "")
+        product_model = model or source.get("model")
+        if product_model:
+            source["model"] = product_model
+        elif not variant and not source.get("article_id"):
+            source["model"] = re.sub(r"^Atomos\s+", "", name, flags=re.I)
+        if variant:
+            source["article_id"] = variant
     elif kind == "bambu_wiki":
         source["series"] = variant.upper() or source.get("series", "")
     elif kind == "tplink_downloads":

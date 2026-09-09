@@ -100,7 +100,7 @@
         "type": "atomos_support",
         "page_url": "https://www.atomos.com/product-support/",
         "url": "https://www.atomos.com/product-support/",
-        "article_id": "NinjaVArticle"
+        "model": "Ninja V"
       },
       "dell_u4025qw": {
         "type": "static",

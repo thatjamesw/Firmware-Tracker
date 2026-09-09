@@ -963,12 +963,14 @@ class ParserTests(unittest.TestCase):
         self.assertTrue(accepted_fallback)
 
     def test_strict_regression_does_not_fail_on_vendor_403(self) -> None:
-        self.assertFalse(
-            ffd.should_fail_on_source_regression(
-                "error",
-                "HTTP Error 403: Forbidden",
-            )
+        reasons = (
+            "HTTP Error 403: Forbidden",
+            "Atomos blocked automated firmware checks (HTTP 403). "
+            "Last known firmware is retained; check the official download page manually.",
         )
+        for reason in reasons:
+            with self.subTest(reason=reason):
+                self.assertFalse(ffd.should_fail_on_source_regression("error", reason))
 
     def test_strict_regression_still_fails_parser_regressions(self) -> None:
         self.assertTrue(

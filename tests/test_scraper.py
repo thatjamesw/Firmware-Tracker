@@ -157,25 +157,31 @@ class RobustParserTests(unittest.TestCase):
         self.assertEqual(releases[0]['released_time'], '2026-08-17')
 
     def test_atomos_article_is_isolated_and_upload_month_is_not_a_date(self):
-        html = """<section id='NinjaVArticle' class='changed'><div><h2>Current Firmware</h2><p>AtomOS <b>11.19.00</b></p><a href='/2026/04/notes.html'>Release notes</a></div></section><div id='Other'>Current Firmware AtomOS 99.0</div>"""
+        html = """<section id='NinjaVArticle' class='support-product-article changed'><h3>Ninja V</h3><div><h2>Current Firmware</h2><p>AtomOS <b>11.19.00</b></p><a href='/2026/04/notes.html'>Release notes</a></div></section><section id='NinjaVPlusArticle' class='support-product-article'><h3>Ninja V+</h3><div><h2>Current Firmware</h2><p>AtomOS 99.0</p></div></section>"""
         with patch.object(atomos, 'fetch_bytes', return_value=html.encode()):
-            releases = atomos.sync_atomos_support({'type': 'atomos_support', 'url': 'https://www.atomos.com/product-support/', 'article_id': 'NinjaVArticle'}, 5)
+            releases = atomos.sync_atomos_support({'type': 'atomos_support', 'url': 'https://www.atomos.com/product-support/', 'model': 'Ninja V'}, 5)
         self.assertEqual(releases[0]['version'], '11.19.00')
         self.assertEqual(releases[0]['released_time'], '')
+
+    def test_atomos_model_match_is_exact_and_does_not_match_ninja_v_plus(self):
+        html = """<div class='support-product-article'><h3>Ninja V+</h3><h2>Current Firmware</h2><p>AtomOS 12.0</p></div>"""
+        with patch.object(atomos, 'fetch_bytes', return_value=html.encode()):
+            releases = atomos.sync_atomos_support({'type': 'atomos_support', 'url': 'https://www.atomos.com/product-support/', 'model': 'Ninja V'}, 5)
+        self.assertEqual(releases, [])
 
     def test_atomos_access_denied_explains_the_source_failure(self):
         url = 'https://www.atomos.com/product-support/'
         error = urllib.error.HTTPError(url, 403, 'Forbidden', {}, None)
         with patch.object(atomos, 'fetch_bytes', side_effect=error):
             with self.assertRaisesRegex(RuntimeError, 'blocked automated firmware checks.*403'):
-                atomos.sync_atomos_support({'url': url}, 5)
+                atomos.sync_atomos_support({'url': url, 'model': 'Ninja V'}, 5)
 
     def test_atomos_other_http_errors_are_preserved(self):
         url = 'https://www.atomos.com/product-support/'
         error = urllib.error.HTTPError(url, 503, 'Unavailable', {}, None)
         with patch.object(atomos, 'fetch_bytes', side_effect=error):
             with self.assertRaises(urllib.error.HTTPError) as caught:
-                atomos.sync_atomos_support({'url': url}, 5)
+                atomos.sync_atomos_support({'url': url, 'model': 'Ninja V'}, 5)
         self.assertEqual(caught.exception.code, 503)
 
     def test_invalid_calendar_dates_rejected(self):
