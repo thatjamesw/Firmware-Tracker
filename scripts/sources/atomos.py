@@ -9,12 +9,35 @@ from urllib.error import HTTPError
 from .common import fetch_bytes, make_release_candidate, resolve_release_candidates, parse_html
 
 
+def normalize_product_name(value: str) -> str:
+    return " ".join(value.split()).casefold()
+
+
+def find_product_article(page: Any, source: dict[str, Any]) -> Any | None:
+    """Find a product by its visible heading, with legacy DOM-ID support."""
+    model = source.get("model")
+    if isinstance(model, str) and model.strip():
+        expected = normalize_product_name(model)
+        matches = []
+        for article in page.select(".support-product-article"):
+            headings = article.find_all(["h1", "h2", "h3", "h4"])
+            if any(normalize_product_name(heading.get_text(" ", strip=True)) == expected for heading in headings):
+                matches.append(article)
+        return matches[0] if len(matches) == 1 else None
+
+    article_id = source.get("article_id")
+    if isinstance(article_id, str) and article_id:
+        return page.find(id=article_id)
+    return None
+
+
 def sync_atomos_support(source: dict[str, Any], timeout: int) -> list[dict[str, Any]]:
     url = source.get("url")
-    article_id = source.get("article_id", "NinjaVArticle")
     if not isinstance(url, str) or not url:
         return []
-    if not isinstance(article_id, str) or not article_id:
+    model = source.get("model")
+    article_id = source.get("article_id")
+    if not (isinstance(model, str) and model.strip()) and not (isinstance(article_id, str) and article_id):
         return []
 
     try:
@@ -26,7 +49,7 @@ def sync_atomos_support(source: dict[str, Any], timeout: int) -> list[dict[str, 
                 "Last known firmware is retained; check the official download page manually."
             ) from exc
         raise
-    article = parse_html(html).find(id=article_id)
+    article = find_product_article(parse_html(html), source)
     if article is None:
         return []
 
@@ -49,7 +72,8 @@ def sync_atomos_support(source: dict[str, Any], timeout: int) -> list[dict[str, 
     released_time = ""
 
     candidates = []
-    note = f"Official Atomos {article_id} firmware listing."
+    product_label = str(model or article_id)
+    note = f"Official Atomos {product_label} firmware listing."
     if release_notes_url:
         note += f" Release notes: {release_notes_url}"
     candidates.append(

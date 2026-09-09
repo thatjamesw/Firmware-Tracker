@@ -252,8 +252,19 @@
           },
           "then": {
             "required": [
-              "url",
-              "article_id"
+              "url"
+            ],
+            "anyOf": [
+              {
+                "required": [
+                  "model"
+                ]
+              },
+              {
+                "required": [
+                  "article_id"
+                ]
+              }
             ]
           }
         },

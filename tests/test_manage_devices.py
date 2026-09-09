@@ -72,7 +72,7 @@ class ManagementTests(unittest.TestCase):
         cases = [
             ('https://www.sony.com/support/', 'ILCE-1M2', '', 'mdl', 'ILCE-1M2'),
             ('https://www.godox.com/firmware/', 'V860IIS Firmware', '', 'title_contains', 'V860IIS Firmware'),
-            ('https://www.atomos.com/product-support/', '', 'NinjaVArticle', 'article_id', 'NinjaVArticle'),
+            ('https://www.atomos.com/product-support/', 'Ninja V', '', 'model', 'Ninja V'),
             ('https://wiki.bambulab.com/history/', '', 'p1', 'series', 'P1'),
             ('https://www.tp-link.com/support/', 'Deco BE65', 'v2', 'hardware_version', 'V2'),
             ('https://support.apple.com/100100', '', 'ios', 'kind', 'ios'),
