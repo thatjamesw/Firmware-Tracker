@@ -102,7 +102,27 @@
         "type": "atomos_support",
         "page_url": "https://www.atomos.com/product-support/",
         "url": "https://www.atomos.com/product-support/",
-        "model": "Ninja V"
+        "model": "Ninja V",
+        "fallback_source": {
+          "type": "static",
+          "page_url": "https://www.atomos.com/product-support/",
+          "manual_verified_utc": "2026-09-28T10:16:00Z",
+          "release": {
+            "version": "11.19.00",
+            "released_time": "2026-09-11",
+            "release_note": {
+              "en": "Official Atomos Ninja V firmware listing; release notes dated September 11, 2026: https://www.atomos.com/wp-content/uploads/2026/09/AtomOS_11.9.00_Release_Notes.html"
+            },
+            "arb": null,
+            "active": true,
+            "evidence": {
+              "type": "atomos_manual_verification",
+              "text": "Ninja V Current Firmware AtomOS 11.19.00",
+              "source_url": "https://www.atomos.com/product-support/"
+            },
+            "confidence": 0.82
+          }
+        }
       },
       "dell_u4025qw": {
         "type": "static",
@@ -165,10 +185,10 @@
     "sync_status": {
       "last_run_utc": "2026-09-28T11:07:14Z",
       "health_counts": {
-        "ok": 18,
+        "ok": 19,
         "ok_empty": 1,
         "no_entries": 0,
-        "error": 1,
+        "error": 0,
         "transient_error": 0,
         "guardrail_rejected": 0,
         "missing_source": 0
@@ -182,21 +202,6 @@
           "last_success_utc": "2026-09-28T11:07:14Z",
           "consecutive_failures": 0,
           "last_error_type": ""
-        },
-        "atomos": {
-          "status": "issue",
-          "ok_count": 0,
-          "issues": [
-            {
-              "device_id": "atomos_ninja_v",
-              "status": "error",
-              "reason": "Atomos blocked automated firmware checks (HTTP 403). Last known firmware is retained; check the official download page manually."
-            }
-          ],
-          "transient_count": 0,
-          "last_success_utc": "2026-09-07T07:16:04Z",
-          "consecutive_failures": 28,
-          "last_error_type": "error"
         },
         "bambu": {
           "status": "ok",
@@ -286,11 +291,12 @@
           "last_error_reason": ""
         },
         "atomos_ninja_v": {
-          "vendor": "atomos",
-          "status": "error",
+          "vendor": "static",
+          "status": "manual_fallback",
           "last_success_utc": "2026-09-07T07:16:04Z",
-          "consecutive_failures": 28,
-          "last_error_type": "error",
+          "manual_verified_utc": "2026-09-28T10:16:00Z",
+          "consecutive_failures": 0,
+          "last_error_type": "",
           "last_error_reason": "Atomos blocked automated firmware checks (HTTP 403). Last known firmware is retained; check the official download page manually."
         },
         "bambu_p1s": {
@@ -406,20 +412,10 @@
           "last_error_reason": ""
         }
       },
-      "issues": [
-        {
-          "vendor": "atomos",
-          "device_id": "atomos_ninja_v",
-          "status": "error",
-          "reason": "Atomos blocked automated firmware checks (HTTP 403). Last known firmware is retained; check the official download page manually.",
-          "streak_days": 28
-        }
-      ],
+      "issues": [],
       "transient_issues": [],
-      "issue_streaks": {
-        "atomos:atomos_ninja_v": 28
-      },
-      "max_issue_streak_days": 28
+      "issue_streaks": {},
+      "max_issue_streak_days": 0
     },
     "manage_devices_url": "https://github.com/thatjamesw/Firmware-Tracker/actions/workflows/manage-devices.yml"
   },
@@ -767,6 +763,21 @@
     },
     "atomos_ninja_v": {
       "releases": [
+        {
+          "version": "11.19.00",
+          "released_time": "2026-09-11",
+          "release_note": {
+            "en": "Official Atomos Ninja V firmware listing; release notes dated September 11, 2026: https://www.atomos.com/wp-content/uploads/2026/09/AtomOS_11.9.00_Release_Notes.html"
+          },
+          "arb": null,
+          "active": true,
+          "evidence": {
+            "type": "atomos_manual_verification",
+            "text": "Ninja V Current Firmware AtomOS 11.19.00",
+            "source_url": "https://www.atomos.com/product-support/"
+          },
+          "confidence": 0.82
+        },
         {
           "version": "11.18.00",
           "released_time": "",
