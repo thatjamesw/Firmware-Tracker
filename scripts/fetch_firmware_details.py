@@ -437,6 +437,7 @@ def _process_device(
             "used_fallback": used_fallback,
             "used_source": candidate,
             "used_source_index": idx,
+            "fallback_reason": str(last_result.get("reason") or "") if used_fallback and last_result else "",
         }
 
     if last_result:
@@ -489,14 +490,26 @@ def build_sync_status(results: list[dict[str, Any]], prior_sync_status: dict[str
         prev_device = prior_device_health.get(device_id, {}) if isinstance(prior_device_health, dict) else {}
         if status in {"ok", "ok_empty"}:
             vendor_entry["ok"] += 1
-            device_health[device_id] = {
-                "vendor": vendor,
-                "status": status,
-                "last_success_utc": run_now,
-                "consecutive_failures": 0,
-                "last_error_type": "",
-                "last_error_reason": "",
-            }
+            used_source = result.get("used_source")
+            if result.get("used_fallback") and vendor == "static" and isinstance(used_source, dict):
+                device_health[device_id] = {
+                    "vendor": vendor,
+                    "status": "manual_fallback",
+                    "last_success_utc": str(prev_device.get("last_success_utc") or ""),
+                    "manual_verified_utc": str(used_source.get("manual_verified_utc") or ""),
+                    "consecutive_failures": 0,
+                    "last_error_type": "",
+                    "last_error_reason": str(result.get("fallback_reason") or ""),
+                }
+            else:
+                device_health[device_id] = {
+                    "vendor": vendor,
+                    "status": status,
+                    "last_success_utc": run_now,
+                    "consecutive_failures": 0,
+                    "last_error_type": "",
+                    "last_error_reason": "",
+                }
         elif status == "transient_error":
             vendor_entry["transient_count"] += 1
             transient_issues.append({"vendor": vendor, "device_id": device_id, "status": status, "reason": reason})

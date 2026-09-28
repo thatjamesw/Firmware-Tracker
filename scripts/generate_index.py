@@ -112,6 +112,7 @@ def generate_summary_markdown(payload: dict) -> str:
     device_sources = sources.get("device_sources", {})
     sync_status = sources.get("sync_status", {})
     issue_map = build_issue_map(sync_status)
+    device_health = sync_status.get("device_health", {})
 
     rows: list[dict[str, str]] = []
     for category in categories.values():
@@ -138,7 +139,9 @@ def generate_summary_markdown(payload: dict) -> str:
                 version = "-"
                 released = "-"
                 age = "-"
-            status = issue_map.get(device_id, "ok")
+            health = device_health.get(device_id, {}) if isinstance(device_health, dict) else {}
+            health = health if isinstance(health, dict) else {}
+            status = "manually verified" if health.get("status") == "manual_fallback" else issue_map.get(device_id, "ok")
             rows.append(
                 {
                     "category": category_title,

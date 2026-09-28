@@ -250,6 +250,15 @@ const STALE_AFTER_MS = 3 * 24 * 60 * 60 * 1000;
 
 function sourceFreshness(deviceId, now = Date.now()) {
   const health = TRACKER_CONFIG.source_sync_status?.device_health?.[deviceId];
+  if (health?.status === "manual_fallback") {
+    const verified = formatUtcAsLocalDateTime(health.manual_verified_utc || "");
+    const reason = health.last_error_reason || "Automatic source check unavailable";
+    return {
+      warning: true,
+      label: "Manually verified",
+      detail: `${verified ? `Official version verified: ${verified}. ` : ""}${reason} Automatic updates will resume when the source is accessible.`
+    };
+  }
   const lastSuccess = health?.last_success_utc || "";
   const timestamp = Date.parse(lastSuccess);
   const stale = !Number.isFinite(timestamp) || now - timestamp > STALE_AFTER_MS;
