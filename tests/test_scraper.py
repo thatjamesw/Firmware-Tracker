@@ -176,6 +176,28 @@ class RobustParserTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, 'blocked automated firmware checks.*403'):
                 atomos.sync_atomos_support({'url': url, 'model': 'Ninja V'}, 5)
 
+    def test_atomos_403_uses_verified_manual_fallback_without_claiming_a_live_check(self):
+        from fetch_firmware_details import _process_device, build_sync_status
+        source = {
+            'type': 'atomos_support', 'url': 'https://www.atomos.com/product-support/', 'model': 'Ninja V',
+            'fallback_source': {
+                'type': 'static', 'manual_verified_utc': '2026-09-28T10:16:00Z',
+                'release': {'version': '11.19.00', 'released_time': '2026-09-11',
+                            'release_note': {'en': 'Official Atomos release notes.'}, 'active': True},
+            },
+        }
+        error = urllib.error.HTTPError(source['url'], 403, 'Forbidden', {}, None)
+        with patch.object(atomos, 'fetch_bytes', side_effect=error):
+            result = _process_device('atomos_ninja_v', 'Atomos Ninja V', source, 5)
+        self.assertEqual(result['status'], 'ok')
+        self.assertEqual(result['releases'][0]['version'], '11.19.00')
+        prior = {'device_health': {'atomos_ninja_v': {'last_success_utc': '2026-09-07T07:16:04Z'}}}
+        health = build_sync_status([result], prior)['device_health']['atomos_ninja_v']
+        self.assertEqual(health['status'], 'manual_fallback')
+        self.assertEqual(health['last_success_utc'], '2026-09-07T07:16:04Z')
+        self.assertEqual(health['manual_verified_utc'], '2026-09-28T10:16:00Z')
+        self.assertIn('HTTP 403', health['last_error_reason'])
+
     def test_atomos_other_http_errors_are_preserved(self):
         url = 'https://www.atomos.com/product-support/'
         error = urllib.error.HTTPError(url, 503, 'Unavailable', {}, None)

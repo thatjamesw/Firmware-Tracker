@@ -23,6 +23,13 @@ Static firmware-tracking site that deploys on GitHub Pages and syncs from offici
   - `docs/FIRMWARE_SUMMARY.md` (repo-friendly markdown snapshot)
 - Frontend: `docs/index.html`
 
+Atomos currently returns HTTP 403 to the GitHub Actions runner. The Ninja V
+source has a manually verified fallback release, dated in its source config.
+When the fallback is used, the tracker labels the version **Manually verified**
+and keeps the last successful live-check timestamp. Update the fallback release
+after verifying a newer version on the official Atomos page; the live parser
+takes priority whenever automated access is available again.
+
 ## Local usage
 
 ```bash

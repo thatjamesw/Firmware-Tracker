@@ -75,6 +75,19 @@ test('recent source failures warn per device while successful checks remain clea
   }
 });
 
+test('manual fallback shows its verification date without claiming a fresh source check', () => {
+  const ctx = app();
+  ctx.TRACKER_CONFIG.source_sync_status = {device_health: {
+    atomos_ninja_v: {status: 'manual_fallback', last_success_utc: '2026-09-07T07:16:04Z',
+      manual_verified_utc: '2026-09-28T10:16:00Z', last_error_reason: 'Atomos returned HTTP 403.'}
+  }};
+  const freshness = ctx.sourceFreshness('atomos_ninja_v', Date.parse('2026-09-28T12:00:00Z'));
+  assert.equal(freshness.label, 'Manually verified');
+  assert.equal(freshness.warning, true);
+  assert.ok(freshness.detail.includes('HTTP 403'));
+  assert.ok(freshness.detail.includes('Official version verified:'));
+});
+
 test('release notes are escaped and empty metadata omitted', () => {
   const markup = app().releaseMarkup({version:'1.0', active:true, release_note:{en:'<script>alert(1)</script>'}, arb:null});
   assert.ok(markup.includes('&lt;script&gt;'));
