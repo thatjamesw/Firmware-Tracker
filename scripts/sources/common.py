@@ -316,20 +316,6 @@ def default_requires_date(source: dict[str, Any]) -> bool:
     }
 
 
-def release_from_candidate(candidate: dict[str, Any]) -> dict[str, Any]:
-    release = normalize_release(candidate)
-    evidence = candidate.get("evidence")
-    if isinstance(evidence, dict):
-        release["evidence"] = {
-            "type": str(evidence.get("type") or ""),
-            "text": str(evidence.get("text") or ""),
-            "source_url": str(evidence.get("source_url") or ""),
-        }
-    if "confidence" in candidate:
-        release["confidence"] = max(0.0, min(1.0, float(candidate.get("confidence") or 0.0)))
-    return release
-
-
 def resolve_release_candidates(
     candidates: list[dict[str, Any]],
     source: dict[str, Any] | None = None,
@@ -358,7 +344,7 @@ def resolve_release_candidates(
         ),
         reverse=True,
     )
-    return [release_from_candidate(valid[0])]
+    return [normalize_release(valid[0])]
 
 
 def normalize_release(raw: dict[str, Any]) -> dict[str, Any]:

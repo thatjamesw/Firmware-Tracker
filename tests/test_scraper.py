@@ -9,7 +9,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-from sources import common, dji, apple, atomos
+from sources import common, dji, apple, atomos, bambu, godox
 from fetch_firmware_details import prepare_release_update
 
 FIXTURES = Path(__file__).parent / 'fixtures'
@@ -123,6 +123,28 @@ class FetchTests(unittest.TestCase):
 
 
 class RobustParserTests(unittest.TestCase):
+    def test_bambu_firmware_heading_accepts_inline_markup(self):
+        html = '<template slot="contents"><h2>P1 <em>series</em> Version <span>01.09.01.00</span> (20260114)</h2></template>'
+        with patch.object(bambu, 'fetch_bytes', return_value=html.encode()):
+            releases = bambu.sync_bambu_wiki({'url': 'https://wiki.bambulab.com/test', 'series': 'P1'}, 5)
+        self.assertEqual([(r['version'], r['released_time']) for r in releases], [('01.09.01.00', '2026-01-14')])
+
+    def test_apple_date_falls_back_to_paragraph_when_table_has_no_matching_row(self):
+        html = '<table><tr><td>Other release</td></tr></table><p>iOS 27 — 14 Sep 2026</p>'
+        self.assertEqual(apple.extract_row_release_date(html, 'ios', '27'), '2026-09-14')
+
+    def test_godox_scans_newer_pages_before_stored_location(self):
+        source = {'url': 'https://www.godox.com/firmware-flash/', 'page_count': 4,
+                  'title_contains': 'AD400ProII Firmware'}
+        other = '<div class="item"><div class="tit">Other Firmware V1.0</div></div>'
+        target = '<div class="item"><div class="tit">AD400ProII Firmware V1.22</div><div class="text">Release Date 2026/09/28</div></div>'
+        with patch.object(godox, 'fetch_bytes', side_effect=[other.encode(), target.encode()]) as fetch:
+            releases = godox.sync_godox_listing(source, 5)
+        self.assertEqual(releases[0]['version'], '1.22')
+        self.assertEqual(releases[0]['evidence']['source_url'], 'https://www.godox.com/firmware-flash_2/')
+        self.assertEqual([call.args[0] for call in fetch.call_args_list],
+                         ['https://www.godox.com/firmware-flash/', 'https://www.godox.com/firmware-flash_2/'])
+
     def test_dji_real_pdf_extracts_camera_not_app_or_accessory_versions(self):
         releases = dji.parse_dji_release_pdf((FIXTURES / 'dji_pocket4p.pdf').read_bytes(), 'Osmo Pocket 4P')
         self.assertEqual(releases[0]['version'], '01.01.71.31')
@@ -147,7 +169,7 @@ class RobustParserTests(unittest.TestCase):
         html = """<li data-id='x' class='extra groups-download-item'>
         <div class='other groups-item-name'><b>DJI Mini 5 Pro</b> - Release Notes</div>
         <a class='download-file' href='/RN/notes.pdf?download=1'>PDF</a></li>"""
-        self.assertEqual(dji.pick_dji_release_notes_pdf(dji.parse_dji_release_note_items(html), 'Mini 5 Pro'), '/RN/notes.pdf?download=1')
+        self.assertEqual(dji.pick_dji_release_notes_pdfs(dji.parse_dji_release_note_items(html), 'Mini 5 Pro')[0], '/RN/notes.pdf?download=1')
 
     def test_apple_latest_phrase_can_contain_inline_tags(self):
         html = '<p>The latest version of <b>iOS</b> is <span>26.6.1</span>.</p><table><tr><td>iOS 26.6.1</td><td>17 August 2026</td></tr></table>'
@@ -212,5 +234,5 @@ class RobustParserTests(unittest.TestCase):
     def test_dji_filename_fallback_survives_all_class_name_changes(self):
         html = '<article><a href="/RN/DJI_Osmo_Pocket_4P_Release_Notes_en.pdf">Download</a></article>'
         items = dji.parse_dji_release_note_items(html)
-        self.assertIsNotNone(dji.pick_dji_release_notes_pdf(items, "Osmo Pocket 4P"))
-        self.assertIsNone(dji.pick_dji_release_notes_pdf(items, "Osmo Pocket 4"))
+        self.assertTrue(dji.pick_dji_release_notes_pdfs(items, "Osmo Pocket 4P"))
+        self.assertFalse(dji.pick_dji_release_notes_pdfs(items, "Osmo Pocket 4"))

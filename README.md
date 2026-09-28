@@ -142,6 +142,8 @@ python scripts/generate_index.py
 `fallback_source`, `fallback_sources`, `allow_empty`, `treat_404_as_empty`, and
 `allow_regression`. The schema validates required vendor fields, including fallback
 sources. Use `allow_regression` only for an intentional correction.
+Godox sources use `page_count` to scan their category from page 1 through the
+configured last page, stopping at the first matching product listing.
 
 ## Scan performance and parser checks
 

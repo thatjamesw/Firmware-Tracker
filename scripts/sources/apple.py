@@ -28,7 +28,7 @@ def extract_row_release_date(html: str, kind: str, latest_version: str) -> str:
         return ""
 
     soup = parse_html(html)
-    searchable_blocks = soup.find_all("tr") or soup.find_all(["li", "p"])
+    searchable_blocks = [*soup.find_all("tr"), *soup.find_all(["li", "p"])]
 
     for block in searchable_blocks:
         row_text = block.get_text(" ", strip=True)

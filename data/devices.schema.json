@@ -14,9 +14,6 @@
         "device_sources"
       ],
       "properties": {
-        "refresh_workflow_url": {
-          "type": "string"
-        },
         "device_sources": {
           "type": "object",
           "additionalProperties": {
@@ -139,6 +136,11 @@
         "title_contains": {
           "type": "string",
           "minLength": 1
+        },
+        "page_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
         },
         "kind": {
           "type": "string",

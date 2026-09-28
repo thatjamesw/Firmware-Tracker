@@ -38,11 +38,6 @@ def parse_dji_release_note_items(downloads_html: str) -> list[dict[str, str]]:
     return items
 
 
-def pick_dji_release_notes_pdf(items: list[dict[str, str]], device_name: str) -> str | None:
-    urls = pick_dji_release_notes_pdfs(items, device_name)
-    return urls[0] if urls else None
-
-
 def pick_dji_release_notes_pdfs(items: list[dict[str, str]], device_name: str) -> list[str]:
     if not items:
         return []
