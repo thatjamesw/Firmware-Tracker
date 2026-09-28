@@ -178,7 +178,6 @@ def main() -> None:
     categories = payload.get("categories", {})
     firmware_index = payload.get("firmware_index", {})
     sources = payload.get("sources", {})
-    refresh_workflow_url = sources.get("refresh_workflow_url", "")
     device_sources = sources.get("device_sources", {})
     sync_status = sources.get("sync_status", {})
     device_download_pages = build_device_download_pages(device_sources)
@@ -198,7 +197,6 @@ def main() -> None:
     config_js += json.dumps(
         {
             "generated_at_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "refresh_workflow_url": refresh_workflow_url,
             "manage_devices_url": sources.get("manage_devices_url", ""),
             "device_download_pages": device_download_pages,
             "device_source_types": device_source_types,

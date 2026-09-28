@@ -1,6 +1,5 @@
 {
   "sources": {
-    "refresh_workflow_url": "",
     "device_sources": {
       "wa150": {
         "type": "dji_downloads",
@@ -70,17 +69,20 @@
       },
       "godox_ad400proii": {
         "type": "godox_listing",
-        "url": "https://www.godox.com/firmware-flash_4/",
+        "url": "https://www.godox.com/firmware-flash/",
+        "page_count": 13,
         "title_contains": "AD400ProII Firmware"
       },
       "godox_x3pros": {
         "type": "godox_listing",
         "url": "https://www.godox.com/firmware-control-system/",
+        "page_count": 5,
         "title_contains": "X3ProS Firmware"
       },
       "godox_v860iis": {
         "type": "godox_listing",
-        "url": "https://www.godox.com/firmware-flash_11/",
+        "url": "https://www.godox.com/firmware-flash/",
+        "page_count": 13,
         "title_contains": "V860IIS Firmware"
       },
       "amaran_300c": {

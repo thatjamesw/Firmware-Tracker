@@ -79,7 +79,6 @@ def main() -> int:
 
     required_config_keys = {
         "generated_at_utc",
-        "refresh_workflow_url",
         "device_download_pages",
         "device_source_types",
         "source_sync_status",

@@ -15,7 +15,17 @@ from .common import (
 
 
 def sync_godox_listing(source: dict[str, Any], timeout: int) -> list[dict[str, Any]]:
-    url = source["url"]
+    base = source["url"].rstrip("/")
+    # ponytail: bounded scan; raise page_count when Godox adds more listing pages.
+    for page in range(1, int(source.get("page_count", 1)) + 1):
+        url = f"{base}_{page}/" if page > 1 else f"{base}/"
+        releases = _parse_godox_page(source, url, timeout)
+        if releases:
+            return releases
+    return []
+
+
+def _parse_godox_page(source: dict[str, Any], url: str, timeout: int) -> list[dict[str, Any]]:
     title_contains = source.get("title_contains", "").lower()
 
     html = fetch_bytes(url, timeout=timeout).decode("utf-8", errors="replace")
