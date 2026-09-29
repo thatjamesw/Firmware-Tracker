@@ -1,6 +1,6 @@
 # Firmware Summary
 
-Generated (UTC): 2026-09-29T08:19:13Z
+Generated (UTC): 2026-09-29T09:55:28Z
 
 | Category | Device | Latest | Released | Age | Source | Status |
 | --- | --- | --- | --- | --- | --- | --- |
