@@ -1,15 +1,15 @@
 # Firmware Summary
 
-Generated (UTC): 2026-10-04T10:41:38Z
+Generated (UTC): 2026-10-05T08:50:28Z
 
 | Category | Device | Latest | Released | Age | Source | Status |
 | --- | --- | --- | --- | --- | --- | --- |
 | 3D Printer | Bambu Lab P1S 3D Printer | 01.10.00.00 | 2026-03-30 | 6 months | bambu_wiki | ok |
-| Apple | AirPods Pro 3 | 9A348 | 2026-09-14 | 20 days | apple_support | ok |
-| Apple | iOS | 27.0.1 | 2026-09-28 | 6 days | apple_support | ok |
+| Apple | AirPods Pro 3 | 9A348 | 2026-09-14 | 21 days | apple_support | ok |
+| Apple | iOS | 27.0.1 | 2026-09-28 | 7 days | apple_support | ok |
 | Apple | macOS | 27.0.1 | - | - | apple_support | ok |
-| Apple | watchOS | 27.0.1 | 2026-09-28 | 6 days | apple_support | ok |
-| Cameras | Atomos Ninja V | 11.19.00 | 2026-09-11 | 23 days | atomos_support | manually verified |
+| Apple | watchOS | 27.0.1 | 2026-09-28 | 7 days | apple_support | ok |
+| Cameras | Atomos Ninja V | 11.19.00 | 2026-09-11 | 24 days | atomos_support | manually verified |
 | Cameras | Osmo Pocket 4P | 01.01.71.31 | 2026-09-03 | 1 month | dji_downloads | ok |
 | Cameras | Sony 16-35 GM II | - | - | - | sony_cscs | ok |
 | Cameras | Sony 24 1.4 GM | 03 | 2021-11-18 | 4 years | sony_cscs | ok |
