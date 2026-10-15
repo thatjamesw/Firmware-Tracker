@@ -183,7 +183,7 @@
       }
     },
     "sync_status": {
-      "last_run_utc": "2026-10-14T07:27:03Z",
+      "last_run_utc": "2026-10-15T07:17:51Z",
       "health_counts": {
         "ok": 19,
         "ok_empty": 1,
@@ -199,7 +199,7 @@
           "ok_count": 4,
           "issues": [],
           "transient_count": 0,
-          "last_success_utc": "2026-10-14T07:27:03Z",
+          "last_success_utc": "2026-10-15T07:17:51Z",
           "consecutive_failures": 0,
           "last_error_type": ""
         },
@@ -208,7 +208,7 @@
           "ok_count": 1,
           "issues": [],
           "transient_count": 0,
-          "last_success_utc": "2026-10-14T07:27:03Z",
+          "last_success_utc": "2026-10-15T07:17:51Z",
           "consecutive_failures": 0,
           "last_error_type": ""
         },
@@ -217,7 +217,7 @@
           "ok_count": 3,
           "issues": [],
           "transient_count": 0,
-          "last_success_utc": "2026-10-14T07:27:03Z",
+          "last_success_utc": "2026-10-15T07:17:51Z",
           "consecutive_failures": 0,
           "last_error_type": ""
         },
@@ -226,7 +226,7 @@
           "ok_count": 3,
           "issues": [],
           "transient_count": 0,
-          "last_success_utc": "2026-10-14T07:27:03Z",
+          "last_success_utc": "2026-10-15T07:17:51Z",
           "consecutive_failures": 0,
           "last_error_type": ""
         },
@@ -235,7 +235,7 @@
           "ok_count": 5,
           "issues": [],
           "transient_count": 0,
-          "last_success_utc": "2026-10-14T07:27:03Z",
+          "last_success_utc": "2026-10-15T07:17:51Z",
           "consecutive_failures": 0,
           "last_error_type": ""
         },
@@ -244,7 +244,7 @@
           "ok_count": 1,
           "issues": [],
           "transient_count": 0,
-          "last_success_utc": "2026-10-14T07:27:03Z",
+          "last_success_utc": "2026-10-15T07:17:51Z",
           "consecutive_failures": 0,
           "last_error_type": ""
         }
@@ -253,7 +253,7 @@
         "airpods_pro_3": {
           "vendor": "apple",
           "status": "ok",
-          "last_success_utc": "2026-10-14T07:27:03Z",
+          "last_success_utc": "2026-10-15T07:17:51Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -261,7 +261,7 @@
         "amaran_300c": {
           "vendor": "static",
           "status": "ok",
-          "last_success_utc": "2026-10-14T07:27:03Z",
+          "last_success_utc": "2026-10-15T07:17:51Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -269,7 +269,7 @@
         "apple_ios": {
           "vendor": "apple",
           "status": "ok",
-          "last_success_utc": "2026-10-14T07:27:03Z",
+          "last_success_utc": "2026-10-15T07:17:51Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -277,7 +277,7 @@
         "apple_macos": {
           "vendor": "apple",
           "status": "ok",
-          "last_success_utc": "2026-10-14T07:27:03Z",
+          "last_success_utc": "2026-10-15T07:17:51Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -285,7 +285,7 @@
         "apple_watchos": {
           "vendor": "apple",
           "status": "ok",
-          "last_success_utc": "2026-10-14T07:27:03Z",
+          "last_success_utc": "2026-10-15T07:17:51Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -302,7 +302,7 @@
         "bambu_p1s": {
           "vendor": "bambu",
           "status": "ok",
-          "last_success_utc": "2026-10-14T07:27:03Z",
+          "last_success_utc": "2026-10-15T07:17:51Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -310,7 +310,7 @@
         "dell_u4025qw": {
           "vendor": "static",
           "status": "ok",
-          "last_success_utc": "2026-10-14T07:27:03Z",
+          "last_success_utc": "2026-10-15T07:17:51Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -318,7 +318,7 @@
         "godox_ad400proii": {
           "vendor": "godox",
           "status": "ok",
-          "last_success_utc": "2026-10-14T07:27:03Z",
+          "last_success_utc": "2026-10-15T07:17:51Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -326,7 +326,7 @@
         "godox_v860iis": {
           "vendor": "godox",
           "status": "ok",
-          "last_success_utc": "2026-10-14T07:27:03Z",
+          "last_success_utc": "2026-10-15T07:17:51Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -334,7 +334,7 @@
         "godox_x3pros": {
           "vendor": "godox",
           "status": "ok",
-          "last_success_utc": "2026-10-14T07:27:03Z",
+          "last_success_utc": "2026-10-15T07:17:51Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -342,7 +342,7 @@
         "osmo_pocket_4p": {
           "vendor": "dji",
           "status": "ok",
-          "last_success_utc": "2026-10-14T07:27:03Z",
+          "last_success_utc": "2026-10-15T07:17:51Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -350,7 +350,7 @@
         "sony_1635gm2": {
           "vendor": "sony",
           "status": "ok_empty",
-          "last_success_utc": "2026-10-14T07:27:03Z",
+          "last_success_utc": "2026-10-15T07:17:51Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -358,7 +358,7 @@
         "sony_2470gm2": {
           "vendor": "sony",
           "status": "ok",
-          "last_success_utc": "2026-10-14T07:27:03Z",
+          "last_success_utc": "2026-10-15T07:17:51Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -366,7 +366,7 @@
         "sony_24f14gm": {
           "vendor": "sony",
           "status": "ok",
-          "last_success_utc": "2026-10-14T07:27:03Z",
+          "last_success_utc": "2026-10-15T07:17:51Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -374,7 +374,7 @@
         "sony_70200gm2": {
           "vendor": "sony",
           "status": "ok",
-          "last_success_utc": "2026-10-14T07:27:03Z",
+          "last_success_utc": "2026-10-15T07:17:51Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -382,7 +382,7 @@
         "sony_a1ii": {
           "vendor": "sony",
           "status": "ok",
-          "last_success_utc": "2026-10-14T07:27:03Z",
+          "last_success_utc": "2026-10-15T07:17:51Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -390,7 +390,7 @@
         "tplink_deco_be65_v2": {
           "vendor": "tplink",
           "status": "ok",
-          "last_success_utc": "2026-10-14T07:27:03Z",
+          "last_success_utc": "2026-10-15T07:17:51Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -398,7 +398,7 @@
         "wa150": {
           "vendor": "dji",
           "status": "ok",
-          "last_success_utc": "2026-10-14T07:27:03Z",
+          "last_success_utc": "2026-10-15T07:17:51Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -406,7 +406,7 @@
         "wa520": {
           "vendor": "dji",
           "status": "ok",
-          "last_success_utc": "2026-10-14T07:27:03Z",
+          "last_success_utc": "2026-10-15T07:17:51Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -475,6 +475,36 @@
     "wa150": {
       "releases": [
         {
+          "version": "01.00.0800",
+          "released_time": "2026-10-10",
+          "release_note": {
+            "en": "\u2022 Fixed some known issues."
+          },
+          "arb": null,
+          "active": true,
+          "evidence": {
+            "type": "dji_release_notes_pdf",
+            "text": "Date: 2026.10.10 Aircraft Firmware: v01.00.0800 Remote Controller Firmware: v10.00.0700 (DJI RC Pro 2) v10.00.0800 (DJI RC 2) v01.00.0400 (DJI RC-N3) v01.00.0300 (DJI RC-N2) DJI Fly App iOS: v1.21.12 DJI Fly App Android: v1.21.12 What's New \u2022 Fixed some known issues. Notes: \u2022 Added features require DJI Fly v1.2 1.12 or later. \u2022 Camera settings will be reset after firmware update, check the camera settings in DJI Fly. \u2022 If update fails, restart aircraft, remote controller, and",
+            "source_url": "https://terra-1-g.djicdn.com/6189933d30024fc1b331bffe4fe41837/mini_5_pro/RN/20261010/DJI_Mini_5_Pro_Release_Notes_EN.pdf"
+          },
+          "confidence": 0.9
+        },
+        {
+          "version": "01.00.0700",
+          "released_time": "2026-07-28",
+          "release_note": {
+            "en": "\u2022 Fixed some known issues."
+          },
+          "arb": null,
+          "active": true,
+          "evidence": {
+            "type": "dji_release_notes_pdf",
+            "text": "Date: 2026.7.28 Aircraft Firmware: v01.00.0700 Remote Controller Firmware: v01.00.0700 (DJI RC Pro 2) v10.00.0700 (DJI RC 2) v01.00.0300 (DJI RC-N3) v01.00.0300 (DJI RC-N2) DJI Fly App iOS: v1.21.4 DJI Fly App Android: v1.21.4 What's New \u2022 Fixed some known issues. Notes: \u2022 Added features require DJI Fly v1.21.4 or later. \u2022 Camera settings will be reset after firmware update, check the camera settings in DJI Fly. \u2022 If update fails, restart aircraft, remote controller, and DJI F",
+            "source_url": "https://terra-1-g.djicdn.com/6189933d30024fc1b331bffe4fe41837/mini_5_pro/RN/20261010/DJI_Mini_5_Pro_Release_Notes_EN.pdf"
+          },
+          "confidence": 0.9
+        },
+        {
           "version": "01.00.0600",
           "released_time": "2026-04-25",
           "release_note": {
@@ -485,7 +515,7 @@
           "evidence": {
             "type": "dji_release_notes_pdf",
             "text": "Date: 2026.4.25 Aircraft Firmware: v01.00.0600 Remote Controller Firmware: v01.00.0600 (DJI RC Pro 2) v10.00.0300 (DJI RC 2) v01.00.0300 (DJI RC-N3) v01.00.0300 (DJI RC-N2) DJI Fly App iOS: v1.21.0 DJI Fly App Android: v1.21.0 What's New \u2022 Fixed some known issues. Notes: \u2022 Added features require DJI Fly v1.21.0 or later. \u2022 Camera settings will be reset after firmware update, check the camera settings in DJI Fly. \u2022 If update fails, restart aircraft, remote controller, and DJI F",
-            "source_url": "https://dl.djicdn.com/downloads/DJI_Mini_5_Pro/RN/20260425/DJI_Mini_5_Pro_Release_Notes_EN.pdf"
+            "source_url": "https://terra-1-g.djicdn.com/6189933d30024fc1b331bffe4fe41837/mini_5_pro/RN/20261010/DJI_Mini_5_Pro_Release_Notes_EN.pdf"
           },
           "confidence": 0.9
         },
@@ -499,8 +529,8 @@
           "active": true,
           "evidence": {
             "type": "dji_release_notes_pdf",
-            "text": "Date: 2025.12.10 Aircraft Firmware: v01.00.0400 Remote Controller Firmware: v01.00.0500 (DJI RC Pro 2) v08.01.0100 (DJI RC 2) v01.00.0200 (DJI RC-N3) v01.00.0200 (DJI RC-N2) DJI Fly App iOS: v1.19.4 DJI Fly App Android: v1.19.4 What's New \u2022 Added support for the propeller guard. \u2022 Optimized the Low Battery RTH strategy. \u2022 Fixed some known issues. Notes: \u2022 Added features require DJI Fly v1.19.4 or later. \u2022 Camera settings will be reset after firmware update, check the camera",
-            "source_url": "https://dl.djicdn.com/downloads/DJI_Mini_5_Pro/RN/20260425/DJI_Mini_5_Pro_Release_Notes_EN.pdf"
+            "text": "Date: 2025.12.10 Aircraft Firmware: v01.00.0400 Remote Controller Firmware: v01.00.0500 (DJI RC Pro 2) v08.01.0100 (DJI RC 2) v01.00.0200 (DJI RC-N3) v01.00.0200 (DJI RC-N2) DJI Fly App iOS: v1.19.4 DJI Fly App Android: v1.19.4 What's New \u2022 Added support for the propeller guard. \u2022 Optimized the Low Battery RTH strategy. \u2022 Fixed some known issues. Notes: \u2022 Added features require DJI Fly v1.19.4 or later. \u2022 Camera settings will be reset after firmware update, check the camera s",
+            "source_url": "https://terra-1-g.djicdn.com/6189933d30024fc1b331bffe4fe41837/mini_5_pro/RN/20261010/DJI_Mini_5_Pro_Release_Notes_EN.pdf"
           },
           "confidence": 0.9
         },
@@ -508,14 +538,14 @@
           "version": "01.00.0300",
           "released_time": "2025-09-17",
           "release_note": {
-            "en": "\u2022 Added MasterShots.\n\u2022 Added 48mm Med-Tele mode to video mode.\n\u2022 Added shooting scenes such a s Standard and Cycling to omnidirectional ActiveTrack, and optimized the overall performance.\n\u2022 Improved low-light performance in 50MP photo mode.\n\u2022 Improved QuickTransfer speed and stability.\n\u2022 Added support for entering QuickTransfer mode by pressing the side button on the aircraft.\n\u2022 Fixed some known issues."
+            "en": "\u2022 Added MasterShots.\n\u2022 Added 48mm Med-Tele mode to video mode.\n\u2022 Added shooting scenes such as Standard and Cycling to omnidirectional ActiveTrack, and optimized the overall performance.\n\u2022 Improved low-light performance in 50MP photo mode.\n\u2022 Improved QuickTransfer speed and stability.\n\u2022 Added support for entering QuickTransfer mode by pressing the side button on the aircraft.\n\u2022 Fixed some known issues."
           },
           "arb": null,
           "active": true,
           "evidence": {
             "type": "dji_release_notes_pdf",
-            "text": "Date: 2025.09.17 Aircraft Firmware: v01.00.0300 Remote Controller Firmware: v01.00.0400 (DJI RC Pro 2) v07.00.0100 (DJI RC 2) v01.00.0100 (DJI RC-N3) v01.00.0100 (DJI RC-N2) DJI Fly App iOS: v1.18.0 DJI Fly App Android: v1.18.0 What's New \u2022 Added MasterShots. \u2022 Added 48mm Med-Tele mode to video mode. \u2022 Added shooting scenes such a s Standard and Cycling to omnidirectional ActiveTrack, and optimized the overall performance. \u2022 Improved low-light performance in 50MP photo mode.",
-            "source_url": "https://dl.djicdn.com/downloads/DJI_Mini_5_Pro/RN/20260425/DJI_Mini_5_Pro_Release_Notes_EN.pdf"
+            "text": "Date: 2025.09.17 Aircraft Firmware: v01.00.0300 Remote Controller Firmware: v01.00.0400 (DJI RC Pro 2) v07.00.0100 (DJI RC 2) v01.00.0100 (DJI RC-N3) v01.00.0100 (DJI RC-N2) DJI Fly App iOS: v1.18.0 DJI Fly App Android: v1.18.0 What's New \u2022 Added MasterShots. \u2022 Added 48mm Med-Tele mode to video mode. \u2022 Added shooting scenes such as Standard and Cycling to omnidirectional ActiveTrack, and optimized the overall performance. \u2022 Improved low-light performance in 50MP photo mode. \u2022",
+            "source_url": "https://terra-1-g.djicdn.com/6189933d30024fc1b331bffe4fe41837/mini_5_pro/RN/20261010/DJI_Mini_5_Pro_Release_Notes_EN.pdf"
           },
           "confidence": 0.9
         }
