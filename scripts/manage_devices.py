@@ -16,7 +16,7 @@ from fetch_firmware_details import (
     DATA_FILE, build_device_health, list_tracked_devices, prepare_release_update, process_device, validate_payload_schema,
 )
 from sources import SOURCE_VENDOR
-from sources.common import configure_fetch
+from sources.common import configure_fetch, write_json_atomic
 
 VENDOR_DOMAINS = {
     "dji_downloads": ("dji.com",),
@@ -247,9 +247,7 @@ def main() -> int:
     if not args.dry_run:
         if args.data_file.read_text(encoding="utf-8") != original:
             raise ValueError("Device data changed during the source check; retry against the latest file")
-        temporary = args.data_file.with_suffix(".json.tmp")
-        temporary.write_text(json.dumps(updated, indent=2, ensure_ascii=True) + "\n", encoding="utf-8")
-        temporary.replace(args.data_file)
+        write_json_atomic(args.data_file, updated)
     return 0
 
 

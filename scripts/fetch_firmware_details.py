@@ -26,7 +26,8 @@ from sources import bambu as bambu_source
 from sources import tplink as tplink_source
 from sources.common import (
     compare_versions, configure_fetch, device_fetch_seconds, fetch_budget,
-    fetch_metrics, get_latest_active_release, normalize_releases,
+    fetch_metrics, get_latest_active_release, normalize_releases, RETRYABLE_HTTP,
+    validate_releases, write_json_atomic,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -36,6 +37,10 @@ SCHEMA_FILE = ROOT / "data" / "devices.schema.json"
 
 def is_transient_network_error(exc: Exception) -> bool:
     """Detect temporary connectivity failures that should not be treated as persistent source issues."""
+    if isinstance(exc, urllib.error.HTTPError):
+        return int(exc.code) in RETRYABLE_HTTP
+    if isinstance(exc, urllib.error.URLError) and isinstance(exc.reason, Exception):
+        return is_transient_network_error(exc.reason)
     text = str(exc).lower()
     transient_markers = (
         "temporary failure in name resolution",
@@ -47,14 +52,8 @@ def is_transient_network_error(exc: Exception) -> bool:
     )
     if any(marker in text for marker in transient_markers):
         return True
-    if isinstance(exc, TimeoutError):
+    if isinstance(exc, TimeoutError | socket.gaierror):
         return True
-    if isinstance(exc, urllib.error.URLError):
-        reason = exc.reason
-        if isinstance(reason, TimeoutError | socket.gaierror):
-            return True
-        reason_text = str(reason).lower()
-        return any(marker in reason_text for marker in transient_markers)
     return False
 
 
@@ -224,6 +223,9 @@ def merge_release_metadata(
         and str(source.get("type") or "") == "apple_support"
         and str(source.get("kind") or "") == "airpods"
     )
+    current_releases = normalize_releases(current_releases)
+    new_releases = normalize_releases(new_releases)
+    incoming_latest = get_latest_active_release(new_releases)
     current_by_version = {
         release_identity(rel): rel
         for rel in current_releases
@@ -264,6 +266,11 @@ def merge_release_metadata(
         if key and key not in seen:
             preserved = dict(rel)
             preserved["active"] = bool(preserved.get("active", True))
+            if (
+                source and source.get("allow_regression") and incoming_latest
+                and compare_versions(preserved["version"], incoming_latest["version"]) == 1
+            ):
+                preserved["active"] = False
             merged.append(preserved)
             seen.add(key)
 
@@ -299,8 +306,11 @@ def prepare_release_update(
     """Validate raw parser output before history can conceal a regression."""
     if status == "ok_empty":
         return True, "", current
+    original = current
+    current = normalize_releases(current)
+    incoming = normalize_releases(incoming)
     accepted, reason = should_accept_release_update(current, incoming, source)
-    return accepted, reason, merge_release_metadata(current, incoming, source) if accepted else current
+    return accepted, reason, merge_release_metadata(current, incoming, source) if accepted else original
 
 
 def _process_device(
@@ -360,7 +370,9 @@ def _process_device(
             "used_source_index": idx,
         }
         try:
-            releases = normalize_releases(sync_device(device_name, candidate_for_run, timeout))
+            releases = sync_device(device_name, candidate_for_run, timeout)
+            validate_releases(releases, candidate_for_run)
+            releases = normalize_releases(releases)
         except Exception as exc:  # noqa: BLE001
             if debug_enabled:
                 print(f"{debug_prefix} attempt failed: {exc}")
@@ -600,7 +612,7 @@ def main() -> int:
             if not accepted:
                 result["status"] = status = "guardrail_rejected"
                 result["reason"] = reason = guard_reason
-            elif releases != current:
+            elif releases != firmware_index.get(device_id, {}).get("releases", []):
                 firmware_index[device_id] = {"releases": releases}
                 updated_devices.append(device_id)
 
@@ -651,7 +663,7 @@ def main() -> int:
         should_write = True
 
     if should_write and not args.dry_run:
-        DATA_FILE.write_text(json.dumps(payload, indent=2, ensure_ascii=True) + "\n", encoding="utf-8")
+        write_json_atomic(DATA_FILE, payload)
         print(f"Wrote updates to {DATA_FILE}")
 
     metrics = {

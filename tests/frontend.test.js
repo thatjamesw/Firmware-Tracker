@@ -94,3 +94,25 @@ test('release notes are escaped and empty metadata omitted', () => {
   assert.ok(!markup.includes('<script>'));
   assert.ok(!markup.includes('Anti-rollback'));
 });
+
+test('TP-Link build changes notify and choose the newest build', () => {
+  const ctx = app();
+  const oldVersion = '1.2.0 Build 20250101';
+  const newVersion = '1.2.0 Build 20250102';
+  ctx.detectNewFirmware([row('router', oldVersion)]);
+  const detection = ctx.detectNewFirmware([row('router', newVersion)]);
+  assert.equal(detection.newDeviceIds.has('router'), true);
+  ctx.saveSeenVersions(detection.current);
+  assert.equal(ctx.detectNewFirmware([row('router', newVersion)]).newDeviceIds.size, 0);
+  const latest = ctx.getLatestActiveRelease([
+    {version: oldVersion, active: true, released_time: '2026-02-01'},
+    {version: newVersion, active: true, released_time: '2026-01-01'},
+  ]);
+  assert.equal(latest.version, newVersion);
+});
+
+test('inactive higher versions do not conceal an approved correction', () => {
+  assert.equal(app().getLatestActiveRelease([
+    {version: '2.0', active: false}, {version: '1.0', active: true},
+  ]).version, '1.0');
+});
