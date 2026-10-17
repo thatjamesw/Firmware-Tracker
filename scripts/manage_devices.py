@@ -13,7 +13,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from fetch_firmware_details import (
-    DATA_FILE, list_tracked_devices, prepare_release_update, process_device, validate_payload_schema,
+    DATA_FILE, build_device_health, list_tracked_devices, prepare_release_update, process_device, validate_payload_schema,
 )
 from sources import SOURCE_VENDOR
 from sources.common import configure_fetch
@@ -146,16 +146,12 @@ def update_health(payload: dict, device_id: str, result: dict | None) -> None:
     if not status:
         return
     health = status.setdefault("device_health", {})
-    health.pop(device_id, None)
+    prior = health.pop(device_id, {})
     for key in ("issues", "transient_issues"):
         status[key] = [i for i in status.get(key, []) if i.get("device_id") != device_id]
     status["issue_streaks"] = {k: v for k, v in status.get("issue_streaks", {}).items() if not k.endswith(":" + device_id)}
     if result:
-        health[device_id] = {
-            "vendor": result["vendor"], "status": result["status"],
-            "last_success_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "consecutive_failures": 0, "last_error_type": "", "last_error_reason": "",
-        }
+        health[device_id] = build_device_health(result, prior, datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
     counts = dict.fromkeys(status.get("health_counts", {}), 0)
     for device in health.values():
         counts[device["status"]] = counts.get(device["status"], 0) + 1

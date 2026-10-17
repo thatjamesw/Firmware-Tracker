@@ -8,7 +8,6 @@ from .common import (
     fetch_bytes,
     html_to_text,
     make_release_candidate,
-    normalize_space,
     parse_human_date_to_iso,
     resolve_release_candidates,
 )
