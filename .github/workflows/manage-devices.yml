@@ -72,6 +72,10 @@ jobs:
           cache: pip
       - name: Install dependencies
         run: python -m pip install -r requirements.txt
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
       - name: Check and prepare device change
         id: device
         env:

@@ -29,9 +29,18 @@ jobs:
         with:
           python-version: '3.12'
           cache: 'pip'
+          cache-dependency-path: |
+            requirements.txt
+            requirements-ci.txt
 
       - name: Install dependencies
-        run: python -m pip install --upgrade pip && python -m pip install -r requirements.txt
+        run: python -m pip install -r requirements.txt -r requirements-ci.txt
+
+      - name: Lint workflows
+        run: actionlint .github/workflows/*.yml
+
+      - name: Audit Python dependencies
+        run: python -m pip_audit -r requirements.txt --progress-spinner=off
 
       - name: Run unit tests
         run: python -m unittest discover -s tests -p 'test_*.py' -v
@@ -53,6 +62,9 @@ jobs:
 
       - name: Install browser test dependencies
         run: npm ci
+
+      - name: Audit JavaScript dependencies
+        run: npm audit
 
       - name: Install Chromium
         run: npx playwright install --with-deps chromium

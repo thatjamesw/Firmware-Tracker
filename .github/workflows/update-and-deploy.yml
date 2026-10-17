@@ -44,42 +44,36 @@ jobs:
             exit 0
           fi
 
-          start_utc="$(TZ=Europe/Helsinki date -d 'today 00:00' --utc '+%Y-%m-%dT%H:%M:%SZ')"
-          end_utc="$(TZ=Europe/Helsinki date -d 'tomorrow 00:00' --utc '+%Y-%m-%dT%H:%M:%SZ')"
+          read -r start_utc end_utc < <(python3 - <<'PYTHON'
+          from datetime import datetime, time, timedelta, timezone
+          from zoneinfo import ZoneInfo
+          finland = ZoneInfo("Europe/Helsinki")
+          start = datetime.combine(datetime.now(finland).date(), time.min, finland)
+          print(*(d.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ") for d in (start, start + timedelta(days=1))))
+          PYTHON
+          )
 
-          runs_json="$(gh api \
-            "repos/${GITHUB_REPOSITORY}/actions/workflows/${WORKFLOW_FILE}/runs?branch=${GITHUB_REF_NAME}&event=schedule&per_page=50")"
-          current_created_at="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" --jq '.created_at')"
+          main_sha="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/main" --jq '.object.sha')"
+          last_scan_utc="$(gh api "repos/${GITHUB_REPOSITORY}/contents/data/devices.json?ref=${main_sha}" \
+            --jq '.content' | base64 --decode | jq -r '.sources.sync_status.last_run_utc // ""')"
+          published_runs="$(gh api \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/${WORKFLOW_FILE}/runs?branch=main&event=push&status=success&per_page=50")"
 
-          prior_active_runs="$(jq \
-            --arg current_run_id "${GITHUB_RUN_ID}" \
-            --arg current_created_at "$current_created_at" \
+          published_today="$(jq \
+            --arg last_scan_utc "$last_scan_utc" \
+            --arg main_sha "$main_sha" \
             --arg start_utc "$start_utc" \
             --arg end_utc "$end_utc" \
-            '[.workflow_runs[]
-              | select((.id | tostring) != $current_run_id)
-              | select(.created_at >= $start_utc and .created_at < $end_utc)
-              | select(.created_at < $current_created_at)
-              | select(.status == "queued" or .status == "in_progress")] | length' \
-            <<< "$runs_json")"
+            '$last_scan_utc >= $start_utc and $last_scan_utc < $end_utc
+              and any(.workflow_runs[]; .head_sha == $main_sha and .created_at >= $last_scan_utc and .conclusion == "success")' \
+            <<< "$published_runs")"
 
-          successful_runs="$(jq \
-            --arg start_utc "$start_utc" \
-            --arg end_utc "$end_utc" \
-            '[.workflow_runs[]
-              | select(.created_at >= $start_utc and .created_at < $end_utc)
-              | select(.status == "completed" and .conclusion == "success")] | length' \
-            <<< "$runs_json")"
-
-          if [[ "$prior_active_runs" != "0" ]]; then
+          if [[ "$published_today" == "true" ]]; then
             echo "run_now=false" >> "$GITHUB_OUTPUT"
-            echo "Another scheduled run is already active for today in Europe/Helsinki. Skipping."
-          elif [[ "$successful_runs" != "0" ]]; then
-            echo "run_now=false" >> "$GITHUB_OUTPUT"
-            echo "A scheduled run already succeeded today in Europe/Helsinki. Skipping."
+            echo "Today's scan is merged and published. Skipping."
           else
             echo "run_now=true" >> "$GITHUB_OUTPUT"
-            echo "No active or successful scheduled run found for today in Europe/Helsinki. Proceeding."
+            echo "Today's scan has not been merged and published. Proceeding."
           fi
 
   build:
@@ -104,12 +98,24 @@ jobs:
       - name: Install sync dependencies
         run: python -m pip install --upgrade pip && python -m pip install -r requirements.txt
 
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
       - name: Run parser and schema tests
         run: python -m unittest discover -s tests -p 'test_*.py' -v
 
       - name: Fetch tracked firmware details from official sources
         if: github.event_name != 'push'
         run: python scripts/fetch_firmware_details.py --fail-on-regression --metrics-file scan-metrics.json
+
+      - name: Report incomplete scan
+        if: always() && github.event_name != 'push'
+        run: |
+          if [[ ! -f scan-metrics.json ]]; then
+            printf '## Firmware scan\n\nThe scan did not complete. See the failed step above for details.\n' >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Upload scan metrics
         if: always()
@@ -128,10 +134,10 @@ jobs:
       - name: Frontend smoke test
         run: python scripts/smoke_test_frontend.py
 
-      - name: Show generated changes (no repo push)
+      - name: Show generated changes
         run: |
           if [[ -n "$(git status --porcelain data/devices.json docs/devices docs/FIRMWARE_SUMMARY.md)" ]]; then
-            echo "Generated content changed for this run (deploying via Pages artifact)."
+            echo "Generated content changed; scans propose a PR and main pushes deploy."
             git status --porcelain data/devices.json docs/devices docs/FIRMWARE_SUMMARY.md
           else
             echo "No generated changes detected."
@@ -173,11 +179,13 @@ jobs:
           merge-method: squash
 
       - name: Upload Pages artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v5
         with:
           path: docs
 
   deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: build
