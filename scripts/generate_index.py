@@ -7,7 +7,7 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
-from sources.common import version_sort_key
+from sources.common import get_latest_active_release
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_FILE = ROOT / "data" / "devices.json"
@@ -53,17 +53,6 @@ def build_device_source_types(device_sources: dict) -> dict:
             continue
         out[device_id] = str(source.get("type") or "")
     return out
-
-
-def get_latest_active_release(releases: list[dict]) -> dict | None:
-    active = [r for r in releases if isinstance(r, dict) and r.get("active") is True]
-    if not active:
-        return None
-    active.sort(
-        key=lambda r: (version_sort_key(str(r.get("version") or "")), str(r.get("released_time") or "")),
-        reverse=True,
-    )
-    return active[0]
 
 
 def age_days(released_time: str) -> int | None:

@@ -2,11 +2,13 @@ import copy
 import json
 import sys
 import unittest
+import urllib.error
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 from manage_devices import apply_change, build_source, infer_type
+from sources import atomos
 
 
 class ManagementTests(unittest.TestCase):
@@ -96,3 +98,35 @@ class ManagementTests(unittest.TestCase):
         del updated['sources']['device_sources']['osmo_pocket_4p']['model']
         revised, _ = apply_change(updated, {'action': 'update', 'device_id': 'osmo_pocket_4p', 'name': 'Travel Camera'}, self.checker)
         self.assertEqual(revised['sources']['device_sources']['osmo_pocket_4p']['model'], 'Osmo Pocket 4P')
+
+    def test_edit_with_manual_fallback_preserves_live_check_and_untouched_health(self):
+        payload = copy.deepcopy(self.payload)
+        source = {
+            'type': 'atomos_support', 'url': 'https://www.atomos.com/product-support/', 'model': 'Ninja V',
+            'fallback_source': {'type': 'static', 'manual_verified_utc': '2026-09-28T10:16:00Z',
+                                'release': self.checker.return_value['releases'][0]},
+        }
+        payload['categories']['cameras']['devices']['atomos_ninja_v'] = 'Atomos Ninja V'
+        payload['sources']['device_sources']['atomos_ninja_v'] = source
+        payload['sources']['sync_status'] = {
+            'last_run_utc': '2026-09-27T10:00:00Z',
+            'device_health': {
+                'atomos_ninja_v': {'vendor': 'atomos', 'status': 'error', 'last_success_utc': '2026-09-07T07:16:04Z'},
+                'other': {'vendor': 'dji', 'status': 'error', 'consecutive_failures': 3},
+            },
+        }
+        prior = copy.deepcopy(payload['sources']['sync_status'])
+        error = urllib.error.HTTPError(source['url'], 403, 'Forbidden', {}, None)
+        with patch.object(atomos, 'fetch_bytes', side_effect=error):
+            updated, _ = apply_change(payload, {'action': 'update', 'device_id': 'atomos_ninja_v', 'name': 'My Ninja V'})
+        status = updated['sources']['sync_status']
+        health = status['device_health']['atomos_ninja_v']
+        self.assertEqual(health['status'], 'manual_fallback')
+        self.assertEqual(health['last_success_utc'], prior['device_health']['atomos_ninja_v']['last_success_utc'])
+        self.assertEqual(health['manual_verified_utc'], source['fallback_source']['manual_verified_utc'])
+        self.assertIn('HTTP 403', health['last_error_reason'])
+        self.assertEqual(status['last_run_utc'], prior['last_run_utc'])
+        for device_id, previous in prior['device_health'].items():
+            if device_id != 'atomos_ninja_v':
+                self.assertEqual(status['device_health'][device_id], previous)
+        self.assertEqual(payload['sources']['sync_status'], prior)

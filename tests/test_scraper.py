@@ -11,6 +11,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 from sources import common, dji, apple, atomos, bambu, godox
 from fetch_firmware_details import prepare_release_update
+import fetch_firmware_details as ffd
 
 FIXTURES = Path(__file__).parent / 'fixtures'
 
@@ -123,6 +124,52 @@ class FetchTests(unittest.TestCase):
 
 
 class RobustParserTests(unittest.TestCase):
+    def test_latest_active_release_handles_empty_inactive_and_tied_versions(self):
+        self.assertIsNone(common.get_latest_active_release([]))
+        releases = [
+            {'version': '9.0', 'released_time': '2026-10-01', 'active': False},
+            {'version': '1.10', 'released_time': '2026-01-01', 'active': True},
+            {'version': '1.9', 'released_time': '2026-10-01', 'active': True},
+            {'version': '1.10', 'released_time': '2026-02-01', 'active': True},
+        ]
+        original = releases.copy()
+        self.assertIs(common.get_latest_active_release(releases), releases[-1])
+        self.assertEqual(releases, original)
+        self.assertIsNone(common.get_latest_active_release(releases[:1]))
+
+    def test_failed_scans_preserve_last_success_and_increment_failures_once(self):
+        for vendor in ('dji', 'static'):
+            for status in ('error', 'transient_error', 'no_entries', 'missing_source', 'guardrail_rejected'):
+                with self.subTest(vendor=vendor, status=status):
+                    prior = {'device_health': {'camera': {'last_success_utc': '2026-01-01T00:00:00Z', 'consecutive_failures': 2}}}
+                    result = {'device_id': 'camera', 'vendor': vendor, 'status': status, 'reason': 'failed check'}
+                    summary = ffd.build_sync_status([result], prior)
+                    health = summary['device_health']['camera']
+                    self.assertEqual(health['last_success_utc'], '2026-01-01T00:00:00Z')
+                    self.assertEqual(health['consecutive_failures'], 3)
+                    self.assertEqual(health['last_error_type'], status)
+                    self.assertEqual(health['last_error_reason'], 'failed check')
+                    self.assertEqual(bool(summary['issues']), vendor != 'static' and status != 'transient_error')
+                    self.assertEqual(bool(summary['transient_issues']), status == 'transient_error')
+                    self.assertEqual(prior['device_health']['camera']['consecutive_failures'], 2)
+
+    def test_failed_fallback_reports_last_attempt_and_source_policy(self):
+        for allow_empty in (False, True):
+            with self.subTest(allow_empty=allow_empty):
+                fallback = {'type': 'dji_downloads', 'url': 'https://example.com/fallback',
+                            'treat_404_as_empty': True, 'allow_empty': allow_empty}
+                source = {'type': 'dji_downloads', 'url': 'https://example.com/primary', 'fallback_source': fallback}
+                error = urllib.error.HTTPError(fallback['url'], 404, 'Not Found', {}, None)
+                with patch.object(ffd, 'sync_device', side_effect=[TimeoutError('primary timed out'), error]) as sync:
+                    result = ffd._process_device('camera', 'Camera', source, 5)
+                self.assertEqual(sync.call_count, 2)
+                self.assertEqual(result['status'], 'ok_empty' if allow_empty else 'no_entries')
+                self.assertEqual(result['releases'], [])
+                self.assertEqual(result['reason'], '404 treated as empty result by source policy')
+                self.assertTrue(result['used_fallback'])
+                self.assertIs(result['used_source'], fallback)
+                self.assertEqual(result['used_source_index'], 1)
+
     def test_bambu_firmware_heading_accepts_inline_markup(self):
         html = '<template slot="contents"><h2>P1 <em>series</em> Version <span>01.09.01.00</span> (20260114)</h2></template>'
         with patch.object(bambu, 'fetch_bytes', return_value=html.encode()):

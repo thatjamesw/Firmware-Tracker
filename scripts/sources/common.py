@@ -238,6 +238,14 @@ def compare_versions(left: str, right: str) -> int | None:
     return 1 if left_key > right_key else -1
 
 
+def get_latest_active_release(releases: list[dict[str, Any]]) -> dict[str, Any] | None:
+    return max(
+        (r for r in releases if isinstance(r, dict) and r.get("active") is True),
+        key=lambda r: (version_sort_key(str(r.get("version") or "")), str(r.get("released_time") or "")),
+        default=None,
+    )
+
+
 def make_release_candidate(
     *,
     version: str,
