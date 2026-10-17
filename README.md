@@ -162,7 +162,7 @@ python scripts/fetch_firmware_details.py --dry-run --metrics-file /tmp/scan-metr
 node --test tests/frontend.test.js
 ```
 
-Python 3.12+ and Node 22+ are used for checks. Each scan shares downloads by URL,
+Python 3.12+ and Node 24 LTS are used for checks. Each scan shares downloads by URL,
 including in-flight requests, and allows two requests per host. Cache data lives
 only for the current process/scan; there is no persistent HTTP cache.
 The fetcher retries temporary HTTP errors (408, 429, 500, 502, 503, 504) and network
@@ -221,7 +221,7 @@ explicit unknown date stays unknown when historical metadata is merged.
   - reports scan results and timing in the Actions summary, including failed scans
   - on pushes to `main`, validates and deploys the merged data without another vendor scan or automation PR
 
-CI, sync, and device-management workflows all use Node 22 for frontend checks.
+CI, sync, and device-management workflows all use Node 24 LTS for frontend checks.
 
 ### Automated Sync PR Setup (One-time)
 
