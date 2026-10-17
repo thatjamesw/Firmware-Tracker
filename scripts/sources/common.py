@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import json
+import math
+import os
 import random
 import re
 import ssl
 import threading
 import time
+import tempfile
 from concurrent.futures import Future
 from contextlib import contextmanager
 from email.utils import parsedate_to_datetime
@@ -13,6 +17,7 @@ import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 from html import unescape
+from pathlib import Path
 from typing import Any
 
 from bs4 import BeautifulSoup
@@ -30,6 +35,21 @@ _FETCH_METRICS: dict[str, float] = {}
 _LOCAL = threading.local()
 MAX_RESPONSE_BYTES = 32 * 1024 * 1024
 RETRYABLE_HTTP = {408, 429, 500, 502, 503, 504}
+
+
+def write_json_atomic(path: Path, payload: Any) -> None:
+    """Replace data only after the complete JSON has been written successfully."""
+    fd, name = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
+    temporary = Path(name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as out:
+            json.dump(payload, out, indent=2, ensure_ascii=True)
+            out.write("\n")
+            out.flush()
+            os.fsync(out.fileno())
+        temporary.replace(path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def configure_fetch(retries: int, retry_backoff: float) -> None:
@@ -305,7 +325,9 @@ def default_expected_version_pattern(source: dict[str, Any]) -> str:
         if kind == "airpods":
             return r"[0-9A-Za-z][0-9A-Za-z.\-]*"
         return r"\d+(?:\.\d+)*(?:[A-Za-z0-9.\-]*)?"
-    if source_type in {"dji_downloads", "atomos_support", "bambu_wiki", "godox_listing", "tplink_downloads"}:
+    if source_type == "tplink_downloads":
+        return r"\d+(?:\.\d+)+(?: Build \d{8})?"
+    if source_type in {"dji_downloads", "atomos_support", "bambu_wiki", "godox_listing"}:
         return r"\d+(?:\.\d+)+"
     if source_type == "sony_cscs":
         return r"\d+(?:\.\d+)*"
@@ -359,8 +381,6 @@ def normalize_release(raw: dict[str, Any]) -> dict[str, Any]:
     note = raw.get("release_note")
     if not isinstance(note, dict):
         note = {"en": ""}
-    elif "en" not in note:
-        note["en"] = ""
 
     release = {
         "version": str(raw.get("version") or "").lstrip("Vv"),
@@ -373,6 +393,10 @@ def normalize_release(raw: dict[str, Any]) -> dict[str, Any]:
         release["date_precision"] = "unknown"
     evidence = raw.get("evidence")
     if isinstance(evidence, dict):
+        # Older TP-Link data kept the build only in the note, losing release identity.
+        build = re.search(r"\bBuild: (\d{8})\b", release["release_note"]["en"])
+        if evidence.get("type") == "tplink_download_item" and build and re.fullmatch(r"\d+(?:\.\d+)+", release["version"]):
+            release["version"] += f" Build {build.group(1)}"
         release["evidence"] = {
             "type": str(evidence.get("type") or ""),
             "text": str(evidence.get("text") or ""),
@@ -381,6 +405,37 @@ def normalize_release(raw: dict[str, Any]) -> dict[str, Any]:
     if "confidence" in raw:
         release["confidence"] = max(0.0, min(1.0, float(raw.get("confidence") or 0.0)))
     return release
+
+
+def validate_releases(releases: Any, source: dict[str, Any]) -> None:
+    """Check adapter output before normalization can hide malformed fields."""
+    if not isinstance(releases, list):
+        raise ValueError("Parser contract: expected a list of releases")
+    for release in releases:
+        if not isinstance(release, dict):
+            raise ValueError("Parser contract: expected a release object")
+        note = release.get("release_note")
+        if (
+            not isinstance(release.get("version"), str) or not release["version"].strip()
+            or not isinstance(release.get("released_time"), str)
+            or type(release.get("active")) is not bool
+            or not isinstance(note, dict) or not isinstance(note.get("en"), str)
+        ):
+            raise ValueError("Parser contract: invalid version, date, active flag or English release note")
+        errors = _candidate_contract_errors(release, source)
+        if errors:
+            raise ValueError(f"Parser contract: {', '.join(errors)}")
+        if "evidence" in release:
+            evidence = release["evidence"]
+            if not isinstance(evidence, dict) or any(not isinstance(evidence.get(key), str) for key in ("type", "text", "source_url")):
+                raise ValueError("Parser contract: invalid evidence")
+            url = urllib.parse.urlparse(evidence["source_url"])
+            if url.scheme not in {"http", "https"} or not url.hostname:
+                raise ValueError("Parser contract: evidence must reference an HTTP(S) URL")
+        if "confidence" in release:
+            confidence = release["confidence"]
+            if type(confidence) not in (int, float) or not math.isfinite(confidence) or not 0 <= confidence <= 1:
+                raise ValueError("Parser contract: confidence must be between 0 and 1")
 
 
 def normalize_releases(releases: list[dict[str, Any]]) -> list[dict[str, Any]]:

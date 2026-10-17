@@ -83,7 +83,7 @@ def sync_tplink_downloads(source: dict[str, Any], timeout: int) -> list[dict[str
 
         candidates.append(
             make_release_candidate(
-                version=version,
+                version=f"{version} Build {build}",
                 released_time=release_date,
                 note=note,
                 evidence_type="tplink_download_item",

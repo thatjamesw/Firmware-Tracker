@@ -269,3 +269,28 @@ Recommended GitHub branch protection:
   - New-firmware status and row highlights based on what your browser has previously seen (`Mark as Seen` to clear)
   - `Release history` details include an `Open official download page` link (landing page, not direct binary URL)
 - Devices without configured sources are skipped.
+
+### Parser contract
+
+Every source adapter returns a list of releases with a nonempty string `version`,
+a string `released_time`, an English `release_note.en` string, and a boolean
+`active`. Dates must be valid ISO dates/timestamps; source policy decides whether
+an empty date or an empty result is allowed. Vendor version patterns are checked
+before data is accepted. Optional evidence contains string `type`, `text`, and
+an HTTP(S) `source_url`; optional confidence is a finite number from 0 to 1.
+Static/manual sources may use descriptive versions and unknown dates.
+
+The scan validates this contract before normalization. Invalid output follows the
+same fallback and last-known-good path as other source failures. Offline tests
+exercise every registered adapter through that boundary. HTTP 408/429 and
+retryable server errors remain transient after retry exhaustion, allowing other
+vendors' healthy updates to publish. Both scan and device-management data writes
+use a unique temporary file and atomic replacement to preserve existing data if
+writing fails.
+
+TP-Link versions include their official build, for example `1.3.5 Build 26071712`,
+so a new build with the same base version is a distinct release. Legacy entries
+with TP-Link evidence and a `Build:` note migrate on a successful scan without
+duplicating history. Existing visitors may see one initial unseen notification
+for the expanded version. An explicit `allow_regression` correction retains
+higher historical versions as inactive so the corrected version becomes latest.

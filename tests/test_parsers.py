@@ -393,7 +393,7 @@ class ParserTests(unittest.TestCase):
             tplink_source.fetch_bytes = original_fetch
 
         self.assertEqual(len(releases), 1)
-        self.assertEqual(releases[0]["version"], "1.2.0")
+        self.assertEqual(releases[0]["version"], "1.2.0 Build 20250718")
         self.assertEqual(releases[0]["released_time"], "2025-08-12")
         self.assertEqual(releases[0]["evidence"]["type"], "tplink_download_item")
         self.assertIn("Build: 20250718", releases[0]["release_note"]["en"])
@@ -429,7 +429,7 @@ class ParserTests(unittest.TestCase):
 
         self.assertEqual(fetched_urls, ["https://www.tp-link.com/nordic/support/download/deco-be65/v2/#Firmware"])
         self.assertEqual(len(releases), 1)
-        self.assertEqual(releases[0]["version"], "1.3.2")
+        self.assertEqual(releases[0]["version"], "1.3.2 Build 26040912")
         self.assertEqual(releases[0]["released_time"], "2026-05-14")
 
     def test_parse_iso_date_preserves_instant_for_offset_aware_inputs(self) -> None:
