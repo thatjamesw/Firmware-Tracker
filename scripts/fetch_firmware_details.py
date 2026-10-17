@@ -5,7 +5,9 @@ from __future__ import annotations
 
 import argparse
 import concurrent.futures
+import html
 import json
+import os
 import re
 import socket
 import sys
@@ -514,6 +516,27 @@ def build_sync_status(results: list[dict[str, Any]], prior_sync_status: dict[str
     }
 
 
+def format_scan_summary(sync_status: dict, updated_devices: list[str], metrics: dict, device_names: dict) -> str:
+    counts = sync_status["health_counts"]
+    fetch = metrics["fetch"]
+    lines = [
+        f"Updated devices: {len(updated_devices)}",
+        f"Elapsed: {metrics['elapsed_seconds']} seconds; requests: {fetch['requests']}; retries: {fetch['retries']}",
+        "Source health: " + ", ".join(f"{key}={value}" for key, value in counts.items()),
+        "",
+    ]
+    for device_id, health in sync_status["device_health"].items():
+        label = health["status"].replace("_", " ")
+        if device_id in updated_devices:
+            label += "; firmware data updated"
+        if health.get("manual_verified_utc"):
+            label += f"; manually verified {health['manual_verified_utc']}"
+        if health.get("last_error_reason"):
+            label += f"; {health['last_error_reason']}"
+        lines.append(f"{device_names.get(device_id, device_id)}: {label}")
+    return "## Firmware scan\n\n<pre>" + html.escape("\n".join(lines)) + "</pre>\n"
+
+
 def main() -> int:
     args = parse_args()
     scan_started = time.monotonic()
@@ -639,6 +662,10 @@ def main() -> int:
     print("Scan metrics: " + json.dumps({"elapsed_seconds": metrics["elapsed_seconds"], **metrics["fetch"]}))
     if args.metrics_file:
         args.metrics_file.write_text(json.dumps(metrics, indent=2) + "\n", encoding="utf-8")
+
+    if os.environ.get("GITHUB_STEP_SUMMARY"):
+        with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
+            summary.write(format_scan_summary(sync_status, updated_devices, metrics, tracked))
 
     if regressions and args.fail_on_regression:
         print("Regressions detected and --fail-on-regression is set.", file=sys.stderr)

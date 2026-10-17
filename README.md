@@ -43,11 +43,14 @@ python scripts/generate_index.py
 
 Then open `docs/index.html` in a browser.
 
-Optional workflow linting:
+CI also lints workflows and audits Python and JavaScript dependencies. To run those checks locally:
 
 ```bash
-.venv/bin/python -m pip install actionlint-py
-.venv/bin/actionlint .github/workflows/update-and-deploy.yml
+.venv/bin/python -m pip install -r requirements-ci.txt
+.venv/bin/actionlint .github/workflows/*.yml
+.venv/bin/python -m pip_audit -r requirements.txt
+npm ci
+npm audit
 ```
 
 ## Using the tracker
@@ -173,7 +176,10 @@ budget is cooperative, not a hard cancellation of PDF parsing or an in-progress
 socket read. Responses are limited to 32 MiB. Scan metrics include request count,
 bytes, shared-cache hits, total elapsed time, and per-device fetch/parse time.
 Network seconds are summed across concurrent requests and can exceed wall time.
-The scheduled workflow uploads `scan-metrics.json` as a run artifact.
+The scheduled workflow uploads `scan-metrics.json` as a run artifact. Its Actions
+summary lists updated devices, source failures, manual fallbacks, and scan timing,
+including when strict regression checks fail. If the scan cannot complete, the
+summary points to the failed step.
 
 DJI, Apple, and Atomos use structural HTML parsing. DJI also recognizes release-note
 filenames if layout classes change, resolves relative PDF links, tries another
@@ -187,26 +193,35 @@ explicit unknown date stays unknown when historical metadata is merged.
 1. Push this repo to GitHub.
 2. In GitHub repository settings:
    - Pages -> Source: `GitHub Actions`
-3. Run workflow `Update and Deploy Firmware Tracker` once (manual dispatch).
-4. The site deploys from the generated `docs/` artifact.
-5. The sync workflow tries early daily slots at 05:07, 06:17, and 07:27 Europe/Helsinki. A gate job allows only one successful scheduled sync per Finland calendar day, while manual dispatch always runs.
+3. Require the `test` check from the `CI` workflow on `main` before merging.
+4. Run workflow `Update and Deploy Firmware Tracker` once (manual dispatch). It
+   proposes a sync PR; once merged, the push to `main` deploys the generated
+   `docs/` artifact. Keep Pages on `GitHub Actions` to avoid a second branch-based deployment.
+5. The sync workflow tries early daily slots at 05:07, 06:17, and 07:27 Europe/Helsinki.
+   Backup attempts continue until today's scan is merged and the current `main`
+   has a successful deployment. Manual dispatch always runs. No human approval
+   is required for sync PRs; required CI checks must pass before auto-merge.
 6. CI runs parser/schema tests and a frontend smoke test before generated changes are merged.
 
 ## Automated Testing (No Local Setup)
 
 - `CI` workflow (`.github/workflows/ci.yml`) runs on every pull request and push to `main`:
   - installs dependencies
+  - lints workflow files and audits Python and JavaScript dependencies
   - runs unit/parser/schema tests
   - runs `scripts/generate_index.py` as a build smoke test
   - runs `scripts/smoke_test_frontend.py` to verify generated browser assets and script wiring
+  - runs desktop and mobile Chromium browser tests
 - `Update and Deploy Firmware Tracker` workflow (`.github/workflows/update-and-deploy.yml`) runs daily + manual:
-  - checks whether a scheduled sync is already active or has already succeeded today in Europe/Helsinki
+  - skips a scheduled attempt only when today's scan is merged and the current `main` is successfully published
   - re-runs tests
   - fetches official firmware data with regression guardrails enabled
   - regenerates browser assets + markdown summary
-  - deploys generated `docs/` as a Pages artifact (no push back to protected `main`)
   - opens/updates an automation PR for generated file changes and enables auto-merge
+  - reports scan results and timing in the Actions summary, including failed scans
   - on pushes to `main`, validates and deploys the merged data without another vendor scan or automation PR
+
+CI, sync, and device-management workflows all use Node 22 for frontend checks.
 
 ### Automated Sync PR Setup (One-time)
 
@@ -224,7 +239,7 @@ To run fully hands-off daily:
 Recommended GitHub branch protection:
 
 - Require pull request before merging to `main`
-- Require status check: `CI / test`
+- Require the `test` status check provided by GitHub Actions (`CI` workflow).
 - Disable direct pushes to `main` (except admins if you want an emergency path)
 
 ## Notes

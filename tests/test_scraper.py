@@ -1,5 +1,7 @@
 import io
+import json
 import sys
+import tempfile
 import threading
 import time
 import unittest
@@ -124,6 +126,49 @@ class FetchTests(unittest.TestCase):
 
 
 class RobustParserTests(unittest.TestCase):
+    def test_scan_summary_includes_updates_fallbacks_failures_and_timing_safely(self):
+        status = {'health_counts': {'ok': 1, 'error': 1}, 'device_health': {
+            'manual': {'status': 'manual_fallback', 'manual_verified_utc': '2026-09-28T10:16:00Z',
+                       'last_error_reason': 'HTTP 403'},
+            'failed': {'status': 'error', 'last_error_reason': '<script>bad source</script>'},
+        }}
+        metrics = {'elapsed_seconds': 12.5, 'fetch': {'requests': 3, 'retries': 1}}
+        summary = ffd.format_scan_summary(status, ['manual'], metrics, {'manual': 'Recorder', 'failed': 'Camera <1>'})
+        self.assertIn('Updated devices: 1', summary)
+        self.assertIn('12.5 seconds; requests: 3; retries: 1', summary)
+        self.assertIn('Recorder: manual fallback; firmware data updated; manually verified 2026-09-28', summary)
+        self.assertIn('HTTP 403', summary)
+        self.assertIn('Camera &lt;1&gt;: error; &lt;script&gt;bad source&lt;/script&gt;', summary)
+        self.assertNotIn('<script>', summary)
+
+    def test_strict_scan_failure_still_writes_summary_and_metrics(self):
+        release = {'version': '2.0', 'released_time': '2026-01-01', 'active': True, 'release_note': {'en': ''}}
+        payload = {
+            'sources': {'device_sources': {'camera': {'type': 'dji_downloads', 'url': 'https://www.dji.com/test'}}},
+            'categories': {'cameras': {'title': 'Cameras', 'devices': {'camera': 'Camera'}}},
+            'firmware_index': {'camera': {'releases': [release]}},
+        }
+        result = {'device_id': 'camera', 'vendor': 'dji', 'source_type': 'dji_downloads',
+                  'status': 'error', 'reason': 'source parsing failed', 'releases': []}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            data, summary, metrics = root / 'devices.json', root / 'summary.md', root / 'metrics.json'
+            original = json.dumps(payload)
+            data.write_text(original)
+            with (
+                patch.object(ffd, 'DATA_FILE', data),
+                patch.object(ffd, 'process_device', return_value=result),
+                patch.object(sys, 'argv', ['scan', '--dry-run', '--fail-on-regression', '--metrics-file', str(metrics)]),
+                patch.dict(ffd.os.environ, {'GITHUB_STEP_SUMMARY': str(summary)}),
+                patch('sys.stdout', new_callable=io.StringIO),
+                patch('sys.stderr', new_callable=io.StringIO),
+            ):
+                self.assertEqual(ffd.main(), 2)
+            self.assertIn('Camera: error; source parsing failed', summary.read_text())
+            self.assertIn('error=1', summary.read_text())
+            self.assertEqual(json.loads(metrics.read_text())['fetch']['requests'], 0)
+            self.assertEqual(data.read_text(), original)
+
     def test_latest_active_release_handles_empty_inactive_and_tied_versions(self):
         self.assertIsNone(common.get_latest_active_release([]))
         releases = [
