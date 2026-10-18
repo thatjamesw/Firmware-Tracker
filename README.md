@@ -205,7 +205,7 @@ explicit unknown date stays unknown when historical metadata is merged.
 
 ## Automated Testing (No Local Setup)
 
-- `CI` workflow (`.github/workflows/ci.yml`) runs on every pull request and push to `main`:
+- `CI` workflow (`.github/workflows/ci.yml`) runs on every pull request and pushes to `main` that change more than the generated firmware data/assets. Generated-only updates already pass PR checks, so merging them triggers deployment without repeating the full CI suite:
   - installs dependencies
   - lints workflow files and audits Python and JavaScript dependencies
   - runs unit/parser/schema tests

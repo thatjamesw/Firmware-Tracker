@@ -5,6 +5,13 @@ on:
   push:
     branches:
       - main
+    # Generated updates already pass PR checks before merging.
+    paths-ignore:
+      - data/devices.json
+      - docs/devices/categories.js
+      - docs/devices/index.js
+      - docs/devices/config.js
+      - docs/FIRMWARE_SUMMARY.md
 
 permissions:
   contents: read
