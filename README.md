@@ -53,11 +53,12 @@ npm ci
 npm audit
 ```
 
-Dependabot checks for routine Python updates weekly on Monday at 06:00
-Europe/Helsinki and groups patch updates separately from minor and major updates.
+Dependabot checks for routine updates weekly on Monday: Python at 06:00, GitHub
+Actions at 06:15, and npm at 06:30 Europe/Helsinki. Each ecosystem groups patch
+updates separately from minor and major updates.
 Dependabot security updates are enabled and open fix PRs when GitHub detects
-vulnerable dependencies, independently of that schedule. Python patch PRs have
-auto-merge enabled automatically; the required `CI` / `test` check must pass
+vulnerable dependencies, independently of that schedule. Patch PRs for all three
+ecosystems have auto-merge enabled automatically; the required `CI` / `test` check must pass
 before GitHub merges them. Minor and major updates still need manual merging.
 Keep that required check enabled on `main` to preserve this merge gate.
 

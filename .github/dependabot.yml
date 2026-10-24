@@ -23,13 +23,24 @@ updates:
       time: "06:15"
       timezone: "Europe/Helsinki"
     groups:
-      github-actions:
+      github-actions-patches:
         patterns:
           - "*"
+        update-types:
+          - "patch"
     open-pull-requests-limit: 2
 
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+      time: "06:30"
+      timezone: "Europe/Helsinki"
+    groups:
+      npm-patches:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
     open-pull-requests-limit: 2

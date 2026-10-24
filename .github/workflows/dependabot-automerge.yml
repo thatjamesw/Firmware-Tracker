@@ -1,4 +1,4 @@
-name: Auto-merge Python dependency patches
+name: Auto-merge dependency patches
 
 on:
   pull_request_target:
@@ -26,9 +26,9 @@ jobs:
         with:
           github-token: ${{ github.token }}
 
-      - name: Enable auto-merge for Python patches
+      - name: Enable auto-merge for dependency patches
         if: >-
-          steps.metadata.outputs.package-ecosystem == 'pip' &&
+          contains(fromJSON('["pip", "npm", "github-actions"]'), steps.metadata.outputs.package-ecosystem) &&
           steps.metadata.outputs.update-type == 'version-update:semver-patch'
         env:
           GH_TOKEN: ${{ github.token }}
