@@ -53,6 +53,12 @@ npm ci
 npm audit
 ```
 
+Dependabot checks Python dependencies daily at 06:00 Europe/Helsinki and groups
+patch updates separately from minor and major updates. Python patch PRs have
+auto-merge enabled automatically; the required `CI` / `test` check must pass
+before GitHub merges them. Minor and major updates still need manual merging.
+Keep that required check enabled on `main` to preserve this merge gate.
+
 ## Using the tracker
 
 Search devices by name or category, select a category, or enable **Unseen releases
