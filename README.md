@@ -48,7 +48,7 @@ CI also lints workflows and audits Python and JavaScript dependencies. To run th
 ```bash
 .venv/bin/python -m pip install -r requirements-ci.txt
 .venv/bin/actionlint .github/workflows/*.yml
-.venv/bin/python -m pip_audit -r requirements.txt
+.venv/bin/python -m pip_audit -r requirements.txt -r requirements-ci.txt
 npm ci
 npm audit
 ```

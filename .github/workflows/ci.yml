@@ -47,7 +47,7 @@ jobs:
         run: actionlint .github/workflows/*.yml
 
       - name: Audit Python dependencies
-        run: python -m pip_audit -r requirements.txt --progress-spinner=off
+        run: python -m pip_audit -r requirements.txt -r requirements-ci.txt --progress-spinner=off
 
       - name: Run unit tests
         run: python -m unittest discover -s tests -p 'test_*.py' -v
