@@ -6,14 +6,9 @@ on:
     branches: [main]
     paths: ["docs/**", "data/**", "scripts/**", "requirements.txt", ".github/workflows/update-and-deploy.yml"]
   schedule:
-    # Try several early slots so the generated site is usually ready before
-    # the workday in Europe/Helsinki. Avoid :00 because GitHub scheduled
-    # workflows are more likely to be delayed or dropped then.
-    - cron: '7 5 * * *'
-      timezone: Europe/Helsinki
-    - cron: '17 6 * * *'
-      timezone: Europe/Helsinki
-    - cron: '27 7 * * *'
+    # Start overnight to allow for scheduler delays and aim to publish by 08:00.
+    # Retry hourly until today's scan is published. Avoid the busy :00 minute.
+    - cron: '17 2-7 * * *'
       timezone: Europe/Helsinki
 
 permissions:

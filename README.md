@@ -206,7 +206,10 @@ explicit unknown date stays unknown when historical metadata is merged.
 4. Run workflow `Update and Deploy Firmware Tracker` once (manual dispatch). It
    proposes a sync PR; once merged, the push to `main` deploys the generated
    `docs/` artifact. Keep Pages on `GitHub Actions` to avoid a second branch-based deployment.
-5. The sync workflow tries early daily slots at 05:07, 06:17, and 07:27 Europe/Helsinki.
+5. The sync workflow tries hourly from 02:17 through 07:17 Europe/Helsinki
+   (automatically following Finnish daylight saving time), aiming to publish by
+   08:00. Overnight attempts leave room for GitHub scheduler delays; the target
+   time is not guaranteed.
    Backup attempts continue until today's scan is merged and the current `main`
    has a successful deployment. Manual dispatch always runs. No human approval
    is required for sync PRs; required CI checks must pass before auto-merge.
