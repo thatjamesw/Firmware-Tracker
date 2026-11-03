@@ -277,10 +277,10 @@ class ParserTests(unittest.TestCase):
         self.assertIsNotNone(latest)
         self.assertEqual(latest["version"], "2.0.0")
 
-    def test_candidate_resolver_prefers_stronger_evidence(self) -> None:
+    def test_candidate_resolver_prefers_stronger_evidence_for_same_version(self) -> None:
         candidates = [
             common_source.make_release_candidate(
-                version="2.0.0",
+                version="1.9.0",
                 released_time="2026-04-01",
                 note="filename clue",
                 evidence_type="download_filename",
@@ -306,6 +306,28 @@ class ParserTests(unittest.TestCase):
         self.assertEqual(releases[0]["version"], "1.9.0")
         self.assertEqual(releases[0]["confidence"], 0.92)
         self.assertEqual(releases[0]["evidence"]["type"], "firmware_table_row")
+
+    def test_candidate_resolver_accepts_newer_version_without_date(self) -> None:
+        for source_type in ("dji_downloads", "sony_cscs", "godox_listing", "bambu_wiki", "tplink_downloads"):
+            with self.subTest(source_type=source_type):
+                candidates = [
+                    common_source.make_release_candidate(
+                        version="1.0", released_time="2026-10-01", evidence_type="official_listing",
+                        evidence_text="1.0", confidence=0.95,
+                    ),
+                    common_source.make_release_candidate(
+                        version="2.0", evidence_type="official_listing", evidence_text="2.0", confidence=0.78,
+                    ),
+                ]
+                source = {"type": source_type}
+                releases = common_source.resolve_release_candidates(candidates, source)
+                self.assertEqual(releases[0]["version"], "2.0")
+                self.assertEqual(releases[0]["released_time"], "")
+                accepted, reason, merged = ffd.prepare_release_update([candidates[0]], releases, source)
+                self.assertTrue(accepted, reason)
+                self.assertEqual(ffd.get_latest_active_release(merged)["version"], "2.0")
+                source["requires_date"] = True
+                self.assertEqual(common_source.resolve_release_candidates(candidates, source)[0]["version"], "1.0")
 
     def test_candidate_resolver_applies_source_contract(self) -> None:
         candidates = [
@@ -638,6 +660,22 @@ class ParserTests(unittest.TestCase):
         self.assertEqual(len(releases), 1)
         self.assertEqual(releases[0]["version"], "26.3.1")
         self.assertEqual(releases[0]["released_time"], "2026-03-04")
+
+    def test_apple_macos_parser_handles_multiword_release_names(self) -> None:
+        table = """
+        <table>
+          <tr><td>macOS Golden Gate 27.2</td><td>macOS Golden Gate</td><td>26 Oct 2026</td></tr>
+          <tr><td>macOS Tahoe 26.7.2</td><td>macOS Tahoe</td><td>26 Oct 2026</td></tr>
+        </table>
+        """
+        for latest_phrase in ("<p>The latest version of macOS is 27.2.</p>", ""):
+            with self.subTest(latest_phrase=latest_phrase):
+                with mock.patch.object(apple_source, "fetch_bytes", return_value=(latest_phrase + table).encode()):
+                    releases = ffd.sync_apple_support(
+                        {"url": "https://support.apple.com/en-us/100100", "kind": "macos"}, timeout=5
+                    )
+                self.assertEqual(releases[0]["version"], "27.2")
+                self.assertEqual(releases[0]["released_time"], "2026-10-26")
 
     def test_apple_watchos_parser_extracts_latest_and_release_date(self) -> None:
         html = (FIXTURES_DIR / "apple_100100.html").read_text(encoding="utf-8")

@@ -19,7 +19,9 @@ test.beforeEach(async ({page}) => {
 
 async function seedUnseen(page) {
   await page.addInitScript(snapshot => {
-    localStorage.setItem('firmware_tracker_seen_versions_v1', JSON.stringify(snapshot));
+    if (!localStorage.getItem('firmware_tracker_seen_versions_v1')) {
+      localStorage.setItem('firmware_tracker_seen_versions_v1', JSON.stringify(snapshot));
+    }
   }, {...baseline, osmo_pocket_4p: '0.0', sony_a1ii: '0.0'});
 }
 
@@ -61,7 +63,7 @@ test('sort controls are accessible on desktop and mobile', async ({page}, testIn
 
 test('dialog prioritizes latest release and restores focus on Escape', async ({page}) => {
   await page.goto('/');
-  await page.getByRole('button', {name:'Release history for Osmo Pocket 4P', exact:true}).click();
+  await page.getByRole('button', {name:'Release details for Osmo Pocket 4P', exact:true}).click();
   const dialog = page.getByRole('dialog', {name:'Osmo Pocket 4P'});
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole('button', {name:'Close', exact:true})).toBeFocused();
@@ -73,12 +75,12 @@ test('dialog prioritizes latest release and restores focus on Escape', async ({p
   await expect(dialog.locator('details')).toHaveAttribute('open');
   await page.keyboard.press('Escape');
   await expect(dialog).not.toBeVisible();
-  await expect(page.getByRole('button', {name:'Release history for Osmo Pocket 4P', exact:true})).toBeFocused();
+  await expect(page.getByRole('button', {name:'Release details for Osmo Pocket 4P', exact:true})).toBeFocused();
 });
 
 test('modal keeps keyboard focus inside its controls', async ({page}) => {
   await page.goto('/');
-  await page.getByRole('button', {name:'Release history for Osmo Pocket 4P', exact:true}).click();
+  await page.getByRole('button', {name:'Release details for Osmo Pocket 4P', exact:true}).click();
   for (let i = 0; i < 6; i++) {
     await page.keyboard.press('Tab');
     expect(await page.evaluate(() => document.getElementById('modal').contains(document.activeElement))).toBe(true);
@@ -88,20 +90,20 @@ test('modal keeps keyboard focus inside its controls', async ({page}) => {
 test('mark one device seen preserves filters and other unseen releases', async ({page}) => {
   await seedUnseen(page);
   await page.goto('/');
-  await expect(page.locator('#firmware-status-title')).toHaveText('2 unseen releases');
+  await expect(page.locator('#firmware-status-title')).toHaveText('2 new releases since last seen');
   await page.getByLabel('Unseen releases only').check();
-  await page.getByRole('button', {name:'Release history for Osmo Pocket 4P', exact:true}).click();
+  await page.getByRole('button', {name:'Release details for Osmo Pocket 4P', exact:true}).click();
   await page.getByRole('button', {name:'Mark as seen', exact:true}).click();
   await page.getByRole('button', {name:'Close', exact:true}).click();
   await expect(page.getByLabel('Unseen releases only')).toBeChecked();
   await expect(page.locator('tbody tr')).toHaveCount(1);
-  await expect(page.locator('#firmware-status-title')).toHaveText('1 unseen release');
+  await expect(page.locator('#firmware-status-title')).toHaveText('1 new release since last seen');
   await expect(page.getByLabel('Search devices', {exact:true})).toBeFocused();
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('firmware_tracker_seen_versions_v1')));
   expect(saved.osmo_pocket_4p).toBe('01.01.71.31');
   expect(saved.sony_a1ii).toBe('0.0');
   await page.getByRole('button', {name:'Mark all as seen'}).click();
-  await expect(page.locator('#firmware-status-title')).toHaveText('No unseen releases');
+  await expect(page.locator('#firmware-status-title')).toHaveText('No new releases since last seen');
   await expect(page.getByRole('heading', {name:'No matching devices'})).toBeVisible();
 });
 
@@ -141,9 +143,43 @@ test('viewport has no horizontal overflow and history remains usable', async ({p
   await page.goto('/');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.screenshot({path: testInfo.outputPath('table.png'), animations:'disabled'});
-  await page.getByRole('button', {name:'Release history for Osmo Pocket 4P', exact:true}).click();
+  await page.getByRole('button', {name:'Release details for Osmo Pocket 4P', exact:true}).click();
   expect(await page.evaluate(() => document.getElementById('modal').scrollWidth <= document.getElementById('modal').clientWidth)).toBe(true);
   await page.screenshot({path: testInfo.outputPath('history.png'), animations:'disabled'});
   await page.getByRole('button', {name:'Close', exact:true}).click();
   await expect(page.getByRole('dialog')).not.toBeVisible();
+});
+
+
+test('row update actions acknowledge one release without losing keyboard focus', async ({page}) => {
+  await seedUnseen(page);
+  await page.goto('/');
+  await page.getByLabel('Unseen releases only').check();
+  const row = page.locator('tbody tr').filter({hasText:'Osmo Pocket 4P'});
+  await expect(row.getByRole('link', {name:'Open update page for Osmo Pocket 4P'})).toHaveAttribute('href', data.config.device_download_pages.osmo_pocket_4p);
+  await expect(row).toContainText('New since last seen');
+  await row.getByRole('button', {name:'Mark as seen for Osmo Pocket 4P', exact:true}).click();
+  await expect(page.locator('tbody tr')).toHaveCount(1);
+  await expect(page.getByLabel('Search devices', {exact:true})).toBeFocused();
+  await expect(page.locator('#firmware-status-title')).toHaveText('1 new release since last seen');
+  await page.reload();
+  await expect(page.getByRole('button', {name:'Mark as seen for Osmo Pocket 4P', exact:true})).toHaveCount(0);
+  await expect(page.getByRole('button', {name:'Mark as seen for Sony A1 II', exact:true})).toBeVisible();
+});
+
+test('coverage remains visible when there are no new releases and checks fail', async ({page}) => {
+  const config = structuredClone(data.config);
+  const current = new Date().toISOString();
+  config.source_sync_status.last_run_utc = current;
+  for (const health of Object.values(config.source_sync_status.device_health)) health.last_success_utc = current;
+  config.source_sync_status.device_health.osmo_pocket_4p.status = 'transient_error';
+  config.source_sync_status.device_health.sony_a1ii.last_success_utc = '2020-01-01T00:00:00Z';
+  await page.route('**/devices/config.js', route => route.fulfill({contentType:'application/javascript', body:`const TRACKER_CONFIG = ${JSON.stringify(config)};`}));
+  await page.goto('/');
+  await expect(page.locator('#firmware-status-title')).toHaveText('No new releases since last seen');
+  await expect(page.locator('#firmware-status-coverage')).toContainText('1 check failed');
+  await expect(page.locator('#firmware-status-coverage')).toContainText('1 check overdue');
+  await expect(page.locator('#firmware-status-coverage')).toHaveClass('source-warning');
+  await page.getByLabel('Search devices', {exact:true}).fill('iOS');
+  await expect(page.locator('#firmware-status-coverage')).toContainText('1 check failed');
 });

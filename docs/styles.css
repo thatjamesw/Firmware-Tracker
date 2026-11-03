@@ -80,6 +80,9 @@ body.dialog-open { overflow: hidden; }
 .modal-header h2 { font-size: 23px; line-height: 1.2; margin: 4px 0 0; font-weight: 650; letter-spacing: -.02em; }
 .modal-content { padding: 22px 24px; }
 .device-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.row-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; max-width: 260px; min-width: 210px; }
+.row-actions .release-link { flex-basis: 100%; }
+#firmware-status-coverage.source-warning { color: var(--warning); }
 .release-link { font-size: 14px; font-weight: 600; text-decoration: none; }
 .release-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 .source-detail { font-size: 12px; color: var(--muted); margin: 12px 0 26px; }
@@ -119,14 +122,15 @@ ul.release-notes { padding-left: 20px; }
   td { display: block; min-width: 0; padding: 0; border: 0; font-size: 13px; }
   td::before { content: attr(data-label); display: block; color: var(--muted); font-size: 10px; margin-bottom: 3px; }
   td[data-label="Device"] { grid-column: 1 / -1; grid-row: 1; }
-  td[data-label="Device"]::before, td[data-label="Category"]::before, td[data-label="History"]::before { display: none; }
+  td[data-label="Device"]::before, td[data-label="Category"]::before, td[data-label="Actions"]::before { display: none; }
   .device-name { font-size: 16px; overflow-wrap: anywhere; }
   td[data-label="Category"] { grid-column: 1 / -1; grid-row: 2; color: var(--muted); font-size: 12px; }
   td[data-label="Latest"] { grid-column: 1 / -1; padding-top: 10px; margin-top: 4px; border-top: 1px solid var(--line); }
   td[data-label="Released"] { grid-column: 1; }
   td[data-label="Age"] { grid-column: 2; text-align: right; }
-  td[data-label="History"] { grid-column: 1 / -1; margin-top: 4px; }
-  td[data-label="History"] button { width: 100%; }
+  td[data-label="Actions"] { grid-column: 1 / -1; margin-top: 4px; }
+  .row-actions { max-width: none; min-width: 0; }
+  .row-actions button { flex: 1; }
   .modal { width: calc(100% - 20px); max-height: 90dvh; border-radius: 12px; }
   .modal-header { padding: 16px; }
   .modal-content { padding: 18px 16px; }
