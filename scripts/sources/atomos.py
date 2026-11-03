@@ -89,21 +89,6 @@ def sync_atomos_support(source: dict[str, Any], timeout: int) -> list[dict[str, 
         )
     )
 
-    release_link_match = re.search(r"AtomOS[_\s-]+([0-9][0-9A-Za-z.\-]+)", release_notes_url, re.I)
-    if release_link_match:
-        candidates.append(
-            make_release_candidate(
-                version=release_link_match.group(1),
-                released_time=released_time,
-                note=note,
-                evidence_type="atomos_release_notes_url",
-                evidence_text=release_notes_url,
-                source_url=url,
-                confidence=0.72,
-                rank=64,
-            )
-        )
-
     releases = resolve_release_candidates(candidates, source)
     for release in releases:
         release["date_precision"] = "unknown"

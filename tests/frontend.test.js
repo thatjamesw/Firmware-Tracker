@@ -116,3 +116,30 @@ test('inactive higher versions do not conceal an approved correction', () => {
     {version: '2.0', active: false}, {version: '1.0', active: true},
   ]).version, '1.0');
 });
+
+
+test('metadata corrections do not mark an acknowledged version new', () => {
+  const ctx = app();
+  ctx.detectNewFirmware([row('camera', '2.0')]);
+  const corrected = {...row('camera', '2.0'), latest: {version: '2.0', released_time: '2026-10-26'}};
+  assert.equal(ctx.detectNewFirmware([corrected]).newDeviceIds.size, 0);
+  assert.equal(ctx.detectNewFirmware([row('camera', '3.0')]).newDeviceIds.size, 1);
+});
+
+test('coverage reflects device checks rather than the global scan timestamp', () => {
+  const ctx = app();
+  const now = Date.parse('2026-11-03T12:00:00Z');
+  const current = new Date(now).toISOString();
+  ctx.TRACKER_CONFIG.source_sync_status = {last_run_utc: current, device_health: {
+    healthy: {status:'ok', last_success_utc:current},
+    empty: {status:'ok_empty', last_success_utc:current},
+    failed: {status:'error', last_success_utc:current},
+    stale: {status:'ok', last_success_utc:'2020-01-01T00:00:00Z'},
+    manual: {status:'manual_fallback', last_success_utc:current},
+    recent: {status:'ok', last_success_utc:new Date(now - 86400000).toISOString()},
+  }};
+  const coverage = ctx.sourceCoverage(['healthy','empty','failed','stale','manual','recent','missing'].map(deviceId => ({deviceId})), now);
+  assert.equal(coverage.text, '2 devices checked today · 1 checked recently · 1 check overdue · 1 check failed · 1 not checked yet · 1 manually verified');
+  assert.equal(coverage.warning, true);
+  assert.equal(ctx.sourceCoverage([{deviceId:'healthy'}], now).warning, false);
+});

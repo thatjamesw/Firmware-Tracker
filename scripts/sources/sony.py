@@ -70,7 +70,7 @@ def sync_sony_cscs(source: dict[str, Any], timeout: int) -> list[dict[str, Any]]
 
     for href in re.findall(r"https?://[^\"'\s<>]+", html):
         file_match = re.search(rf"{re.escape(mdl)}V?([0-9][0-9A-Za-z.\-]*)", href, re.I)
-        if file_match:
+        if file_match and not version:
             candidates.append(
                 make_release_candidate(
                     version=file_match.group(1),

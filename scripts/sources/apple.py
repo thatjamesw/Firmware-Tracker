@@ -20,7 +20,7 @@ def extract_row_release_date(html: str, kind: str, latest_version: str) -> str:
     latest_escaped = re.escape(latest_version)
     token_patterns = {
         "ios": re.compile(rf"\biOS\s+{latest_escaped}(?![0-9A-Za-z.\-])", re.I),
-        "macos": re.compile(rf"\bmacOS(?:\s+\w+)?\s+{latest_escaped}(?![0-9A-Za-z.\-])", re.I),
+        "macos": re.compile(rf"\bmacOS(?:\s+[^\W\d_]+)*\s+{latest_escaped}(?![0-9A-Za-z.\-])", re.I),
         "watchos": re.compile(rf"\bwatchOS\s+{latest_escaped}(?![0-9A-Za-z.\-])", re.I),
     }
     token_pattern = token_patterns.get(kind)
@@ -46,7 +46,7 @@ def extract_row_release_date(html: str, kind: str, latest_version: str) -> str:
 def extract_table_release_candidates(html: str, kind: str, source_url: str) -> list[dict[str, Any]]:
     version_patterns = {
         "ios": re.compile(r"\biOS\s+([0-9][0-9A-Za-z.\-]*)", re.I),
-        "macos": re.compile(r"\bmacOS(?:\s+\w+)?\s+([0-9][0-9A-Za-z.\-]*)", re.I),
+        "macos": re.compile(r"\bmacOS(?:\s+[^\W\d_]+)*\s+([0-9][0-9A-Za-z.\-]*)", re.I),
         "watchos": re.compile(r"\bwatchOS\s+([0-9][0-9A-Za-z.\-]*)", re.I),
     }
     version_pattern = version_patterns.get(kind)

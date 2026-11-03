@@ -68,20 +68,24 @@ Search devices by name or category, select a category, or enable **Unseen releas
 only**. Sort with the column buttons on desktop or **Sort by** on any screen.
 Filters and sort order stay in place when releases are marked as seen.
 
-**Unseen** means the latest release differs from the version last acknowledged in
+**New since last seen** means the latest release differs from the version last acknowledged in
 this browser. It does not compare with firmware installed on your physical device.
 The first visit establishes a baseline. **Mark all as seen** acknowledges the full
-watchlist; **Mark as seen** in release history acknowledges one device.
+watchlist; **Mark as seen** on a device row or in its release details acknowledges
+one device. Each row also provides **Open update page** and **Release details**.
 
 **Sources checked** shows the vendor scan time, independently of the site's build
 time. Devices without a successful check in more than three days show **Check
 overdue**; devices with no recorded success show **Not checked yet**. A failed
 source check is identified on its row even when a global issue banner is hidden.
-Release history includes the exact last successful check and official download
+The status summary counts successful checks today in your local timezone, recent
+checks, overdue and failed checks, and devices requiring manual verification.
+These counts cover the full watchlist, independently of search and filters.
+Release details include the exact last successful check and official download
 link, with older releases collapsed below the latest release.
 
-The history dialog supports keyboard navigation and Escape. On closing, focus
-returns to the device's history button, or search if the row was filtered out.
+The release details dialog supports keyboard navigation and Escape. On closing,
+focus returns to the device's details button, or search if the row was filtered out.
 Seen status is browser-local; clearing site storage resets it.
 
 Browser regression checks (development only; the deployed site has no npm runtime):
@@ -120,7 +124,7 @@ A failed source check leaves repository data unchanged and explains the failure
 in the workflow log. Empty results require an explicit **allow** policy for new devices.
 
 For **update** or **remove**, enter the existing device ID shown in the device's
-**Release history** details. Blank update fields keep their current values. Changing the
+**Release details**. Blank update fields keep their current values. Changing the
 source URL replaces its old fallback URLs; advanced fallback configuration remains
 available in JSON. Updating retains release history and rejects detected downgrades.
 Removing a device removes its tracking configuration, history, and source-health entry.
@@ -279,18 +283,22 @@ Recommended GitHub branch protection:
   - Last generated timestamp
   - Source issue banner when a vendor feed is failing (for example DJI parsing errors)
   - New-firmware status and row highlights based on what your browser has previously seen (`Mark as Seen` to clear)
-  - `Release history` details include an `Open official download page` link (landing page, not direct binary URL)
+  - `Release details` include an `Open official download page` link (landing page, not direct binary URL)
 - Devices without configured sources are skipped.
 
 ### Parser contract
 
 Every source adapter returns a list of releases with a nonempty string `version`,
 a string `released_time`, an English `release_note.en` string, and a boolean
-`active`. Dates must be valid ISO dates/timestamps; source policy decides whether
-an empty date or an empty result is allowed. Vendor version patterns are checked
-before data is accepted. Optional evidence contains string `type`, `text`, and
+`active`. Dates, when present, must be valid ISO dates/timestamps. Missing dates
+are accepted by default so verified new versions remain visible; `requires_date: true`
+opts a source into strict date validation. Empty-result policy remains separate.
+Vendor version patterns are checked before data is accepted. Optional evidence contains string `type`, `text`, and
 an HTTP(S) `source_url`; optional confidence is a finite number from 0 to 1.
-Static/manual sources may use descriptive versions and unknown dates.
+Candidates are scoped to the configured device by each adapter, then selected by
+version, with confidence and evidence rank breaking ties for the same version.
+Explicit current-version listings take priority over filename hints in Sony and
+Atomos adapters. Static/manual sources may use descriptive versions and unknown dates.
 
 The scan validates this contract before normalization. Invalid output follows the
 same fallback and last-known-good path as other source failures. Offline tests

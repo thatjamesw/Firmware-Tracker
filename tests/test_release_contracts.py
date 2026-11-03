@@ -54,7 +54,7 @@ class ReleaseContractTests(unittest.TestCase):
                     [release() | {'evidence': {}}],
                     [release() | {'evidence': {'type': 'listing', 'text': '', 'source_url': 'file:///tmp/test'}}]]
         fallback = {'type': 'static', 'release': release()}
-        source = {'type': 'dji_downloads', 'fallback_source': fallback}
+        source = {'type': 'dji_downloads', 'requires_date': True, 'fallback_source': fallback}
         for invalid in invalids:
             before = copy.deepcopy(invalid)
             with self.subTest(invalid=invalid), patch.object(ffd, 'sync_device', side_effect=[invalid, [release()]]):
@@ -73,6 +73,25 @@ class ReleaseContractTests(unittest.TestCase):
             self.assertEqual(result['status'], 'ok_empty' if allow_empty else 'no_entries')
         with self.assertRaisesRegex(ValueError, 'version_pattern'):
             common.validate_releases([release('wrong')], {'type': 'sony_cscs'})
+
+    def test_verified_new_versions_survive_missing_metadata_and_wrong_product_hints(self):
+        cases = [
+            (sony, sony.sync_sony_cscs, {'type': 'sony_cscs', 'mdl': 'ILCE-1M2'},
+             b"<script>config={, ver: '4.00'}</script><a href='https://example.com/ILCE-1M2V900.zip'>Download</a>", '4.00'),
+            (bambu, bambu.sync_bambu_wiki, {'type': 'bambu_wiki', 'series': 'P1'},
+             b'<h2>X1 series Version 99.00.00.00</h2><h2>P1 series Version 99.00.00.00-beta</h2><h2>P1 series Version 02.00.00.00</h2><h2>P1 series Version 01.00.00.00 (20260101)</h2>', '02.00.00.00'),
+            (atomos, atomos.sync_atomos_support, {'type': 'atomos_support', 'model': 'Ninja V'},
+             b'<article class="support-product-article"><h2>Ninja V</h2><p>Current Firmware AtomOS 11.19.00</p><a href="AtomOS_99.00_Release_Notes.html">Release notes</a></article>', '11.19.00'),
+            (tplink, tplink.sync_tplink_downloads, {'type': 'tplink_downloads', 'model': 'Deco BE65', 'hardware_version': 'V2'},
+             b'Deco BE65(EU)_V1_99.0 Build 20261001 Deco BE65(EU)_V2_2.0 Build 20261001', '2.0 Build 20261001'),
+        ]
+        for module, handler, options, html, expected in cases:
+            source = {'url': 'https://example.com/downloads', **options}
+            with self.subTest(module=module.__name__), patch.object(module, 'fetch_bytes', return_value=html):
+                releases = handler(source, 1)
+                common.validate_releases(releases, source)
+                self.assertEqual(releases[0]['version'], expected)
+                self.assertEqual(releases[0]['released_time'], '')
 
     def test_normalization_does_not_modify_notes(self):
         raw = release() | {'release_note': {'fr': 'Bonjour'}}

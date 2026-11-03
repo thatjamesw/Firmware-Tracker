@@ -305,9 +305,7 @@ def _candidate_contract_errors(candidate: dict[str, Any], source: dict[str, Any]
                 errors.append("version_pattern")
         except re.error:
             errors.append("invalid_expected_version_pattern")
-    requires_date = source.get("requires_date")
-    if requires_date is None:
-        requires_date = default_requires_date(source)
+    requires_date = source.get("requires_date", False)
     if released_time:
         try:
             datetime.fromisoformat(released_time)
@@ -334,18 +332,6 @@ def default_expected_version_pattern(source: dict[str, Any]) -> str:
     return ""
 
 
-def default_requires_date(source: dict[str, Any]) -> bool:
-    if bool(source.get("allow_empty")):
-        return False
-    return str(source.get("type") or "") in {
-        "dji_downloads",
-        "sony_cscs",
-        "godox_listing",
-        "bambu_wiki",
-        "tplink_downloads",
-    }
-
-
 def resolve_release_candidates(
     candidates: list[dict[str, Any]],
     source: dict[str, Any] | None = None,
@@ -367,9 +353,9 @@ def resolve_release_candidates(
 
     valid.sort(
         key=lambda item: (
+            version_sort_key(str(item.get("version") or "")),
             float(item.get("confidence") or 0.0),
             int(item.get("rank") or 0),
-            version_sort_key(str(item.get("version") or "")),
             str(item.get("released_time") or ""),
         ),
         reverse=True,

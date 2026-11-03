@@ -15,13 +15,13 @@ def sync_bambu_wiki(source: dict[str, Any], timeout: int) -> list[dict[str, Any]
     html = fetch_bytes(url, timeout=timeout).decode("utf-8", errors="replace")
 
     candidates: list[dict[str, Any]] = []
-    pattern = re.compile(rf"\b{re.escape(series)}\s+series\s+Version\s+([0-9.]+)\s*\((\d{{8}})\)", re.I)
+    pattern = re.compile(rf"\b{re.escape(series)}\s+series\s+Version\s+([0-9.]+)(?:\s*\((\d{{8}})\))?", re.I)
     for heading in parse_html(html).find_all(["h2", "h3"]):
-        match = pattern.search(html_to_text(str(heading)))
+        match = pattern.fullmatch(html_to_text(str(heading)))
         if not match:
             continue
         version, yyyymmdd = match.groups()
-        date_iso = f"{yyyymmdd[0:4]}-{yyyymmdd[4:6]}-{yyyymmdd[6:8]}"
+        date_iso = f"{yyyymmdd[0:4]}-{yyyymmdd[4:6]}-{yyyymmdd[6:8]}" if yyyymmdd else ""
         title = match.group(0)
         candidates.append(
             make_release_candidate(

@@ -21,8 +21,9 @@
     <section class="firmware-status" id="firmware-status" aria-label="Unseen release status">
       <div>
         <span class="section-label">Your firmware watchlist</span>
-        <strong id="firmware-status-title" role="status">No unseen releases</strong>
+        <strong id="firmware-status-title" role="status">No new releases since last seen</strong>
         <p id="firmware-status-detail">Compared with what you’ve seen in this browser. Installed versions aren’t tracked.</p>
+        <p id="firmware-status-coverage"></p>
         <span class="firmware-status-meta" id="firmware-status-meta">Sources checked: unknown</span>
       </div>
       <div class="updates-actions" id="firmware-status-actions" hidden>
@@ -73,7 +74,7 @@
 
   <dialog class="modal" id="modal" aria-labelledby="modal-title">
     <div class="modal-header">
-      <div><span class="section-label">Release history</span><h2 id="modal-title">Device</h2></div>
+      <div><span class="section-label">Release details</span><h2 id="modal-title">Device</h2></div>
       <button class="ghost" id="close-modal" autofocus>Close</button>
     </div>
     <div class="modal-content" id="modal-content"></div>

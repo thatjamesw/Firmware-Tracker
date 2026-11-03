@@ -271,6 +271,31 @@ function sourceFreshness(deviceId, now = Date.now()) {
   };
 }
 
+function sourceCoverage(rows, now = Date.now()) {
+  const counts = {today: 0, earlier: 0, overdue: 0, failed: 0, missing: 0, manual: 0};
+  const today = new Date(now).toDateString();
+  for (const row of rows) {
+    const health = TRACKER_CONFIG.source_sync_status?.device_health?.[row.deviceId];
+    if (health?.status === "manual_fallback") {
+      counts.manual += 1;
+      continue;
+    }
+    const timestamp = Date.parse(health?.last_success_utc || "");
+    const failed = health && !["ok", "ok_empty"].includes(health.status);
+    if (failed) counts.failed += 1;
+    if (!Number.isFinite(timestamp)) counts.missing += 1;
+    else if (now - timestamp > STALE_AFTER_MS) counts.overdue += 1;
+    else if (!failed) counts[new Date(timestamp).toDateString() === today ? "today" : "earlier"] += 1;
+  }
+  const parts = [`${counts.today} device${counts.today === 1 ? "" : "s"} checked today`];
+  if (counts.earlier) parts.push(`${counts.earlier} checked recently`);
+  if (counts.overdue) parts.push(`${counts.overdue} check${counts.overdue === 1 ? "" : "s"} overdue`);
+  if (counts.failed) parts.push(`${counts.failed} check${counts.failed === 1 ? "" : "s"} failed`);
+  if (counts.missing) parts.push(`${counts.missing} not checked yet`);
+  if (counts.manual) parts.push(`${counts.manual} manually verified`);
+  return {text: parts.join(" · "), warning: Boolean(counts.overdue || counts.failed || counts.missing || counts.manual)};
+}
+
 function filteredRows(rows, state) {
   const query = state.query.trim().toLowerCase();
   return rows.filter(row =>
@@ -312,8 +337,12 @@ function compareRows(a, b, key, direction) {
 function updateFirmwareStatus() {
   const count = uiState.unseen.size;
   document.getElementById("firmware-status").classList.toggle("has-updates", count > 0);
-  document.getElementById("firmware-status-title").textContent = count ? `${count} unseen release${count === 1 ? "" : "s"}` : "No unseen releases";
+  document.getElementById("firmware-status-title").textContent = count ? `${count} new release${count === 1 ? "" : "s"} since last seen` : "No new releases since last seen";
   document.getElementById("firmware-status-actions").hidden = !count;
+  const coverage = sourceCoverage(uiState.rows);
+  const coverageElement = document.getElementById("firmware-status-coverage");
+  coverageElement.textContent = coverage.text;
+  coverageElement.classList.toggle("source-warning", coverage.warning);
 }
 
 function markDeviceSeen(deviceId) {
@@ -381,7 +410,7 @@ function renderTable() {
   table.appendChild(caption);
   const thead = document.createElement("thead");
   const hr = document.createElement("tr");
-  const headers = [["Category", "category"], ["Device", "name"], ["Latest", "version"], ["Released", "date"], ["Age", "age"], ["History", null]];
+  const headers = [["Category", "category"], ["Device", "name"], ["Latest", "version"], ["Released", "date"], ["Age", "age"], ["Actions", null]];
   for (const [title, key] of headers) {
     const th = document.createElement("th");
     th.scope = "col";
@@ -411,14 +440,23 @@ function renderTable() {
     const tr = document.createElement("tr");
     const unseen = uiState.unseen.has(row.deviceId);
     const freshness = sourceFreshness(row.deviceId);
+    const pageUrl = getDeviceDownloadPage(row.deviceId);
     tr.classList.toggle("row-new", unseen);
     tr.innerHTML = `<td data-label="Category">${escapeHtml(row.category)}</td>
       <td data-label="Device"><span class="device-name">${escapeHtml(row.deviceName)}</span>${freshness.warning ? `<span class="source-warning" title="${escapeHtml(freshness.detail)}">${escapeHtml(freshness.label)}</span>` : ""}</td>
-      <td data-label="Latest"><span class="latest-version">${escapeHtml(row.latest?.version || "—")}</span>${unseen ? ' <span class="badge new">Unseen</span>' : ""}</td>
+      <td data-label="Latest"><span class="latest-version">${escapeHtml(row.latest?.version || "—")}</span>${unseen ? ' <span class="badge new">New since last seen</span>' : ""}</td>
       <td data-label="Released">${escapeHtml(row.latest?.released_time || "Unknown")}</td>
       <td data-label="Age">${escapeHtml(row.age == null ? "—" : formatAge(row.age))}</td>
-      <td data-label="History"><button class="ghost" id="history-${escapeHtml(row.deviceId)}" aria-label="Release history for ${escapeHtml(row.deviceName)}">Release history</button></td>`;
+      <td data-label="Actions"><div class="row-actions">
+        ${pageUrl ? `<a class="release-link" href="${escapeHtml(pageUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Open update page for ${escapeHtml(row.deviceName)}">Open update page <span aria-hidden="true">↗</span></a>` : ""}
+        <button class="ghost" id="history-${escapeHtml(row.deviceId)}" aria-label="Release details for ${escapeHtml(row.deviceName)}">Release details</button>
+        ${unseen ? `<button class="ghost mark-seen" aria-label="Mark as seen for ${escapeHtml(row.deviceName)}">Mark as seen</button>` : ""}
+      </div></td>`;
     tr.querySelector("button").addEventListener("click", () => renderModal(row.deviceId, row.deviceName, row.releases));
+    tr.querySelector(".mark-seen")?.addEventListener("click", () => {
+      markDeviceSeen(row.deviceId);
+      (document.getElementById(`history-${row.deviceId}`) || document.getElementById("device-search")).focus();
+    });
     tbody.appendChild(tr);
   }
   table.appendChild(tbody);
@@ -438,7 +476,7 @@ function initSourceFreshness() {
   const overdue = !local || Date.now() - Date.parse(checked) > STALE_AFTER_MS;
   meta.textContent = local ? `Sources checked ${local}${overdue ? " · Check overdue" : ""}` : "Sources have not been checked yet";
   meta.classList.toggle("source-warning", overdue);
-  meta.title = "The time vendor sources were scanned. Individual devices show their last successful check in release history.";
+  meta.title = "The time vendor sources were scanned. Individual devices show their last successful check in release details.";
 }
 
 function initApp() {
