@@ -90,20 +90,20 @@ test('modal keeps keyboard focus inside its controls', async ({page}) => {
 test('mark one device seen preserves filters and other unseen releases', async ({page}) => {
   await seedUnseen(page);
   await page.goto('/');
-  await expect(page.locator('#firmware-status-title')).toHaveText('2 new releases since last seen');
+  await expect(page.locator('#firmware-status-title')).toHaveText('2 new releases');
   await page.getByLabel('Unseen releases only').check();
   await page.getByRole('button', {name:'Release details for Osmo Pocket 4P', exact:true}).click();
   await page.getByRole('button', {name:'Mark as seen', exact:true}).click();
   await page.getByRole('button', {name:'Close', exact:true}).click();
   await expect(page.getByLabel('Unseen releases only')).toBeChecked();
   await expect(page.locator('tbody tr')).toHaveCount(1);
-  await expect(page.locator('#firmware-status-title')).toHaveText('1 new release since last seen');
+  await expect(page.locator('#firmware-status-title')).toHaveText('1 new release');
   await expect(page.getByLabel('Search devices', {exact:true})).toBeFocused();
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('firmware_tracker_seen_versions_v1')));
   expect(saved.osmo_pocket_4p).toBe('01.01.71.31');
   expect(saved.sony_a1ii).toBe('0.0');
   await page.getByRole('button', {name:'Mark all as seen'}).click();
-  await expect(page.locator('#firmware-status-title')).toHaveText('No new releases since last seen');
+  await expect(page.locator('#firmware-status-title')).toHaveText('No new releases');
   await expect(page.getByRole('heading', {name:'No matching devices'})).toBeVisible();
 });
 
@@ -142,7 +142,12 @@ test('viewport has no horizontal overflow and history remains usable', async ({p
   await seedUnseen(page);
   await page.goto('/');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-  await page.screenshot({path: testInfo.outputPath('table.png'), animations:'disabled'});
+  if (testInfo.project.name === 'desktop') {
+    const heights = await page.locator('tbody tr').evaluateAll(rows => rows.map(row => row.getBoundingClientRect().height));
+    expect(Math.max(...heights)).toBeLessThanOrEqual(72);
+    expect(await page.locator('#table-container').evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
+  }
+  await page.screenshot({path: testInfo.outputPath('table.png'), animations:'disabled', fullPage:true});
   await page.getByRole('button', {name:'Release details for Osmo Pocket 4P', exact:true}).click();
   expect(await page.evaluate(() => document.getElementById('modal').scrollWidth <= document.getElementById('modal').clientWidth)).toBe(true);
   await page.screenshot({path: testInfo.outputPath('history.png'), animations:'disabled'});
@@ -151,20 +156,19 @@ test('viewport has no horizontal overflow and history remains usable', async ({p
 });
 
 
-test('row update actions acknowledge one release without losing keyboard focus', async ({page}) => {
+test('source column links directly to the vendor and acknowledgement stays in details', async ({page}) => {
   await seedUnseen(page);
   await page.goto('/');
-  await page.getByLabel('Unseen releases only').check();
   const row = page.locator('tbody tr').filter({hasText:'Osmo Pocket 4P'});
-  await expect(row.getByRole('link', {name:'Open update page for Osmo Pocket 4P'})).toHaveAttribute('href', data.config.device_download_pages.osmo_pocket_4p);
-  await expect(row).toContainText('New since last seen');
-  await row.getByRole('button', {name:'Mark as seen for Osmo Pocket 4P', exact:true}).click();
-  await expect(page.locator('tbody tr')).toHaveCount(1);
-  await expect(page.getByLabel('Search devices', {exact:true})).toBeFocused();
-  await expect(page.locator('#firmware-status-title')).toHaveText('1 new release since last seen');
+  await expect(row.locator('[data-label="Source"]').getByRole('link', {name:'Official source for Osmo Pocket 4P'})).toHaveAttribute('href', data.config.device_download_pages.osmo_pocket_4p);
+  await expect(row.locator('.badge.new')).toHaveAttribute('title', 'New since last seen');
+  await expect(row.getByRole('button')).toHaveCount(1);
+  await row.getByRole('button', {name:'Release details for Osmo Pocket 4P'}).click();
+  await page.getByRole('dialog').getByRole('button', {name:'Mark as seen', exact:true}).click();
+  await page.getByRole('button', {name:'Close', exact:true}).click();
+  await expect(page.locator('#firmware-status-title')).toHaveText('1 new release');
   await page.reload();
-  await expect(page.getByRole('button', {name:'Mark as seen for Osmo Pocket 4P', exact:true})).toHaveCount(0);
-  await expect(page.getByRole('button', {name:'Mark as seen for Sony A1 II', exact:true})).toBeVisible();
+  await expect(row.locator('.badge.new')).toHaveCount(0);
 });
 
 test('coverage remains visible when there are no new releases and checks fail', async ({page}) => {
@@ -176,7 +180,7 @@ test('coverage remains visible when there are no new releases and checks fail', 
   config.source_sync_status.device_health.sony_a1ii.last_success_utc = '2020-01-01T00:00:00Z';
   await page.route('**/devices/config.js', route => route.fulfill({contentType:'application/javascript', body:`const TRACKER_CONFIG = ${JSON.stringify(config)};`}));
   await page.goto('/');
-  await expect(page.locator('#firmware-status-title')).toHaveText('No new releases since last seen');
+  await expect(page.locator('#firmware-status-title')).toHaveText('No new releases');
   await expect(page.locator('#firmware-status-coverage')).toContainText('1 check failed');
   await expect(page.locator('#firmware-status-coverage')).toContainText('1 check overdue');
   await expect(page.locator('#firmware-status-coverage')).toHaveClass('source-warning');
