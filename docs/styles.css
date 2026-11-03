@@ -30,10 +30,10 @@ a { color: var(--accent); }
 h1 { margin: 0; font-size: clamp(2rem, 4vw, 3.1rem); font-weight: 720; letter-spacing: -.035em; line-height: 1.05; }
 #manage-devices { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; white-space: nowrap; font-size: 13px; }
 .section-label { color: var(--muted); font-size: 12px; font-weight: 650; }
-.firmware-status { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 24px 0; border-bottom: 1px solid var(--line); }
-.firmware-status strong { display: block; margin-top: 4px; font-size: 25px; line-height: 1.2; font-weight: 650; letter-spacing: -.02em; }
+.firmware-status { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 20px 0; border-bottom: 1px solid var(--line); }
+.firmware-status strong { display: block; margin-top: 0; font-size: 22px; line-height: 1.2; font-weight: 650; letter-spacing: -.02em; }
 .firmware-status.has-updates strong { color: var(--accent); }
-.firmware-status p { color: var(--muted); margin: 7px 0; font-size: 13px; }
+.firmware-status p { color: var(--muted); margin: 6px 0 0; font-size: 12px; }
 .firmware-status-meta { font-size: 12px; color: var(--muted); }
 .primary, .ghost { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 8px 15px; border: 1px solid var(--line); border-radius: 8px; background: transparent; color: var(--ink); font-size: 13px; font-weight: 600; white-space: nowrap; transition: background .15s ease, border-color .15s ease; }
 .primary { color: white; border-color: var(--accent); background: var(--accent); }
@@ -49,8 +49,8 @@ h1 { margin: 0; font-size: clamp(2rem, 4vw, 3.1rem); font-weight: 720; letter-sp
 .check-filter input { width: 17px; height: 17px; accent-color: var(--accent); }
 .results-summary { display: flex; justify-content: space-between; align-items: center; min-height: 50px; font-size: 12px; color: var(--muted); }
 .table-wrap { width: 100%; overflow-x: auto; }
-table { width: 100%; min-width: 940px; border-collapse: collapse; }
-th, td { text-align: left; padding: 15px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+table { width: 100%; min-width: 820px; border-collapse: collapse; }
+th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
 th { position: sticky; top: 0; z-index: 1; background: var(--bg); font-size: 12px; color: var(--muted); font-weight: 650; }
 .sort-button { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; border: 0; background: none; color: inherit; padding: 0; font: inherit; }
 .sort-button span { color: #777b85; }
@@ -80,8 +80,10 @@ body.dialog-open { overflow: hidden; }
 .modal-header h2 { font-size: 23px; line-height: 1.2; margin: 4px 0 0; font-weight: 650; letter-spacing: -.02em; }
 .modal-content { padding: 22px 24px; }
 .device-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-.row-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; max-width: 260px; min-width: 210px; }
-.row-actions .release-link { flex-basis: 100%; }
+.row-action { border: 0; background: transparent; color: var(--muted); padding: 4px 0; min-height: 32px; font-size: 12px; font-weight: 500; }
+.row-action:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.source-link { white-space: nowrap; }
+.firmware-status .ghost { min-height: 36px; padding: 6px 12px; font-size: 12px; }
 #firmware-status-coverage.source-warning { color: var(--warning); }
 .release-link { font-size: 14px; font-weight: 600; text-decoration: none; }
 .release-link:hover { text-decoration: underline; text-underline-offset: 3px; }
@@ -106,7 +108,8 @@ ul.release-notes { padding-left: 20px; }
 @media (max-width: 760px) {
   .shell { padding: 22px 16px 40px; }
   .masthead { gap: 16px; padding-bottom: 20px; }
-  .firmware-status { align-items: flex-start; flex-direction: column; gap: 14px; padding: 20px 0; }
+  .firmware-status { align-items: flex-start; flex-wrap: wrap; gap: 12px; padding: 16px 0; }
+  .firmware-status strong { font-size: 20px; }
   .toolbar { gap: 12px; }
   .search-field { grid-column: 1 / -1; }
   .toolbar .check-filter { grid-row: 3; grid-column: 1 / -1; }
@@ -122,15 +125,16 @@ ul.release-notes { padding-left: 20px; }
   td { display: block; min-width: 0; padding: 0; border: 0; font-size: 13px; }
   td::before { content: attr(data-label); display: block; color: var(--muted); font-size: 10px; margin-bottom: 3px; }
   td[data-label="Device"] { grid-column: 1 / -1; grid-row: 1; }
-  td[data-label="Device"]::before, td[data-label="Category"]::before, td[data-label="Actions"]::before { display: none; }
+  td[data-label="Device"]::before, td[data-label="Category"]::before, td[data-label="Details"]::before { display: none; }
   .device-name { font-size: 16px; overflow-wrap: anywhere; }
   td[data-label="Category"] { grid-column: 1 / -1; grid-row: 2; color: var(--muted); font-size: 12px; }
   td[data-label="Latest"] { grid-column: 1 / -1; padding-top: 10px; margin-top: 4px; border-top: 1px solid var(--line); }
   td[data-label="Released"] { grid-column: 1; }
   td[data-label="Age"] { grid-column: 2; text-align: right; }
-  td[data-label="Actions"] { grid-column: 1 / -1; margin-top: 4px; }
-  .row-actions { max-width: none; min-width: 0; }
-  .row-actions button { flex: 1; }
+  td[data-label="Source"] { grid-column: 1; display: flex; align-items: center; }
+  td[data-label="Source"]::before { display: none; }
+  td[data-label="Details"] { grid-column: 2; text-align: right; }
+  .row-action { min-height: 44px; }
   .modal { width: calc(100% - 20px); max-height: 90dvh; border-radius: 12px; }
   .modal-header { padding: 16px; }
   .modal-content { padding: 18px 16px; }

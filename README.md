@@ -71,12 +71,13 @@ Filters and sort order stay in place when releases are marked as seen.
 **New since last seen** means the latest release differs from the version last acknowledged in
 this browser. It does not compare with firmware installed on your physical device.
 The first visit establishes a baseline. **Mark all as seen** acknowledges the full
-watchlist; **Mark as seen** on a device row or in its release details acknowledges
-one device. Each row also provides **Open update page** and **Release details**.
+watchlist; **Mark as seen** in release details acknowledges one device. The
+**Source** column links directly to the official vendor page; **Details** opens
+the current release notes and acknowledgement action.
 
-**Sources checked** shows the vendor scan time, independently of the site's build
-time. Devices without a successful check in more than three days show **Check
-overdue**; devices with no recorded success show **Not checked yet**. A failed
+**Sources checked**, available in the check-coverage tooltip, shows the vendor
+scan time independently of the site's build time. Devices without a successful
+check in more than three days show **Check overdue**; devices with no recorded success show **Not checked yet**. A failed
 source check is identified on its row even when a global issue banner is hidden.
 The status summary counts successful checks today in your local timezone, recent
 checks, overdue and failed checks, and devices requiring manual verification.

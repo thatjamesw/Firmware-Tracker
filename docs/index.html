@@ -20,14 +20,13 @@
 
     <section class="firmware-status" id="firmware-status" aria-label="Unseen release status">
       <div>
-        <span class="section-label">Your firmware watchlist</span>
-        <strong id="firmware-status-title" role="status">No new releases since last seen</strong>
-        <p id="firmware-status-detail">Compared with what you’ve seen in this browser. Installed versions aren’t tracked.</p>
+        <strong id="firmware-status-title" role="status">No new releases</strong>
+        <p id="firmware-status-detail" class="sr-only">Compared with what you’ve seen in this browser. Installed versions aren’t tracked.</p>
         <p id="firmware-status-coverage"></p>
-        <span class="firmware-status-meta" id="firmware-status-meta">Sources checked: unknown</span>
+        <span class="sr-only" id="firmware-status-meta">Sources checked: unknown</span>
       </div>
       <div class="updates-actions" id="firmware-status-actions" hidden>
-        <button class="primary" id="mark-updates-seen">Mark all as seen</button>
+        <button class="ghost" id="mark-updates-seen">Mark all as seen</button>
       </div>
     </section>
 

@@ -337,7 +337,7 @@ function compareRows(a, b, key, direction) {
 function updateFirmwareStatus() {
   const count = uiState.unseen.size;
   document.getElementById("firmware-status").classList.toggle("has-updates", count > 0);
-  document.getElementById("firmware-status-title").textContent = count ? `${count} new release${count === 1 ? "" : "s"} since last seen` : "No new releases since last seen";
+  document.getElementById("firmware-status-title").textContent = count ? `${count} new release${count === 1 ? "" : "s"}` : "No new releases";
   document.getElementById("firmware-status-actions").hidden = !count;
   const coverage = sourceCoverage(uiState.rows);
   const coverageElement = document.getElementById("firmware-status-coverage");
@@ -410,7 +410,7 @@ function renderTable() {
   table.appendChild(caption);
   const thead = document.createElement("thead");
   const hr = document.createElement("tr");
-  const headers = [["Category", "category"], ["Device", "name"], ["Latest", "version"], ["Released", "date"], ["Age", "age"], ["Actions", null]];
+  const headers = [["Category", "category"], ["Device", "name"], ["Latest", "version"], ["Released", "date"], ["Age", "age"], ["Source", null], ["Details", null]];
   for (const [title, key] of headers) {
     const th = document.createElement("th");
     th.scope = "col";
@@ -444,19 +444,12 @@ function renderTable() {
     tr.classList.toggle("row-new", unseen);
     tr.innerHTML = `<td data-label="Category">${escapeHtml(row.category)}</td>
       <td data-label="Device"><span class="device-name">${escapeHtml(row.deviceName)}</span>${freshness.warning ? `<span class="source-warning" title="${escapeHtml(freshness.detail)}">${escapeHtml(freshness.label)}</span>` : ""}</td>
-      <td data-label="Latest"><span class="latest-version">${escapeHtml(row.latest?.version || "—")}</span>${unseen ? ' <span class="badge new">New since last seen</span>' : ""}</td>
+      <td data-label="Latest"><span class="latest-version">${escapeHtml(row.latest?.version || "—")}</span>${unseen ? ' <span class="badge new" title="New since last seen" aria-label="New since last seen">New</span>' : ""}</td>
       <td data-label="Released">${escapeHtml(row.latest?.released_time || "Unknown")}</td>
       <td data-label="Age">${escapeHtml(row.age == null ? "—" : formatAge(row.age))}</td>
-      <td data-label="Actions"><div class="row-actions">
-        ${pageUrl ? `<a class="release-link" href="${escapeHtml(pageUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Open update page for ${escapeHtml(row.deviceName)}">Open update page <span aria-hidden="true">↗</span></a>` : ""}
-        <button class="ghost" id="history-${escapeHtml(row.deviceId)}" aria-label="Release details for ${escapeHtml(row.deviceName)}">Release details</button>
-        ${unseen ? `<button class="ghost mark-seen" aria-label="Mark as seen for ${escapeHtml(row.deviceName)}">Mark as seen</button>` : ""}
-      </div></td>`;
+      <td data-label="Source">${pageUrl ? `<a class="release-link source-link" href="${escapeHtml(pageUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Official source for ${escapeHtml(row.deviceName)}">Official <span aria-hidden="true">↗</span></a>` : "—"}</td>
+      <td data-label="Details"><button class="row-action" id="history-${escapeHtml(row.deviceId)}" aria-label="Release details for ${escapeHtml(row.deviceName)}">Details</button></td>`;
     tr.querySelector("button").addEventListener("click", () => renderModal(row.deviceId, row.deviceName, row.releases));
-    tr.querySelector(".mark-seen")?.addEventListener("click", () => {
-      markDeviceSeen(row.deviceId);
-      (document.getElementById(`history-${row.deviceId}`) || document.getElementById("device-search")).focus();
-    });
     tbody.appendChild(tr);
   }
   table.appendChild(tbody);
@@ -476,7 +469,8 @@ function initSourceFreshness() {
   const overdue = !local || Date.now() - Date.parse(checked) > STALE_AFTER_MS;
   meta.textContent = local ? `Sources checked ${local}${overdue ? " · Check overdue" : ""}` : "Sources have not been checked yet";
   meta.classList.toggle("source-warning", overdue);
-  meta.title = "The time vendor sources were scanned. Individual devices show their last successful check in release details.";
+  document.getElementById("firmware-status-coverage").title = meta.textContent;
+  document.getElementById("firmware-status-title").title = "New since last seen in this browser. Installed versions are not tracked.";
 }
 
 function initApp() {
