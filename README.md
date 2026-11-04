@@ -278,7 +278,8 @@ Recommended GitHub branch protection:
   - Parsers now extract ranked release candidates from official evidence (tables, visible text, links, filenames, and PDFs) before a shared resolver chooses the best firmware value.
   - Vendor HTML parsers use shared text/date/link helpers and tolerate common markup changes in Apple, Sony, Godox, Atomos, Bambu, and TP-Link pages.
   - Per-device and per-vendor health is tracked (`consecutive_failures`, `last_success_utc`, `last_error_type`) for better diagnostics.
-  - Strict mode: `python scripts/fetch_firmware_details.py --fail-on-regression` is used by the scheduled deploy workflow.
+  - Scheduled scans publish healthy updates and source health even when an individual lookup fails, retaining that device's last known good firmware. Schema validation and release guardrails remain enforced.
+  - Optional strict mode: `python scripts/fetch_firmware_details.py --fail-on-regression` exits nonzero on source regressions for manual diagnostics; scheduled scans do not use it.
 - UI is single-table for all devices and includes:
   - A firmware status summary that changes when unseen firmware is detected
   - Last generated timestamp
