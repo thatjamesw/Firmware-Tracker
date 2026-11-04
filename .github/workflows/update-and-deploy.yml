@@ -103,7 +103,7 @@ jobs:
 
       - name: Fetch tracked firmware details from official sources
         if: github.event_name != 'push'
-        run: python scripts/fetch_firmware_details.py --fail-on-regression --metrics-file scan-metrics.json
+        run: python scripts/fetch_firmware_details.py --metrics-file scan-metrics.json
 
       - name: Report incomplete scan
         if: always() && github.event_name != 'push'

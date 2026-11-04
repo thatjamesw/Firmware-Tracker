@@ -1,6 +1,7 @@
 import copy
 import io
 import json
+import shlex
 import socket
 import sys
 import tempfile
@@ -209,3 +210,32 @@ class ReleaseContractTests(unittest.TestCase):
             updated = json.loads(path.read_text())
             self.assertEqual(updated['firmware_index']['failed'], payload['firmware_index']['failed'])
             self.assertEqual(common.get_latest_active_release(updated['firmware_index']['healthy']['releases'])['version'], '2.0')
+
+    def test_workflow_scan_keeps_empty_source_and_publishes_healthy_update(self):
+        workflow = (Path(__file__).resolve().parents[1] / '.github/workflows/update-and-deploy.yml').read_text()
+        command = next(line.strip().removeprefix('run: ') for line in workflow.splitlines()
+                       if line.strip().startswith('run: python scripts/fetch_firmware_details.py '))
+        payload = {'sources': {'device_sources': {name: {'type': 'sony_cscs', 'mdl': name} for name in ('failed', 'healthy')}},
+                   'categories': {'cameras': {'title': 'Cameras', 'devices': {'failed': 'Failed', 'healthy': 'Healthy'}}},
+                   'firmware_index': {name: {'releases': [release()]} for name in ('failed', 'healthy')}}
+        def sync(name, source, timeout):
+            return [] if name == 'Failed' else [release('2.0')]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path, summary = root / 'devices.json', root / 'summary.md'
+            path.write_text(json.dumps(payload))
+            with (patch.object(ffd, 'DATA_FILE', path), patch.object(ffd, 'sync_device', side_effect=sync),
+                  patch.object(sys, 'argv', shlex.split(command)[1:]),
+                  patch.dict(ffd.os.environ, {'GITHUB_STEP_SUMMARY': str(summary)}),
+                  patch('sys.stdout', new_callable=io.StringIO), patch('sys.stderr', new_callable=io.StringIO)):
+                # Resolve the workflow's relative metrics path inside the temporary directory.
+                args = ffd.parse_args()
+                args.metrics_file = root / args.metrics_file
+                with patch.object(ffd, 'parse_args', return_value=args):
+                    self.assertEqual(ffd.main(), 0)
+            updated = json.loads(path.read_text())
+            self.assertEqual(updated['firmware_index']['failed'], payload['firmware_index']['failed'])
+            self.assertEqual(common.get_latest_active_release(updated['firmware_index']['healthy']['releases'])['version'], '2.0')
+            self.assertEqual(updated['sources']['sync_status']['device_health']['failed']['status'], 'no_entries')
+            self.assertIn('Failed: no entries; no firmware entries parsed', summary.read_text())
+            self.assertTrue((root / 'scan-metrics.json').is_file())
