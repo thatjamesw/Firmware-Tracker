@@ -17,6 +17,8 @@ def sync_bambu_wiki(source: dict[str, Any], timeout: int) -> list[dict[str, Any]
     candidates: list[dict[str, Any]] = []
     pattern = re.compile(rf"\b{re.escape(series)}\s+series\s+Version\s+([0-9.]+)(?:\s*\((\d{{8}})\))?", re.I)
     for heading in parse_html(html).find_all(["h2", "h3"]):
+        for anchor in heading.select("a.toc-anchor"):
+            anchor.decompose()
         match = pattern.fullmatch(html_to_text(str(heading)))
         if not match:
             continue
