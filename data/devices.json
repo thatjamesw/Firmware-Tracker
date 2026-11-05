@@ -183,11 +183,11 @@
       }
     },
     "sync_status": {
-      "last_run_utc": "2026-11-04T10:50:08Z",
+      "last_run_utc": "2026-11-05T06:53:25Z",
       "health_counts": {
-        "ok": 18,
+        "ok": 19,
         "ok_empty": 1,
-        "no_entries": 1,
+        "no_entries": 0,
         "error": 0,
         "transient_error": 0,
         "guardrail_rejected": 0,
@@ -199,31 +199,25 @@
           "ok_count": 4,
           "issues": [],
           "transient_count": 0,
-          "last_success_utc": "2026-11-04T10:50:08Z",
+          "last_success_utc": "2026-11-05T06:53:25Z",
           "consecutive_failures": 0,
           "last_error_type": ""
         },
         "bambu": {
-          "status": "issue",
-          "ok_count": 0,
-          "issues": [
-            {
-              "device_id": "bambu_p1s",
-              "status": "no_entries",
-              "reason": "no firmware entries parsed"
-            }
-          ],
+          "status": "ok",
+          "ok_count": 1,
+          "issues": [],
           "transient_count": 0,
-          "last_success_utc": "2026-11-03T06:53:16Z",
-          "consecutive_failures": 1,
-          "last_error_type": "no_entries"
+          "last_success_utc": "2026-11-05T06:53:25Z",
+          "consecutive_failures": 0,
+          "last_error_type": ""
         },
         "godox": {
           "status": "ok",
           "ok_count": 3,
           "issues": [],
           "transient_count": 0,
-          "last_success_utc": "2026-11-04T10:50:08Z",
+          "last_success_utc": "2026-11-05T06:53:25Z",
           "consecutive_failures": 0,
           "last_error_type": ""
         },
@@ -232,7 +226,7 @@
           "ok_count": 3,
           "issues": [],
           "transient_count": 0,
-          "last_success_utc": "2026-11-04T10:50:08Z",
+          "last_success_utc": "2026-11-05T06:53:25Z",
           "consecutive_failures": 0,
           "last_error_type": ""
         },
@@ -241,7 +235,7 @@
           "ok_count": 5,
           "issues": [],
           "transient_count": 0,
-          "last_success_utc": "2026-11-04T10:50:08Z",
+          "last_success_utc": "2026-11-05T06:53:25Z",
           "consecutive_failures": 0,
           "last_error_type": ""
         },
@@ -250,7 +244,7 @@
           "ok_count": 1,
           "issues": [],
           "transient_count": 0,
-          "last_success_utc": "2026-11-04T10:50:08Z",
+          "last_success_utc": "2026-11-05T06:53:25Z",
           "consecutive_failures": 0,
           "last_error_type": ""
         }
@@ -259,7 +253,7 @@
         "airpods_pro_3": {
           "vendor": "apple",
           "status": "ok",
-          "last_success_utc": "2026-11-04T10:50:08Z",
+          "last_success_utc": "2026-11-05T06:53:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -267,7 +261,7 @@
         "amaran_300c": {
           "vendor": "static",
           "status": "ok",
-          "last_success_utc": "2026-11-04T10:50:08Z",
+          "last_success_utc": "2026-11-05T06:53:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -275,7 +269,7 @@
         "apple_ios": {
           "vendor": "apple",
           "status": "ok",
-          "last_success_utc": "2026-11-04T10:50:08Z",
+          "last_success_utc": "2026-11-05T06:53:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -283,7 +277,7 @@
         "apple_macos": {
           "vendor": "apple",
           "status": "ok",
-          "last_success_utc": "2026-11-04T10:50:08Z",
+          "last_success_utc": "2026-11-05T06:53:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -291,7 +285,7 @@
         "apple_watchos": {
           "vendor": "apple",
           "status": "ok",
-          "last_success_utc": "2026-11-04T10:50:08Z",
+          "last_success_utc": "2026-11-05T06:53:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -307,16 +301,16 @@
         },
         "bambu_p1s": {
           "vendor": "bambu",
-          "status": "no_entries",
-          "last_success_utc": "2026-11-03T06:53:16Z",
-          "consecutive_failures": 1,
-          "last_error_type": "no_entries",
-          "last_error_reason": "no firmware entries parsed"
+          "status": "ok",
+          "last_success_utc": "2026-11-05T06:53:25Z",
+          "consecutive_failures": 0,
+          "last_error_type": "",
+          "last_error_reason": ""
         },
         "dell_u4025qw": {
           "vendor": "static",
           "status": "ok",
-          "last_success_utc": "2026-11-04T10:50:08Z",
+          "last_success_utc": "2026-11-05T06:53:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -324,7 +318,7 @@
         "godox_ad400proii": {
           "vendor": "godox",
           "status": "ok",
-          "last_success_utc": "2026-11-04T10:50:08Z",
+          "last_success_utc": "2026-11-05T06:53:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -332,7 +326,7 @@
         "godox_v860iis": {
           "vendor": "godox",
           "status": "ok",
-          "last_success_utc": "2026-11-04T10:50:08Z",
+          "last_success_utc": "2026-11-05T06:53:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -340,7 +334,7 @@
         "godox_x3pros": {
           "vendor": "godox",
           "status": "ok",
-          "last_success_utc": "2026-11-04T10:50:08Z",
+          "last_success_utc": "2026-11-05T06:53:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -348,7 +342,7 @@
         "osmo_pocket_4p": {
           "vendor": "dji",
           "status": "ok",
-          "last_success_utc": "2026-11-04T10:50:08Z",
+          "last_success_utc": "2026-11-05T06:53:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -356,7 +350,7 @@
         "sony_1635gm2": {
           "vendor": "sony",
           "status": "ok_empty",
-          "last_success_utc": "2026-11-04T10:50:08Z",
+          "last_success_utc": "2026-11-05T06:53:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -364,7 +358,7 @@
         "sony_2470gm2": {
           "vendor": "sony",
           "status": "ok",
-          "last_success_utc": "2026-11-04T10:50:08Z",
+          "last_success_utc": "2026-11-05T06:53:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -372,7 +366,7 @@
         "sony_24f14gm": {
           "vendor": "sony",
           "status": "ok",
-          "last_success_utc": "2026-11-04T10:50:08Z",
+          "last_success_utc": "2026-11-05T06:53:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -380,7 +374,7 @@
         "sony_70200gm2": {
           "vendor": "sony",
           "status": "ok",
-          "last_success_utc": "2026-11-04T10:50:08Z",
+          "last_success_utc": "2026-11-05T06:53:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -388,7 +382,7 @@
         "sony_a1ii": {
           "vendor": "sony",
           "status": "ok",
-          "last_success_utc": "2026-11-04T10:50:08Z",
+          "last_success_utc": "2026-11-05T06:53:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -396,7 +390,7 @@
         "tplink_deco_be65_v2": {
           "vendor": "tplink",
           "status": "ok",
-          "last_success_utc": "2026-11-04T10:50:08Z",
+          "last_success_utc": "2026-11-05T06:53:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -404,7 +398,7 @@
         "wa150": {
           "vendor": "dji",
           "status": "ok",
-          "last_success_utc": "2026-11-04T10:50:08Z",
+          "last_success_utc": "2026-11-05T06:53:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -412,26 +406,16 @@
         "wa520": {
           "vendor": "dji",
           "status": "ok",
-          "last_success_utc": "2026-11-04T10:50:08Z",
+          "last_success_utc": "2026-11-05T06:53:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
         }
       },
-      "issues": [
-        {
-          "vendor": "bambu",
-          "device_id": "bambu_p1s",
-          "status": "no_entries",
-          "reason": "no firmware entries parsed",
-          "streak_days": 1
-        }
-      ],
+      "issues": [],
       "transient_issues": [],
-      "issue_streaks": {
-        "bambu:bambu_p1s": 1
-      },
-      "max_issue_streak_days": 1
+      "issue_streaks": {},
+      "max_issue_streak_days": 0
     },
     "manage_devices_url": "https://github.com/thatjamesw/Firmware-Tracker/actions/workflows/manage-devices.yml"
   },
