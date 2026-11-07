@@ -1,6 +1,6 @@
 # Firmware Summary
 
-Generated (UTC): 2026-11-07T06:04:26Z
+Generated (UTC): 2026-11-07T08:10:43Z
 
 | Category | Device | Latest | Released | Age | Source | Status |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -14,6 +14,7 @@ Generated (UTC): 2026-11-07T06:04:26Z
 | Cameras | Sony 16-35 GM II | - | - | - | sony_cscs | ok |
 | Cameras | Sony 24 1.4 GM | 03 | 2021-11-18 | 4 years | sony_cscs | ok |
 | Cameras | Sony 24-70 GM II | 02 | 2023-12-05 | 2 years | sony_cscs | ok |
+| Cameras | Sony 50 1.2 GM | 02 | 2021-06-21 | 5 years | sony_cscs | ok |
 | Cameras | Sony 70-200 GM II | 04 | 2023-12-05 | 2 years | sony_cscs | ok |
 | Cameras | Sony A1 II | 4.00 | 2025-10-30 | 1 year | sony_cscs | ok |
 | Drones | Avata 2 | 01.00.0500 | 2026-07-30 | 3 months | dji_downloads | ok |
