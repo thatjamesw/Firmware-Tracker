@@ -191,7 +191,7 @@
       }
     },
     "sync_status": {
-      "last_run_utc": "2026-11-10T07:24:24Z",
+      "last_run_utc": "2026-11-11T06:31:49Z",
       "health_counts": {
         "ok": 20,
         "ok_empty": 1,
@@ -207,7 +207,7 @@
           "ok_count": 4,
           "issues": [],
           "transient_count": 0,
-          "last_success_utc": "2026-11-10T07:24:24Z",
+          "last_success_utc": "2026-11-11T06:31:49Z",
           "consecutive_failures": 0,
           "last_error_type": ""
         },
@@ -216,7 +216,7 @@
           "ok_count": 1,
           "issues": [],
           "transient_count": 0,
-          "last_success_utc": "2026-11-10T07:24:24Z",
+          "last_success_utc": "2026-11-11T06:31:49Z",
           "consecutive_failures": 0,
           "last_error_type": ""
         },
@@ -225,7 +225,7 @@
           "ok_count": 3,
           "issues": [],
           "transient_count": 0,
-          "last_success_utc": "2026-11-10T07:24:24Z",
+          "last_success_utc": "2026-11-11T06:31:49Z",
           "consecutive_failures": 0,
           "last_error_type": ""
         },
@@ -234,7 +234,7 @@
           "ok_count": 3,
           "issues": [],
           "transient_count": 0,
-          "last_success_utc": "2026-11-10T07:24:24Z",
+          "last_success_utc": "2026-11-11T06:31:49Z",
           "consecutive_failures": 0,
           "last_error_type": ""
         },
@@ -243,7 +243,7 @@
           "ok_count": 6,
           "issues": [],
           "transient_count": 0,
-          "last_success_utc": "2026-11-10T07:24:24Z",
+          "last_success_utc": "2026-11-11T06:31:49Z",
           "consecutive_failures": 0,
           "last_error_type": ""
         },
@@ -252,7 +252,7 @@
           "ok_count": 1,
           "issues": [],
           "transient_count": 0,
-          "last_success_utc": "2026-11-10T07:24:24Z",
+          "last_success_utc": "2026-11-11T06:31:49Z",
           "consecutive_failures": 0,
           "last_error_type": ""
         }
@@ -261,7 +261,7 @@
         "airpods_pro_3": {
           "vendor": "apple",
           "status": "ok",
-          "last_success_utc": "2026-11-10T07:24:24Z",
+          "last_success_utc": "2026-11-11T06:31:49Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -269,7 +269,7 @@
         "amaran_300c": {
           "vendor": "static",
           "status": "ok",
-          "last_success_utc": "2026-11-10T07:24:24Z",
+          "last_success_utc": "2026-11-11T06:31:49Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -277,7 +277,7 @@
         "apple_ios": {
           "vendor": "apple",
           "status": "ok",
-          "last_success_utc": "2026-11-10T07:24:24Z",
+          "last_success_utc": "2026-11-11T06:31:49Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -285,7 +285,7 @@
         "apple_macos": {
           "vendor": "apple",
           "status": "ok",
-          "last_success_utc": "2026-11-10T07:24:24Z",
+          "last_success_utc": "2026-11-11T06:31:49Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -293,7 +293,7 @@
         "apple_watchos": {
           "vendor": "apple",
           "status": "ok",
-          "last_success_utc": "2026-11-10T07:24:24Z",
+          "last_success_utc": "2026-11-11T06:31:49Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -310,7 +310,7 @@
         "bambu_p1s": {
           "vendor": "bambu",
           "status": "ok",
-          "last_success_utc": "2026-11-10T07:24:24Z",
+          "last_success_utc": "2026-11-11T06:31:49Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -318,7 +318,7 @@
         "dell_u4025qw": {
           "vendor": "static",
           "status": "ok",
-          "last_success_utc": "2026-11-10T07:24:24Z",
+          "last_success_utc": "2026-11-11T06:31:49Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -326,7 +326,7 @@
         "godox_ad400proii": {
           "vendor": "godox",
           "status": "ok",
-          "last_success_utc": "2026-11-10T07:24:24Z",
+          "last_success_utc": "2026-11-11T06:31:49Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -334,7 +334,7 @@
         "godox_v860iis": {
           "vendor": "godox",
           "status": "ok",
-          "last_success_utc": "2026-11-10T07:24:24Z",
+          "last_success_utc": "2026-11-11T06:31:49Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -342,7 +342,7 @@
         "godox_x3pros": {
           "vendor": "godox",
           "status": "ok",
-          "last_success_utc": "2026-11-10T07:24:24Z",
+          "last_success_utc": "2026-11-11T06:31:49Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -350,7 +350,7 @@
         "osmo_pocket_4p": {
           "vendor": "dji",
           "status": "ok",
-          "last_success_utc": "2026-11-10T07:24:24Z",
+          "last_success_utc": "2026-11-11T06:31:49Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -358,7 +358,7 @@
         "sony_1635gm2": {
           "vendor": "sony",
           "status": "ok_empty",
-          "last_success_utc": "2026-11-10T07:24:24Z",
+          "last_success_utc": "2026-11-11T06:31:49Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -366,7 +366,7 @@
         "sony_2470gm2": {
           "vendor": "sony",
           "status": "ok",
-          "last_success_utc": "2026-11-10T07:24:24Z",
+          "last_success_utc": "2026-11-11T06:31:49Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -374,7 +374,7 @@
         "sony_24f14gm": {
           "vendor": "sony",
           "status": "ok",
-          "last_success_utc": "2026-11-10T07:24:24Z",
+          "last_success_utc": "2026-11-11T06:31:49Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -382,7 +382,7 @@
         "sony_50f12gm": {
           "vendor": "sony",
           "status": "ok",
-          "last_success_utc": "2026-11-10T07:24:24Z",
+          "last_success_utc": "2026-11-11T06:31:49Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -390,7 +390,7 @@
         "sony_70200gm2": {
           "vendor": "sony",
           "status": "ok",
-          "last_success_utc": "2026-11-10T07:24:24Z",
+          "last_success_utc": "2026-11-11T06:31:49Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -398,7 +398,7 @@
         "sony_a1ii": {
           "vendor": "sony",
           "status": "ok",
-          "last_success_utc": "2026-11-10T07:24:24Z",
+          "last_success_utc": "2026-11-11T06:31:49Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -406,7 +406,7 @@
         "tplink_deco_be65_v2": {
           "vendor": "tplink",
           "status": "ok",
-          "last_success_utc": "2026-11-10T07:24:24Z",
+          "last_success_utc": "2026-11-11T06:31:49Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -414,7 +414,7 @@
         "wa150": {
           "vendor": "dji",
           "status": "ok",
-          "last_success_utc": "2026-11-10T07:24:24Z",
+          "last_success_utc": "2026-11-11T06:31:49Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -422,7 +422,7 @@
         "wa520": {
           "vendor": "dji",
           "status": "ok",
-          "last_success_utc": "2026-11-10T07:24:24Z",
+          "last_success_utc": "2026-11-11T06:31:49Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -1389,6 +1389,21 @@
     "airpods_pro_3": {
       "releases": [
         {
+          "version": "9B47",
+          "released_time": "2026-11-10",
+          "release_note": {
+            "en": "Official Apple AirPods firmware matrix listing for AirPods Pro 3."
+          },
+          "arb": null,
+          "active": true,
+          "evidence": {
+            "type": "apple_airpods_matrix",
+            "text": "AirPods Pro 3: 9B47",
+            "source_url": "https://support.apple.com/106340"
+          },
+          "confidence": 0.88
+        },
+        {
           "version": "9A348",
           "released_time": "2026-09-14",
           "release_note": {
@@ -1453,6 +1468,21 @@
     "osmo_pocket_4p": {
       "releases": [
         {
+          "version": "01.02.11.49",
+          "released_time": "2026-11-09",
+          "release_note": {
+            "en": "\u2022 Added the Scene Preset, including the Stage and Sunset presets. When enabled, the camera automatically adjusts settings based on the selected scene to improve the captured video quality.\n\u2022 Increased the maximum zoom ratio to 18x in Photo and Video modes.\n\u2022 Optimized the ActiveTrack experience and tracking stability.\n\u2022 Added support for Intelligent Highlight. Highlight moments are automatically detected and recorded during capture, or you can mark them manually during camera playback. Use the latest DJI Mimo app for quick sharing. If your phone su pports Auto Media Transfer, Highlight Live Photos can be automatically transferred to your phone album.\n\u2022 Auto Media Transfer supports Instant Transfer for photos and Live Photos. Both are automatically transferred to your phone album once shooting is complete.\n\u2022 Added support for Direct Transfer to Huawei Devices. You can select footage directly on the camera playback screen and transfer it to Huawei devices with one tap. Ensure the mobile device supports HarmonyOS 6.1 or later, and enable Everyone in Hu awei Share before sharing for the first time.\n\u2022 When powered off, the camera can be connected to a computer or an OTG -compatible phone with a USB cable in USB mode to manage camera footage.\n\u2022 When the camera is powered off and enters sleep mode, you can preview and download footage using the latest DJI Mimo app .\n\u2022 Supports Auto ISO with automatic exposure in D -Log2 10bit mode.\n\u2022 Optimized image quality at 4K/30fps for the med -tele camera.\n\u2022 Optimized the multi -camera switching experience for more natural image transi tions while zooming.\n\u2022 Optimized med -tele camera image quality during wireless live streaming, DisplayPort Output, and Webcam mode, improving sharpness and zoom smoothness.\n\u2022 Optimized image quality for non -portrait high dynamic range scenes.\n\u2022 Optimized video color and brightness in parents-and-kid scenes.\n\u2022 Optimized the display and playback quality of HDR videos on the camera screen.\n\u2022 Optimized gimbal stability when using the med -tele camera.\n\u2022 Fixed some known issues. DJI Osmo Pocket 4P Release Notes https://www.dji.com/osmo -pocket-4p Copyright \u00a9 2026 DJI All Rights Reserved 2"
+          },
+          "arb": null,
+          "active": true,
+          "evidence": {
+            "type": "dji_release_notes_pdf",
+            "text": "Date: 2026.11.09 Firmware Version: v01.02.11.49 DJI Mimo App iOS: v2.12.5 DJI Mimo App Android: v2.12.4 Osmo FrameTap: v01.02.08.02 What's New \u2022 Added the Scene Preset, including the Stage and Sunset presets. When enabled, the camera automatically adjusts settings based on the selected scene to improve the captured video quality. \u2022 Increased the maximum zoom ratio to 18x in Photo and Video modes. \u2022 Optimized the ActiveTrack experience and tracking stability. \u2022 Added support for Inte",
+            "source_url": "https://terra-1-g.djicdn.com/6189933d30024fc1b331bffe4fe41837/osmo-pocket-4p/RN/20261109/DJI_Osmo_Pocket_4P_Release_Notes_en.pdf"
+          },
+          "confidence": 0.9
+        },
+        {
           "version": "01.01.71.31",
           "released_time": "2026-09-03",
           "release_note": {
@@ -1478,7 +1508,7 @@
           "evidence": {
             "type": "dji_release_notes_pdf",
             "text": "Date: 2026.07.30 Firmware Version: v01.01.65.13 DJI Mimo App iOS: v2.10.12 DJI Mimo App Android: v2.10.12 Osmo FrameTap: v01.02.08.02 What's New \u2022 Added support for HDR Enhancement in Photo mode. Play back footage on a device that supports high dynamic range display for the best viewing experience. \u2022 Fixed some known issues. Notes: 1. If the update fails, follow the steps for troubleshooting. a. Restart Osmo Pocket 4P and DJI Mimo. b. Enable Wi-Fi and Bluetooth on the mobile",
-            "source_url": "https://terra-1-g.djicdn.com/6189933d30024fc1b331bffe4fe41837/osmo-pocket-4p/RN/20260903/DJI_Osmo_Pocket_4P_Release_Notes_en.pdf"
+            "source_url": "https://terra-1-g.djicdn.com/6189933d30024fc1b331bffe4fe41837/osmo-pocket-4p/RN/20261109/DJI_Osmo_Pocket_4P_Release_Notes_en.pdf"
           },
           "confidence": 0.9
         },
@@ -1486,14 +1516,14 @@
           "version": "01.01.58.03",
           "released_time": "2026-07-16",
           "release_note": {
-            "en": "\u2022 Added support for Auto Media Transfer on iOS. Newly captured files can be automatically transferred to your mobile device after the camera powers off. For a more stable experience, it is recommended to pair the camera with an iPhone 16 series (or later) device running iOS 26.4.1 or later, and to ensure the camera battery is above 15%.\n\u2022 Added HDR 10 -bit color mode, supporting 10 -bit high dynamic range video capture. Play back footage on a device that supports high dynamic range display for the best viewing experience.\n\u2022 Added support for automatic brightness and color temperature adjustment for the fill light. When enabled, brightness and color temperature automatically adapt to the current scene without frequent manual adjustments.\n\u2022 Fixed some known issues."
+            "en": "\u2022 Added support for Auto Media Transfer on iOS. Newly captured files can be automatically transferred to your mobile device after the camera powers off. For a more stable experience, it is recommended to pair the camera wi th an iPhone 16 series (or later) device running iOS 26.4.1 or later, and to ensure the camera battery is above 15%.\n\u2022 Added HDR 10 -bit color mode, supporting 10 -bit high dynamic range video capture. Play back footage on a device that supports high dynamic r ange display for the best viewing experience.\n\u2022 Added support for automatic brightness and color temperature adjustment for the fill light. When enabled, brightness and color temperature automatically adapt to the current scene without frequent manual adjust ments.\n\u2022 Fixed some known issues."
           },
           "arb": null,
           "active": true,
           "evidence": {
             "type": "dji_release_notes_pdf",
-            "text": "Date: 2026.07.16 Firmware Version: v01.01.58.03 DJI Mimo App iOS: v2.10.10 DJI Mimo App Android: v2.10.9 Osmo FrameTap: v01.02.08.02 What's New \u2022 Added support for Auto Media Transfer on iOS. Newly captured files can be automatically transferred to your mobile device after the camera powers off. For a more stable experience, it is recommended to pair the camera with an iPhone 16 series (or later) device running iOS 26.4.1 or later, and to ensure the camera battery is above 15%. \u2022 A",
-            "source_url": "https://terra-1-g.djicdn.com/6189933d30024fc1b331bffe4fe41837/osmo-pocket-4p/RN/20260903/DJI_Osmo_Pocket_4P_Release_Notes_en.pdf"
+            "text": "Date: 2026.07.16 Firmware Version: v01.01.58.03 DJI Mimo App iOS: v2.10.10 DJI Mimo App Android: v2.10.9 Osmo FrameTap: v01.02.08.02 What's New \u2022 Added support for Auto Media Transfer on iOS. Newly captured files can be automatically transferred to your mobile device after the camera powers off. For a more stable experience, it is recommended to pair the camera wi th an iPhone 16 series (or later) device running iOS 26.4.1 or later, and to ensure the camera battery is above 15%. \u2022 A",
+            "source_url": "https://terra-1-g.djicdn.com/6189933d30024fc1b331bffe4fe41837/osmo-pocket-4p/RN/20261109/DJI_Osmo_Pocket_4P_Release_Notes_en.pdf"
           },
           "confidence": 0.9
         },
@@ -1501,14 +1531,14 @@
           "version": "01.01.09.05",
           "released_time": "2026-06-29",
           "release_note": {
-            "en": "\u2022 Added support for Frame Tracking. The camera automatically matches and selects an ActiveTrack subject. When the subject frame turns yellow, press the joystick once to start tracking while maintaining the current composition.\n\u2022 Added Multi -Person Tracking to Smart Gimbal Mode. When enabled, the camera automatically matches and tracks the primary subject and nearby subjects. During tracking, the composition adjusts in real time to maintain tracking even when subjects enter or leave the frame.\n\u2022 Added support to set the Press & Hol d Joystick function to Lock Gimbal or Lock Camera Direction in system settings. When Lock Gimbal is selected, the gimbal responds more naturally to hand movements.\n\u2022 Press and hold the Zoom Button or Custom Button to continuously zoom in at a constant speed.\n\u2022 Moved frequently used operations to the front in system settings.\n\u2022 Improved image quality in certain scenarios.\n\u2022 Fixed some known issues."
+            "en": "\u2022 Added support for Frame Tracking. The camera automatically matches and selects an ActiveTrack subject. When the subject frame turns yellow, press the joystick once to start tracking while maintaining the current composition.\n\u2022 Added Multi -Person Tracking to Smart Gimbal Mode. When enabled, the camera automatically matches and tracks the primary subject and nearby subjects. During tracking, the composition adjusts in real time to maintain tracking even when subjects enter or leave the frame.\n\u2022 Added support to s et the Press & Hold Joystick function to Lock Gimbal or Lock Camera Direction in system settings. When Lock Gimbal is selected, the gimbal responds more naturally to hand movements.\n\u2022 Press and hold the Zoom Button or Custom Button to continuously zoom in at a constant speed.\n\u2022 Moved frequently used operations to the front in system settings.\n\u2022 Improved image quality in certain scenarios.\n\u2022 Fixed some known issues."
           },
           "arb": null,
           "active": true,
           "evidence": {
             "type": "dji_release_notes_pdf",
-            "text": "Date: 2026.06.29 Firmware Version: v01.01.09.05 DJI Mimo App iOS: v2.10.2 DJI Mimo App Android: v2.10.2 Osmo FrameTap: v01.02.08.02 What's New \u2022 Added support for Frame Tracking. The camera automatically matches and selects an ActiveTrack subject. When the subject frame turns yellow, press the joystick once to start tracking while maintaining the current composition. \u2022 Added Multi -Person Tracking to Smart Gimbal Mode. When enabled, the camera automatically matches and tracks the p",
-            "source_url": "https://terra-1-g.djicdn.com/6189933d30024fc1b331bffe4fe41837/osmo-pocket-4p/RN/20260903/DJI_Osmo_Pocket_4P_Release_Notes_en.pdf"
+            "text": "Date: 2026.06.29 Firmware Version: v01.01.09.05 DJI Mimo App iOS: v2.10.2 DJI Mimo App Android: v2.10.2 Osmo FrameTap: v01.02.08.02 What's New \u2022 Added support for Frame Tracking. The camera automatically matches and selects an ActiveTrack subject. When the subject frame turns yellow, press the joystick once to start tracking while maintaining the current composition. \u2022 Added Multi -Person Tracking to Smart Gimbal Mode. When enabled, the camera automatically matches and tracks the pr",
+            "source_url": "https://terra-1-g.djicdn.com/6189933d30024fc1b331bffe4fe41837/osmo-pocket-4p/RN/20261109/DJI_Osmo_Pocket_4P_Release_Notes_en.pdf"
           },
           "confidence": 0.9
         }
