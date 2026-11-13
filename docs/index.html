@@ -12,15 +12,16 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <main class="shell">
-    <header class="masthead" aria-label="Tracker overview">
+  <header class="masthead" aria-label="Tracker overview">
+    <div class="masthead-inner">
       <h1>Firmware Tracker</h1>
       <a id="manage-devices" class="ghost" hidden>Manage devices on GitHub <span aria-hidden="true">↗</span></a>
-    </header>
-
+    </div>
+  </header>
+  <main class="shell">
     <section class="firmware-status" id="firmware-status" aria-label="Unseen release status">
       <div>
-        <strong id="firmware-status-title" role="status">No new releases</strong>
+        <strong id="firmware-status-title" role="status">No unseen releases</strong>
         <p id="firmware-status-detail" class="sr-only">Compared with what you’ve seen in this browser. Installed versions aren’t tracked.</p>
         <p id="firmware-status-coverage"></p>
         <span class="sr-only" id="firmware-status-meta">Sources checked: unknown</span>

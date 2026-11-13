@@ -293,7 +293,7 @@ function sourceCoverage(rows, now = Date.now()) {
   if (counts.failed) parts.push(`${counts.failed} check${counts.failed === 1 ? "" : "s"} failed`);
   if (counts.missing) parts.push(`${counts.missing} not checked yet`);
   if (counts.manual) parts.push(`${counts.manual} manually verified`);
-  return {text: parts.join(" · "), warning: Boolean(counts.overdue || counts.failed || counts.missing || counts.manual)};
+  return {text: parts.join(" · "), warning: Boolean(counts.overdue || counts.failed || counts.missing)};
 }
 
 function filteredRows(rows, state) {
@@ -337,7 +337,7 @@ function compareRows(a, b, key, direction) {
 function updateFirmwareStatus() {
   const count = uiState.unseen.size;
   document.getElementById("firmware-status").classList.toggle("has-updates", count > 0);
-  document.getElementById("firmware-status-title").textContent = count ? `${count} new release${count === 1 ? "" : "s"}` : "No new releases";
+  document.getElementById("firmware-status-title").textContent = count ? `${count} unseen release${count === 1 ? "" : "s"}` : "No unseen releases";
   document.getElementById("firmware-status-actions").hidden = !count;
   const coverage = sourceCoverage(uiState.rows);
   const coverageElement = document.getElementById("firmware-status-coverage");

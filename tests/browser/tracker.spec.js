@@ -90,20 +90,20 @@ test('modal keeps keyboard focus inside its controls', async ({page}) => {
 test('mark one device seen preserves filters and other unseen releases', async ({page}) => {
   await seedUnseen(page);
   await page.goto('/');
-  await expect(page.locator('#firmware-status-title')).toHaveText('2 new releases');
+  await expect(page.locator('#firmware-status-title')).toHaveText('2 unseen releases');
   await page.getByLabel('Unseen releases only').check();
   await page.getByRole('button', {name:'Release details for Osmo Pocket 4P', exact:true}).click();
   await page.getByRole('button', {name:'Mark as seen', exact:true}).click();
   await page.getByRole('button', {name:'Close', exact:true}).click();
   await expect(page.getByLabel('Unseen releases only')).toBeChecked();
   await expect(page.locator('tbody tr')).toHaveCount(1);
-  await expect(page.locator('#firmware-status-title')).toHaveText('1 new release');
+  await expect(page.locator('#firmware-status-title')).toHaveText('1 unseen release');
   await expect(page.getByLabel('Search devices', {exact:true})).toBeFocused();
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('firmware_tracker_seen_versions_v1')));
   expect(saved.osmo_pocket_4p).toBe('01.01.71.31');
   expect(saved.sony_a1ii).toBe('0.0');
   await page.getByRole('button', {name:'Mark all as seen'}).click();
-  await expect(page.locator('#firmware-status-title')).toHaveText('No new releases');
+  await expect(page.locator('#firmware-status-title')).toHaveText('No unseen releases');
   await expect(page.getByRole('heading', {name:'No matching devices'})).toBeVisible();
 });
 
@@ -166,7 +166,7 @@ test('source column links directly to the vendor and acknowledgement stays in de
   await row.getByRole('button', {name:'Release details for Osmo Pocket 4P'}).click();
   await page.getByRole('dialog').getByRole('button', {name:'Mark as seen', exact:true}).click();
   await page.getByRole('button', {name:'Close', exact:true}).click();
-  await expect(page.locator('#firmware-status-title')).toHaveText('1 new release');
+  await expect(page.locator('#firmware-status-title')).toHaveText('1 unseen release');
   await page.reload();
   await expect(row.locator('.badge.new')).toHaveCount(0);
 });
@@ -180,7 +180,7 @@ test('coverage remains visible when there are no new releases and checks fail', 
   config.source_sync_status.device_health.sony_a1ii.last_success_utc = '2020-01-01T00:00:00Z';
   await page.route('**/devices/config.js', route => route.fulfill({contentType:'application/javascript', body:`const TRACKER_CONFIG = ${JSON.stringify(config)};`}));
   await page.goto('/');
-  await expect(page.locator('#firmware-status-title')).toHaveText('No new releases');
+  await expect(page.locator('#firmware-status-title')).toHaveText('No unseen releases');
   await expect(page.locator('#firmware-status-coverage')).toContainText('1 check failed');
   await expect(page.locator('#firmware-status-coverage')).toContainText('1 check overdue');
   await expect(page.locator('#firmware-status-coverage')).toHaveClass('source-warning');

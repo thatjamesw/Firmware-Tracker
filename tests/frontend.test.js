@@ -142,4 +142,5 @@ test('coverage reflects device checks rather than the global scan timestamp', ()
   assert.equal(coverage.text, '2 devices checked today · 1 checked recently · 1 check overdue · 1 check failed · 1 not checked yet · 1 manually verified');
   assert.equal(coverage.warning, true);
   assert.equal(ctx.sourceCoverage([{deviceId:'healthy'}], now).warning, false);
+  assert.equal(ctx.sourceCoverage(['healthy', 'recent', 'manual'].map(deviceId => ({deviceId})), now).warning, false);
 });
