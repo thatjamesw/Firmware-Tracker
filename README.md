@@ -10,7 +10,7 @@ Static firmware-tracking site that deploys on GitHub Pages and syncs from offici
   - DJI: downloads pages and release-notes PDFs
   - Sony: official `support.d-imaging.sony.co.jp` firmware pages (model-code based)
   - Godox: official firmware listing pages
-  - Apple: official support pages for iOS/macOS/watchOS/AirPods
+  - Apple: official support pages for iOS/macOS/watchOS/AirPods/HomePod
   - Atomos: official product-support firmware sections (device article based)
   - Bambu: official wiki release-history pages
   - TP-Link: official support/download firmware pages
@@ -139,7 +139,7 @@ Some vendors need a model or variant to avoid matching the wrong hardware:
 | DJI | Product downloads page | Optional exact source model name | — |
 | Sony | Official support page | Model code, e.g. `ILCE-1M2` (or `mdl` in URL) | — |
 | Godox | Firmware listing page | Exact listing title/model, e.g. `V860IIS Firmware` | — |
-| Apple | Support article | AirPods model, if applicable | `ios`, `macos`, `watchos`, or `airpods` |
+| Apple | Support article | AirPods model, if applicable | `ios`, `macos`, `watchos`, `airpods`, or `homepod` |
 | Atomos | Product support page | — | Article ID, e.g. `NinjaVArticle` |
 | Bambu | Wiki release-history page | — | Series, e.g. `P1` |
 | TP-Link | Download page | Model, e.g. `Deco BE65` | Hardware version, e.g. `V2` |

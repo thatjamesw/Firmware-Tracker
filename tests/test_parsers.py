@@ -537,6 +537,16 @@ class ParserTests(unittest.TestCase):
         self.assertEqual(releases[0]["version"], "11.19.00")
         self.assertEqual(releases[0]["released_time"], "")
 
+    def test_homepod_uses_latest_heading_without_article_date_or_old_history(self) -> None:
+        html = b'<h1>HomePod</h1><p>Software version 99.0</p><h2>HomePod Software Version 27.2</h2><p>Updates</p><h2>HomePod Software Version 27</h2><p>Published Date: November 12, 2026</p>'
+        source = {"type": "apple_support", "kind": "homepod", "url": "https://support.apple.com/en-us/108045"}
+        with mock.patch.object(apple_source, "fetch_bytes", return_value=html):
+            releases = apple_source.sync_apple_support(source, timeout=5)
+        self.assertEqual([r["version"] for r in releases], ["27.2"])
+        self.assertEqual(releases[0]["released_time"], "")
+        with mock.patch.object(apple_source, "fetch_bytes", return_value=b'<h1>HomePod</h1>'):
+            self.assertEqual(apple_source.sync_apple_support(source, timeout=5), [])
+
     def test_apple_ios_parser_extracts_latest_and_release_date(self) -> None:
         html = (FIXTURES_DIR / "apple_100100.html").read_text(encoding="utf-8")
         original_fetch = apple_source.fetch_bytes

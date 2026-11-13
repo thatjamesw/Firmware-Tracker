@@ -188,6 +188,12 @@
         "mdl": "SEL50F12GM",
         "lang": "en",
         "area": "us"
+      },
+      "homepod_mini_2": {
+        "type": "apple_support",
+        "page_url": "https://support.apple.com/en-us/108045",
+        "url": "https://support.apple.com/en-us/108045",
+        "kind": "homepod"
       }
     },
     "sync_status": {
@@ -199,12 +205,13 @@
         "error": 0,
         "transient_error": 0,
         "guardrail_rejected": 0,
-        "missing_source": 0
+        "missing_source": 0,
+        "manual_fallback": 1
       },
       "vendor_health": {
         "apple": {
           "status": "ok",
-          "ok_count": 4,
+          "ok_count": 5,
           "issues": [],
           "transient_count": 0,
           "last_success_utc": "2026-11-12T07:17:00Z",
@@ -426,6 +433,14 @@
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
+        },
+        "homepod_mini_2": {
+          "vendor": "apple",
+          "status": "ok",
+          "last_success_utc": "2026-11-13T05:47:44Z",
+          "consecutive_failures": 0,
+          "last_error_type": "",
+          "last_error_reason": ""
         }
       },
       "issues": [],
@@ -484,7 +499,8 @@
         "apple_ios": "iOS",
         "apple_macos": "macOS",
         "apple_watchos": "watchOS",
-        "airpods_pro_3": "AirPods Pro 3"
+        "airpods_pro_3": "AirPods Pro 3",
+        "homepod_mini_2": "HomePod mini 2"
       }
     }
   },
@@ -1560,6 +1576,25 @@
             "source_url": "https://support.d-imaging.sony.co.jp/www/cscs/firm/?mdl=SEL50F12GM&lang=en&area=us"
           },
           "confidence": 0.9
+        }
+      ]
+    },
+    "homepod_mini_2": {
+      "releases": [
+        {
+          "version": "27.2",
+          "released_time": "",
+          "release_note": {
+            "en": "Official Apple HomePod software update listing. See the source page for release notes."
+          },
+          "arb": null,
+          "active": true,
+          "evidence": {
+            "type": "apple_homepod_heading",
+            "text": "HomePod Software Version 27.2",
+            "source_url": "https://support.apple.com/en-us/108045"
+          },
+          "confidence": 0.82
         }
       ]
     }

@@ -115,6 +115,26 @@ def sync_apple_support(source: dict[str, Any], timeout: int) -> list[dict[str, A
         ]
         return resolve_release_candidates(candidates, source)
 
+    if kind == "homepod":
+        for heading in parse_html(html).find_all("h2"):
+            match = re.fullmatch(r"HomePod Software Version ([0-9]+(?:\.[0-9]+)*)", heading.get_text(" ", strip=True), re.I)
+            if not match:
+                continue
+            # The article publication date is not the release date of its newest version.
+            return resolve_release_candidates([
+                make_release_candidate(
+                    version=match.group(1),
+                    released_time="",
+                    note="Official Apple HomePod software update listing. See the source page for release notes.",
+                    evidence_type="apple_homepod_heading",
+                    evidence_text=match.group(0),
+                    source_url=url,
+                    confidence=0.82,
+                    rank=86,
+                )
+            ], source)
+        return []
+
     if kind == "airpods":
         model = str(source.get("model") or "").strip()
         if not model:

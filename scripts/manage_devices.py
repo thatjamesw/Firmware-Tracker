@@ -75,8 +75,8 @@ def validate_source(source: dict) -> None:
     if kind == "atomos_support" and not (source.get("model") or source.get("article_id")):
         raise ValueError("atomos_support needs model; use the exact product heading, for example Ninja V")
     if kind == "apple_support":
-        if source["kind"] not in {"ios", "macos", "watchos", "airpods"}:
-            raise ValueError("Apple variant must be ios, macos, watchos, or airpods")
+        if source["kind"] not in {"ios", "macos", "watchos", "airpods", "homepod"}:
+            raise ValueError("Apple variant must be ios, macos, watchos, airpods, or homepod")
         if source["kind"] == "airpods" and not source.get("model"):
             raise ValueError("AirPods needs the exact model name from Apple's firmware matrix")
 
