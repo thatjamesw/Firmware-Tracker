@@ -188,6 +188,12 @@
         "mdl": "SEL50F12GM",
         "lang": "en",
         "area": "us"
+      },
+      "homepod_mini_2": {
+        "type": "apple_support",
+        "page_url": "https://support.apple.com/en-us/108045",
+        "url": "https://support.apple.com/en-us/108045",
+        "kind": "homepod"
       }
     },
     "sync_status": {
@@ -205,7 +211,7 @@
       "vendor_health": {
         "apple": {
           "status": "ok",
-          "ok_count": 4,
+          "ok_count": 5,
           "issues": [],
           "transient_count": 0,
           "last_success_utc": "2026-11-12T07:17:00Z",
@@ -428,10 +434,10 @@
           "last_error_type": "",
           "last_error_reason": ""
         },
-        "sony_50f12gm": {
-          "vendor": "sony",
+        "homepod_mini_2": {
+          "vendor": "apple",
           "status": "ok",
-          "last_success_utc": "2026-11-07T08:10:38Z",
+          "last_success_utc": "2026-11-13T05:47:44Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -493,7 +499,8 @@
         "apple_ios": "iOS",
         "apple_macos": "macOS",
         "apple_watchos": "watchOS",
-        "airpods_pro_3": "AirPods Pro 3"
+        "airpods_pro_3": "AirPods Pro 3",
+        "homepod_mini_2": "HomePod mini 2"
       }
     }
   },
@@ -1572,22 +1579,22 @@
         }
       ]
     },
-    "sony_50f12gm": {
+    "homepod_mini_2": {
       "releases": [
         {
-          "version": "02",
-          "released_time": "2021-06-21",
+          "version": "27.2",
+          "released_time": "",
           "release_note": {
-            "en": "Official Sony firmware page. Download: https://support.d-imaging.sony.co.jp/download/IMT/Update_SEL50F12GMV2D.exe?fm=jp?fm=jp&upid=&s_tc="
+            "en": "Official Apple HomePod software update listing. See the source page for release notes."
           },
           "arb": null,
           "active": true,
           "evidence": {
-            "type": "sony_cscs_version",
-            "text": ",ver: '02'",
-            "source_url": "https://support.d-imaging.sony.co.jp/www/cscs/firm/?mdl=SEL50F12GM&lang=en&area=us"
+            "type": "apple_homepod_heading",
+            "text": "HomePod Software Version 27.2",
+            "source_url": "https://support.apple.com/en-us/108045"
           },
-          "confidence": 0.9
+          "confidence": 0.82
         }
       ]
     }

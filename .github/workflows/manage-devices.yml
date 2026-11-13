@@ -30,7 +30,7 @@ on:
         description: 'Optional model: Sony code, Godox listing title, TP-Link model, or exact DJI/AirPods name'
         type: string
       variant:
-        description: 'If needed: TP-Link V2, Bambu P1, Atomos NinjaVArticle, or Apple ios/macos/watchos/airpods'
+        description: 'If needed: TP-Link V2, Bambu P1, Atomos NinjaVArticle, or Apple ios/macos/watchos/airpods/homepod'
         type: string
       empty_policy:
         description: 'If no firmware is found (keep defaults to reject for new devices)'

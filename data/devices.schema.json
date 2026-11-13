@@ -330,7 +330,8 @@
                   "ios",
                   "macos",
                   "watchos",
-                  "airpods"
+                  "airpods",
+                  "homepod"
                 ]
               }
             }
