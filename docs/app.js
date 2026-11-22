@@ -1,5 +1,113 @@
 const SEEN_VERSIONS_KEY = "firmware_tracker_seen_versions_v1";
 const SEEN_SOURCE_ISSUES_KEY = "firmware_tracker_seen_source_issues_v1";
+const DAILY_SIGNALS = [
+  "A quiet day is a good day to make something.",
+  "The only thing flashing today is the coffee machine.",
+  "Take something off standby. Maybe an idea.",
+  "Good day to put your gear to work.",
+  "The release notes can wait. Go make a little noise.",
+  "Today’s greatest upgrade might be a walk.",
+  "Every good project started as a tiny ‘what if?’",
+  "Some days are for patches. Some days are for play.",
+  "Give that half-finished project a second boot.",
+  "Go make something worth a version two.",
+  "The best discoveries rarely come with release notes.",
+  "Brag a little. Even the smallest fix deserves a changelog.",
+  "No restart required. A stretch is still a good idea.",
+  "Go try the button you always wondered about.",
+  "The first draft is allowed to look like a first draft.",
+  "Your devices can sit this one out. Go get some daylight.",
+  "Somewhere, a printer has decided that today is its day.",
+  "Photograph the thing you walk past every morning.",
+  "Five minutes of tinkering beats another hour of thinking about tinkering.",
+  "A cable that works on the first try deserves a little ceremony.",
+  "The light through your window has a different version every day.",
+  "The best part of a side project is picking the next weird thing to try.",
+  "Every time you label a cable, your future self gets a little gift.",
+  "Try making the smallest version that still makes you smile.",
+  "You can give one good idea an entire afternoon.",
+  "The screwdriver you need is always in the drawer you checked first.",
+  "Look for an interesting shadow. The rest of the photo can follow.",
+  "Start with whatever’s already on your desk.",
+  "The tiniest screw always has the biggest escape plan.",
+  "There’s probably a shortcut on your favorite device that you’d actually use.",
+  "Make the thing you’d be delighted to find in someone else’s workshop.",
+  "A blank page is technically a very fast-loading interface.",
+  "Use your favorite tool for something it was never marketed for.",
+  "Tomorrow’s easy job might start with one small fix today.",
+  "The spare cable has finally been vindicated.",
+  "Go somewhere you can hear leaves moving.",
+  "Try the version of the idea that takes ten minutes.",
+  "Some days the whole victory is finding the right adapter.",
+  "The old camera in the drawer still knows how to catch good light.",
+  "A finished sketch can have wobbly lines.",
+  "If you find the missing bit, check what it’s stuck to.",
+  "Ask someone what they’ve been making lately.",
+  "An empty afternoon is surprisingly good project material.",
+  "The most optimistic word in any setup guide is ‘simply’.",
+  "Take the longer route and see what’s changed.",
+  "Build one small thing you can hand to somebody.",
+  "A tidy workbench is its own kind of progress bar.",
+  "Save a little attention for whatever catches your eye.",
+  "Leave yourself a note about what finally worked.",
+  "Somewhere in the house, a clock is still waiting for daylight saving to end.",
+  "Put on a good record and do the easy part first.",
+  "Give an old photo a second look. The interesting bit might be in the corner.",
+  "A dedicated charging spot is a small luxury.",
+  "Make something that only has to make sense to you.",
+  "The little green light is doing a very good job of being green.",
+  "Give yourself permission to follow the interesting question.",
+  "One shelf, one drawer, one tiny win.",
+  "The instruction manual probably has one genuinely good surprise in it.",
+  "Go watch something that takes its own time.",
+  "Let a happy accident have a second attempt.",
+  "There’s a special satisfaction in putting the lid back on and having it fit.",
+  "Your next favorite picture might already be on your camera.",
+  "Give the idea a name you’ll remember tomorrow.",
+  "The tape measure is somewhere measuring its own invisibility.",
+  "Try changing just one thing and see what happens.",
+  "A late start still leaves plenty of room for a good afternoon.",
+  "An unlabelled switch is how every good workshop story begins.",
+  "There’s a whole different view three steps to the left.",
+  "Make a rough copy so the good materials can relax.",
+  "A perfectly aligned label feels like a personal best.",
+  "Spend a moment with the thing you fixed. It gets to keep working because of you.",
+  "Take the photo before you tidy the table.",
+  "The last ten percent of a battery has a flair for drama.",
+  "A little curiosity travels well.",
+  "A friend might be the exact right audience for your weird little prototype.",
+  "The humble zip tie has saved more afternoons than it gets credit for.",
+  "Go find a view that deserves a full minute.",
+  "Today is a perfectly reasonable day to learn one small thing.",
+  "There’s always one screw that wants a formal introduction.",
+  "Revisit the place where you took a favorite photo.",
+  "Keep the version that made you laugh.",
+  "Every drawer of spare parts is a collection of very specific hopes.",
+  "A few uninterrupted minutes can feel like a whole different day.",
+  "Put the idea somewhere you can see it.",
+  "A device that boots quietly has excellent manners.",
+  "Try making a tiny improvement you’ll notice every morning.",
+  "Sometimes the fun starts when the instructions run out.",
+  "Today’s project can be as small as finding the right place for one thing.",
+  "There is a hauntingly specific cable somewhere that fits exactly one thing.",
+  "Go find out what the neighborhood sounds like with your headphones off.",
+  "The first useful version is worth celebrating.",
+  "Keep a photo of the messy middle. It tells a better story later.",
+  "An old lens and new light make a good team.",
+  "The box of spare screws is quietly training for its big moment.",
+  "Pick up where you left off, even if it takes a minute to remember where that was.",
+  "Some afternoons deserve a dedicated snack break.",
+  "There’s a small thrill in hearing the problem disappear.",
+  "Give your hands something interesting to do.",
+  "A good question is a perfectly respectable project for the day.",
+  "Look around for one thing that already works beautifully."
+];
+
+function dailySignalForDate(date = new Date()) {
+  // Convert the local calendar date to a day index so DST can't shift the rotation.
+  const day = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86_400_000;
+  return DAILY_SIGNALS.at(day % DAILY_SIGNALS.length);
+}
 
 function loadSeenVersions() {
   try {
@@ -413,7 +521,12 @@ function renderModal(deviceId, deviceName, releases) {
 
 function renderTable() {
   const total = uiState.unseenOnly ? uiState.unseen.size : uiState.rows.length;
-  document.getElementById("device-list").hidden = uiState.unseenOnly && total === 0;
+  const showDailySignal = uiState.unseenOnly && total === 0;
+  document.getElementById("device-list").hidden = showDailySignal;
+  document.getElementById("daily-signal").hidden = !showDailySignal;
+  if (showDailySignal) {
+    document.getElementById("daily-signal-quote").textContent = `“${dailySignalForDate()}”`;
+  }
   document.getElementById("toggle-device-view").textContent = uiState.unseenOnly ? "All devices" : "Unseen releases only";
   const table = document.createElement("table");
   const caption = document.createElement("caption");

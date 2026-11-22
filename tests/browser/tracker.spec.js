@@ -27,6 +27,26 @@ async function seedUnseen(page) {
 
 const allDeviceCount = Object.values(data.config.device_source_types).filter(type => type !== 'static').length;
 
+test('quiet days show a signal that rotates with the local date', async ({page}) => {
+  await page.clock.setFixedTime(new Date(2026, 10, 22, 12));
+  await page.goto('/');
+  const signal = page.locator('#daily-signal');
+  const quote = signal.locator('blockquote');
+  await expect(signal).toBeVisible();
+  await expect(quote).toHaveText(/“.+”/);
+  const firstQuote = await quote.textContent();
+  await page.reload();
+  await expect(quote).toHaveText(firstQuote);
+  await page.getByRole('button', {name:'All devices', exact:true}).click();
+  await expect(signal).toBeHidden();
+  await page.getByRole('button', {name:'Unseen releases only', exact:true}).click();
+  await expect(quote).toHaveText(firstQuote);
+  await page.clock.setFixedTime(new Date(2026, 10, 23, 12));
+  await page.reload();
+  await expect(quote).not.toHaveText(firstQuote);
+  await expect(quote).toBeVisible();
+});
+
 test('search, category and empty state work together', async ({page}) => {
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -99,6 +119,7 @@ test('mark one device seen preserves filters and other unseen releases', async (
   await seedUnseen(page);
   await page.goto('/');
   await expect(page.locator('#firmware-status-title')).toHaveText('2 unseen releases');
+  await expect(page.locator('#daily-signal')).toBeHidden();
   await expect(page.locator('tbody tr')).toHaveCount(2);
   await page.getByLabel('Search devices', {exact:true}).fill('pocket');
   await page.getByRole('button', {name:'Release details for Osmo Pocket 4P', exact:true}).click();
@@ -115,6 +136,7 @@ test('mark one device seen preserves filters and other unseen releases', async (
   expect(saved.sony_a1ii).toBe('0.0');
   await page.getByRole('button', {name:'Mark all as seen'}).click();
   await expect(page.locator('#firmware-status-title')).toHaveText('No unseen releases');
+  await expect(page.locator('#daily-signal')).toBeVisible();
   await expect(page.locator('#device-list')).toBeHidden();
   await expect(page.getByRole('button', {name:'All devices', exact:true})).toBeFocused();
 });
