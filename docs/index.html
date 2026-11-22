@@ -24,47 +24,49 @@
         <p id="firmware-status-coverage"></p>
         <span class="sr-only" id="firmware-status-meta">Sources checked: unknown</span>
       </div>
-      <div class="updates-actions" id="firmware-status-actions" hidden>
-        <button class="ghost" id="mark-updates-seen">Mark all as seen</button>
+      <div class="updates-actions">
+        <button class="ghost" id="mark-updates-seen" hidden>Mark all as seen</button>
+        <button class="ghost" id="toggle-device-view" aria-controls="device-list">All devices</button>
       </div>
     </section>
 
-    <section class="tracker-surface" aria-label="Devices">
+    <section aria-label="Devices">
       <div class="source-banner" id="source-banner">
         <div id="source-banner-text"></div>
         <button class="ghost" id="hide-source-banner">Hide</button>
       </div>
-      <div class="toolbar" role="search" aria-label="Find devices">
-        <label class="search-field">Search devices
-          <input type="search" id="device-search" placeholder="Search by name or category" autocomplete="off" />
-        </label>
-        <div class="control"><label for="category-filter">Category</label>
-          <select id="category-filter"><option value="">All categories</option></select>
+      <div class="tracker-surface" id="device-list" hidden>
+        <div class="toolbar" role="search" aria-label="Find devices">
+          <label class="search-field">Search devices
+            <input type="search" id="device-search" placeholder="Search by name or category" autocomplete="off" />
+          </label>
+          <div class="control"><label for="category-filter">Category</label>
+            <select id="category-filter"><option value="">All categories</option></select>
+          </div>
+          <div class="control"><label for="sort-order">Sort by</label>
+            <select id="sort-order">
+              <option value="category:asc">Category · A–Z</option>
+              <option value="category:desc">Category · Z–A</option>
+              <option value="name:asc">Device · A–Z</option>
+              <option value="name:desc">Device · Z–A</option>
+              <option value="version:desc">Version · highest first</option>
+              <option value="version:asc">Version · lowest first</option>
+              <option value="date:desc">Release · newest first</option>
+              <option value="date:asc">Release · oldest first</option>
+              <option value="age:asc">Age · youngest first</option>
+              <option value="age:desc">Age · oldest first</option>
+            </select>
+          </div>
         </div>
-        <label class="check-filter"><input type="checkbox" id="unseen-filter" /> Unseen releases only</label>
-        <div class="control"><label for="sort-order">Sort by</label>
-          <select id="sort-order">
-            <option value="category:asc">Category · A–Z</option>
-            <option value="category:desc">Category · Z–A</option>
-            <option value="name:asc">Device · A–Z</option>
-            <option value="name:desc">Device · Z–A</option>
-            <option value="version:desc">Version · highest first</option>
-            <option value="version:asc">Version · lowest first</option>
-            <option value="date:desc">Release · newest first</option>
-            <option value="date:asc">Release · oldest first</option>
-            <option value="age:asc">Age · youngest first</option>
-            <option value="age:desc">Age · oldest first</option>
-          </select>
+        <div class="results-summary">
+          <span id="result-count" role="status" aria-atomic="true"></span>
+          <button class="text-button" id="clear-filters" hidden>Clear filters</button>
         </div>
-      </div>
-      <div class="results-summary">
-        <span id="result-count" role="status" aria-atomic="true"></span>
-        <button class="text-button" id="clear-filters" hidden>Clear filters</button>
-      </div>
-      <div class="table-wrap" id="table-container"></div>
-      <div id="empty-results" class="empty-results" hidden>
-        <h2>No matching devices</h2>
-        <p>Try another search or clear the filters.</p>
+        <div class="table-wrap" id="table-container"></div>
+        <div id="empty-results" class="empty-results" hidden>
+          <h2>No matching devices</h2>
+          <p>Try another search or clear the filters.</p>
+        </div>
       </div>
     </section>
     <noscript><p>Enable JavaScript to browse this tracker, or read the <a href="FIRMWARE_SUMMARY.md">firmware summary</a>.</p></noscript>

@@ -25,6 +25,8 @@ async function seedUnseen(page) {
   }, {...baseline, osmo_pocket_4p: '0.0', sony_a1ii: '0.0'});
 }
 
+const allDeviceCount = Object.values(data.config.device_source_types).filter(type => type !== 'static').length;
+
 test('search, category and empty state work together', async ({page}) => {
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -32,19 +34,22 @@ test('search, category and empty state work together', async ({page}) => {
   await expect(page.getByRole('heading', {name:'Firmware Tracker', exact:true})).toBeVisible();
   await expect(page.locator('header a')).toHaveCount(0);
   await expect(page.locator('#firmware-status-coverage')).toContainText(/devices checked \d{2}\/\d{2}\/\d{4}/);
+  await expect(page.locator('#device-list')).toBeHidden();
+  await page.getByRole('button', {name:'All devices', exact:true}).click();
   await page.getByLabel('Search devices', {exact:true}).fill('pOcKeT');
   await expect(page.locator('tbody tr')).toHaveCount(1);
   await expect(page.locator('tbody')).toContainText('Osmo Pocket 4P');
   await page.getByLabel('Category', {exact:true}).selectOption('platforms');
   await expect(page.getByRole('heading', {name:'No matching devices'})).toBeVisible();
   await page.getByRole('button', {name:'Clear filters'}).click();
-  await expect(page.locator('tbody tr')).toHaveCount(Object.values(data.config.device_source_types).filter(type => type !== 'static').length);
+  await expect(page.locator('tbody tr')).toHaveCount(allDeviceCount);
   await expect(page.getByLabel('Search devices', {exact:true})).toBeFocused();
   expect(errors).toEqual([]);
 });
 
 test('sort controls are accessible on desktop and mobile', async ({page}, testInfo) => {
   await page.goto('/');
+  await page.getByRole('button', {name:'All devices', exact:true}).click();
   await page.getByLabel('Sort by', {exact:true}).selectOption('date:desc');
   const firstDate = await page.locator('tbody tr').first().locator('[data-label="Released"]').textContent();
   expect(firstDate).not.toBe('Unknown');
@@ -63,6 +68,7 @@ test('sort controls are accessible on desktop and mobile', async ({page}, testIn
 });
 
 test('dialog prioritizes latest release and restores focus on Escape', async ({page}) => {
+  await seedUnseen(page);
   await page.goto('/');
   await page.getByRole('button', {name:'Release details for Osmo Pocket 4P', exact:true}).click();
   const dialog = page.getByRole('dialog', {name:'Osmo Pocket 4P'});
@@ -80,6 +86,7 @@ test('dialog prioritizes latest release and restores focus on Escape', async ({p
 });
 
 test('modal keeps keyboard focus inside its controls', async ({page}) => {
+  await seedUnseen(page);
   await page.goto('/');
   await page.getByRole('button', {name:'Release details for Osmo Pocket 4P', exact:true}).click();
   for (let i = 0; i < 6; i++) {
@@ -92,11 +99,14 @@ test('mark one device seen preserves filters and other unseen releases', async (
   await seedUnseen(page);
   await page.goto('/');
   await expect(page.locator('#firmware-status-title')).toHaveText('2 unseen releases');
-  await page.getByLabel('Unseen releases only').check();
+  await expect(page.locator('tbody tr')).toHaveCount(2);
+  await page.getByLabel('Search devices', {exact:true}).fill('pocket');
   await page.getByRole('button', {name:'Release details for Osmo Pocket 4P', exact:true}).click();
   await page.getByRole('button', {name:'Mark as seen', exact:true}).click();
   await page.getByRole('button', {name:'Close', exact:true}).click();
-  await expect(page.getByLabel('Unseen releases only')).toBeChecked();
+  await expect(page.getByLabel('Search devices', {exact:true})).toHaveValue('pocket');
+  await expect(page.getByRole('heading', {name:'No matching devices'})).toBeVisible();
+  await page.getByRole('button', {name:'Clear filters'}).click();
   await expect(page.locator('tbody tr')).toHaveCount(1);
   await expect(page.locator('#firmware-status-title')).toHaveText('1 unseen release');
   await expect(page.getByLabel('Search devices', {exact:true})).toBeFocused();
@@ -105,10 +115,11 @@ test('mark one device seen preserves filters and other unseen releases', async (
   expect(saved.sony_a1ii).toBe('0.0');
   await page.getByRole('button', {name:'Mark all as seen'}).click();
   await expect(page.locator('#firmware-status-title')).toHaveText('No unseen releases');
-  await expect(page.getByRole('heading', {name:'No matching devices'})).toBeVisible();
+  await expect(page.locator('#device-list')).toBeHidden();
+  await expect(page.getByRole('button', {name:'All devices', exact:true})).toBeFocused();
 });
 
-test('unseen filtering keeps the page horizontally aligned', async ({page}) => {
+test('switching device views keeps the page horizontally aligned', async ({page}) => {
   await seedUnseen(page);
   await page.goto('/');
   const positions = () => page.locator('.shell, .masthead, .toolbar').evaluateAll(elements =>
@@ -117,10 +128,12 @@ test('unseen filtering keeps the page horizontally aligned', async ({page}) => {
       return {x, width};
     }));
   const before = await positions();
-  await page.getByLabel('Unseen releases only').check();
   await expect(page.locator('tbody tr')).toHaveCount(2);
+  await page.getByRole('button', {name:'All devices', exact:true}).click();
+  await expect(page.locator('tbody tr')).toHaveCount(allDeviceCount);
   expect(await positions()).toEqual(before);
-  await page.getByLabel('Unseen releases only').uncheck();
+  await page.getByRole('button', {name:'Unseen releases only', exact:true}).click();
+  await expect(page.locator('tbody tr')).toHaveCount(2);
   expect(await positions()).toEqual(before);
 });
 
@@ -134,6 +147,7 @@ test('stale source checks show their date and overdue status', async ({page}) =>
   await page.goto('/');
   await expect(page.locator('#firmware-status-meta')).toContainText('2020');
   await expect(page.locator('#firmware-status-meta')).toContainText('Check overdue');
+  await page.getByRole('button', {name:'All devices', exact:true}).click();
   const row = page.locator('tbody tr').filter({hasText:'Osmo Pocket 4P'});
   await expect(row).toContainText('Check overdue');
 });
@@ -168,6 +182,9 @@ test('source column links directly to the vendor and acknowledgement stays in de
   await page.getByRole('button', {name:'Close', exact:true}).click();
   await expect(page.locator('#firmware-status-title')).toHaveText('1 unseen release');
   await page.reload();
+  await expect(row).toHaveCount(0);
+  await page.getByRole('button', {name:'All devices', exact:true}).click();
+  await expect(row).toBeVisible();
   await expect(row.locator('.badge.new')).toHaveCount(0);
 });
 
@@ -184,6 +201,7 @@ test('coverage remains visible when there are no new releases and checks fail', 
   await expect(page.locator('#firmware-status-coverage')).toContainText('1 check failed');
   await expect(page.locator('#firmware-status-coverage')).toContainText('1 check overdue');
   await expect(page.locator('#firmware-status-coverage')).toHaveClass('source-warning');
+  await page.getByRole('button', {name:'All devices', exact:true}).click();
   await page.getByLabel('Search devices', {exact:true}).fill('iOS');
   await expect(page.locator('#firmware-status-coverage')).toContainText('1 check failed');
 });
