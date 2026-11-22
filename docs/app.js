@@ -244,7 +244,7 @@ function initSourceBanner() {
 }
 
 
-const uiState = {rows: [], unseen: new Set(), query: "", category: "", unseenOnly: false, sortKey: "category", sortDir: "asc"};
+const uiState = {rows: [], unseen: new Set(), query: "", category: "", unseenOnly: true, sortKey: "category", sortDir: "asc"};
 let returnFocusId = "";
 const STALE_AFTER_MS = 3 * 24 * 60 * 60 * 1000;
 const CHECK_DATE_FORMATTER = new Intl.DateTimeFormat("en-GB", {
@@ -347,7 +347,7 @@ function updateFirmwareStatus() {
   const count = uiState.unseen.size;
   document.getElementById("firmware-status").classList.toggle("has-updates", count > 0);
   document.getElementById("firmware-status-title").textContent = count ? `${count} unseen release${count === 1 ? "" : "s"}` : "No unseen releases";
-  document.getElementById("firmware-status-actions").hidden = !count;
+  document.getElementById("mark-updates-seen").hidden = !count;
   const coverage = sourceCoverage(uiState.rows);
   const coverageElement = document.getElementById("firmware-status-coverage");
   coverageElement.textContent = coverage.text;
@@ -412,6 +412,9 @@ function renderModal(deviceId, deviceName, releases) {
 }
 
 function renderTable() {
+  const total = uiState.unseenOnly ? uiState.unseen.size : uiState.rows.length;
+  document.getElementById("device-list").hidden = uiState.unseenOnly && total === 0;
+  document.getElementById("toggle-device-view").textContent = uiState.unseenOnly ? "All devices" : "Unseen releases only";
   const table = document.createElement("table");
   const caption = document.createElement("caption");
   caption.className = "sr-only";
@@ -466,8 +469,8 @@ function renderTable() {
   container.replaceChildren(table);
   container.hidden = rows.length === 0;
   document.getElementById("empty-results").hidden = rows.length !== 0;
-  document.getElementById("result-count").textContent = `${rows.length} of ${uiState.rows.length} devices`;
-  document.getElementById("clear-filters").hidden = !uiState.query && !uiState.category && !uiState.unseenOnly;
+  document.getElementById("result-count").textContent = `${rows.length} of ${total} device${total === 1 ? "" : "s"}`;
+  document.getElementById("clear-filters").hidden = !uiState.query && !uiState.category;
   document.getElementById("sort-order").value = `${uiState.sortKey}:${uiState.sortDir}`;
 }
 
@@ -495,17 +498,19 @@ function initApp() {
   }
   document.getElementById("device-search").addEventListener("input", event => {uiState.query = event.target.value; renderTable();});
   categorySelect.addEventListener("change", event => {uiState.category = event.target.value; renderTable();});
-  document.getElementById("unseen-filter").addEventListener("change", event => {uiState.unseenOnly = event.target.checked; renderTable();});
+  const toggleView = document.getElementById("toggle-device-view");
+  toggleView.addEventListener("click", () => {
+    uiState.unseenOnly = !uiState.unseenOnly;
+    renderTable();
+  });
   document.getElementById("sort-order").addEventListener("change", event => {
     [uiState.sortKey, uiState.sortDir] = event.target.value.split(":");
     renderTable();
   });
   document.getElementById("clear-filters").addEventListener("click", () => {
     uiState.query = uiState.category = "";
-    uiState.unseenOnly = false;
     document.getElementById("device-search").value = "";
     categorySelect.value = "";
-    document.getElementById("unseen-filter").checked = false;
     renderTable();
     document.getElementById("device-search").focus();
   });
@@ -514,7 +519,7 @@ function initApp() {
     uiState.unseen.clear();
     updateFirmwareStatus();
     renderTable();
-    document.getElementById("device-search").focus();
+    toggleView.focus();
   });
   const modal = document.getElementById("modal");
   document.getElementById("close-modal").addEventListener("click", () => modal.close());
@@ -535,7 +540,8 @@ function initApp() {
   });
   modal.addEventListener("close", () => {
     document.body.classList.remove("dialog-open");
-    (document.getElementById(returnFocusId) || document.getElementById("device-search")).focus();
+    const fallback = document.getElementById("device-list").hidden ? toggleView : document.getElementById("device-search");
+    (document.getElementById(returnFocusId) || fallback).focus();
   });
   updateFirmwareStatus();
   initSourceBanner();

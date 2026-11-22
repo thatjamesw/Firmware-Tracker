@@ -68,8 +68,10 @@ Keep that required check enabled on `main` to preserve this merge gate.
 
 ## Using the tracker
 
-Search devices by name or category, select a category, or enable **Unseen releases
-only**. Sort with the column buttons on desktop or **Sort by** on any screen.
+The tracker opens with devices that have unseen releases. Select **All devices**
+to browse the watchlist or **Unseen releases only** to return to the updates view.
+Search by name or category, select a category, or sort with the column buttons
+on desktop or **Sort by** on any screen.
 Filters and sort order stay in place when releases are marked as seen.
 
 **New since last seen** means the latest release differs from the version last acknowledged in

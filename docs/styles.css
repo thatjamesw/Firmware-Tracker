@@ -37,6 +37,7 @@ input::placeholder { color: var(--muted); opacity: 1; }
 .firmware-status strong { display: block; margin-top: 0; font-size: 22px; line-height: 1.2; font-weight: 650; letter-spacing: -.02em; }
 .firmware-status.has-updates strong { color: var(--accent); }
 .firmware-status p { color: var(--muted); margin: 6px 0 0; font-size: 12px; }
+.updates-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .firmware-status-meta { font-size: 12px; color: var(--muted); }
 .primary, .ghost { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 8px 15px; border: 1px solid var(--line); border-radius: 8px; background: transparent; color: var(--ink); font-size: 13px; font-weight: 600; white-space: nowrap; transition: background .15s ease, border-color .15s ease; }
 .primary { color: white; border-color: var(--accent); background: var(--accent); }
@@ -44,12 +45,10 @@ input::placeholder { color: var(--muted); opacity: 1; }
 .ghost:hover { background: white; border-color: #979ca6; }
 .text-button { padding: 4px; border: 0; background: none; color: var(--accent); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
 .tracker-surface { padding-top: 24px; }
-.toolbar { display: grid; grid-template-columns: minmax(220px, 1fr) 180px auto 210px; align-items: end; gap: 16px; }
+.toolbar { display: grid; grid-template-columns: minmax(220px, 1fr) 180px 210px; align-items: end; gap: 16px; }
 .toolbar .control { display: grid; gap: 6px; }
 .toolbar label { display: grid; gap: 6px; font-size: 12px; font-weight: 600; color: var(--muted); }
 .toolbar input[type="search"], .toolbar select { width: 100%; min-height: 44px; border: 1px solid #858a94; border-radius: 8px; background: white; color: var(--ink); padding: 9px 11px; font-size: 14px; }
-.toolbar .check-filter { display: flex; align-items: center; min-height: 44px; gap: 8px; padding: 0 4px; color: var(--ink); font-size: 13px; white-space: nowrap; }
-.check-filter input { width: 17px; height: 17px; accent-color: var(--accent); }
 .results-summary { display: flex; justify-content: space-between; align-items: center; min-height: 50px; font-size: 12px; color: var(--muted); }
 .table-wrap { width: 100%; overflow-x: auto; }
 table { width: 100%; min-width: 820px; border-collapse: collapse; }
@@ -69,7 +68,7 @@ tbody tr:hover { background: white; }
 .badge.old { background: #fff5e6; color: var(--warning); border-color: #e9cba0; }
 .source-warning { color: var(--warning); }
 td .source-warning { display: block; font-size: 11px; margin-top: 3px; }
-.source-banner { display: none; align-items: center; justify-content: space-between; gap: 20px; border-bottom: 1px solid var(--line); padding-bottom: 16px; margin-bottom: 20px; color: var(--warning); font-size: 13px; }
+.source-banner { display: none; align-items: center; justify-content: space-between; gap: 20px; border-bottom: 1px solid var(--line); padding: 24px 0 16px; color: var(--warning); font-size: 13px; }
 .source-banner.active { display: flex; }
 .empty-results { padding: 42px 20px; text-align: center; border-top: 1px solid var(--line); }
 .empty-results h2 { font-size: 19px; margin: 0 0 5px; }
@@ -86,7 +85,7 @@ body.dialog-open { overflow: hidden; }
 .row-action { border: 0; background: transparent; color: var(--ink); padding: 4px 0; min-height: 32px; font-size: 12px; font-weight: 600; }
 .row-action:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 .source-link { white-space: nowrap; color: var(--muted); }
-.firmware-status .ghost { min-height: 36px; padding: 6px 12px; font-size: 12px; }
+.firmware-status .ghost { min-height: 44px; padding: 6px 12px; font-size: 12px; }
 #firmware-status-coverage.source-warning { color: var(--warning); }
 .release-link { font-size: 14px; font-weight: 600; text-decoration: none; }
 .release-link:hover { text-decoration: underline; text-underline-offset: 3px; }
@@ -104,18 +103,13 @@ ul.release-notes { padding-left: 20px; }
 .older-releases summary { min-height: 40px; font-size: 14px; font-weight: 600; padding: 8px 0; }
 .device-id { margin: 24px 0 0; font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
 @keyframes dialog-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-@media (max-width: 1000px) {
-  .toolbar { grid-template-columns: 1fr 1fr; }
-  .check-filter { grid-row: 2; }
-}
 @media (max-width: 760px) {
   .shell { padding: 0 16px 40px; }
   .masthead-inner { padding: 18px 16px 12px; }
   .firmware-status { align-items: flex-start; flex-wrap: wrap; gap: 12px; padding: 16px 0; }
   .firmware-status strong { font-size: 20px; }
-  .toolbar { gap: 12px; }
+  .toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .search-field { grid-column: 1 / -1; }
-  .toolbar .check-filter { grid-row: 3; grid-column: 1 / -1; }
   .toolbar select { font-size: 13px; }
   .table-wrap { overflow: visible; }
   table { display: block; min-width: 0; }
