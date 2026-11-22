@@ -24,7 +24,7 @@ on:
       source_type:
         description: 'Source (auto detects the vendor for add; keeps existing for update)'
         type: choice
-        options: [auto, dji_downloads, sony_cscs, godox_listing, apple_support, atomos_support, bambu_wiki, tplink_downloads, static]
+        options: [auto, dji_downloads, sony_cscs, godox_listing, apple_support, atomos_support, bambu_wiki, tplink_downloads, playstation_support, pihole_releases, byd_release_notes, merlin_releases, static]
         default: auto
       model:
         description: 'Optional model: Sony code, Godox listing title, TP-Link model, or exact DJI/AirPods name'

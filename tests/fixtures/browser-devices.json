@@ -5,7 +5,6 @@
       "devices": {
         "sony_a1ii": "Sony A1 II",
         "atomos_ninja_v": "Atomos Ninja V",
-        "dell_u4025qw": "Dell U4025QW Monitor",
         "osmo_pocket_4p": "Osmo Pocket 4P"
       }
     },
@@ -124,19 +123,6 @@
           "active": true
         }
       ]
-    },
-    "dell_u4025qw": {
-      "releases": [
-        {
-          "version": "Check Dell Support",
-          "released_time": "2025-10-17",
-          "release_note": {
-            "en": "Track this via the official Dell support page. Automated fetch is limited by Dell anti-bot protection from this environment."
-          },
-          "arb": null,
-          "active": true
-        }
-      ]
     }
   },
   "config": {
@@ -146,8 +132,7 @@
       "apple_ios": "apple_support",
       "bambu_p1s": "bambu_wiki",
       "atomos_ninja_v": "atomos_support",
-      "osmo_pocket_4p": "dji_downloads",
-      "dell_u4025qw": "static"
+      "osmo_pocket_4p": "dji_downloads"
     },
     "device_download_pages": {
       "sony_a1ii": "https://www.sony.com/electronics/support/e-mount-body-ilce-1-series/ilce-1m2/downloads",
@@ -155,8 +140,7 @@
       "apple_ios": "https://support.apple.com/en-us/100100",
       "bambu_p1s": "https://bambulab.com/en/support/firmware-download/p1",
       "atomos_ninja_v": "https://www.atomos.com/product-support/",
-      "osmo_pocket_4p": "https://www.dji.com/global/downloads/products/osmo-pocket-4p",
-      "dell_u4025qw": "https://www.dell.com/support/product-details/en-uk/product/u4025qw-monitor/drivers"
+      "osmo_pocket_4p": "https://www.dji.com/global/downloads/products/osmo-pocket-4p"
     },
     "source_sync_status": {
       "last_run_utc": "2026-09-06T12:00:00Z",
@@ -182,10 +166,6 @@
           "last_success_utc": "2026-09-06T12:00:00Z"
         },
         "osmo_pocket_4p": {
-          "status": "ok",
-          "last_success_utc": "2026-09-06T12:00:00Z"
-        },
-        "dell_u4025qw": {
           "status": "ok",
           "last_success_utc": "2026-09-06T12:00:00Z"
         }

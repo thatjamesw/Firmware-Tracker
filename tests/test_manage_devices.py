@@ -70,6 +70,22 @@ class ManagementTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'hardware_version'):
             build_source({'source_url': 'https://www.tp-link.com/nordic/support/download/deco-be65/', 'model': 'Deco BE65'}, 'Deco BE65')
 
+    def test_management_accepts_new_sources_and_rejects_unrelated_github_repositories(self):
+        cases = [
+            ('https://www.playstation.com/en-gb/support/hardware/ps5/system-software-info/', 'playstation_support'),
+            ('https://github.com/pi-hole/FTL/releases', 'pihole_releases'),
+            ('https://byd.no/eie-byd/din-byd-sealion-7', 'byd_release_notes'),
+            ('https://sourceforge.net/projects/asuswrt-merlin/rss?path=/RT-AX86U/Release', 'merlin_releases'),
+        ]
+        for url, expected in cases:
+            with self.subTest(url=url):
+                self.assertEqual(build_source({'source_url': url}, 'Device')['type'], expected)
+        unrelated = 'https://github.com/other/FTL/releases'
+        with self.assertRaisesRegex(ValueError, 'not supported automatically'):
+            infer_type(unrelated)
+        with self.assertRaisesRegex(ValueError, 'official GitHub releases page'):
+            build_source({'source_url': unrelated, 'source_type': 'pihole_releases'}, 'Device')
+
     def test_explicit_variants_for_supported_vendors(self):
         cases = [
             ('https://www.sony.com/support/', 'ILCE-1M2', '', 'mdl', 'ILCE-1M2'),
