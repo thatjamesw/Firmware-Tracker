@@ -140,7 +140,6 @@
     }
   },
   "config": {
-    "manage_devices_url": "https://github.com/thatjamesw/Firmware-Tracker/actions/workflows/manage-devices.yml",
     "device_source_types": {
       "sony_a1ii": "sony_cscs",
       "amaran_300c": "static",

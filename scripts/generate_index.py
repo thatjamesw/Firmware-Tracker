@@ -185,8 +185,6 @@ def main() -> None:
     config_js = "// Auto-generated UI config\n\nconst TRACKER_CONFIG = "
     config_js += json.dumps(
         {
-            "generated_at_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "manage_devices_url": sources.get("manage_devices_url", ""),
             "device_download_pages": device_download_pages,
             "device_source_types": device_source_types,
             "source_sync_status": sync_status,

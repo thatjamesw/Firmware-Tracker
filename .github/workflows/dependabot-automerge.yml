@@ -22,7 +22,7 @@ jobs:
       # This privileged workflow only reads metadata; never check out PR code.
       - name: Read Dependabot metadata
         id: metadata
-        uses: dependabot/fetch-metadata@v3
+        uses: dependabot/fetch-metadata@v3.1.0
         with:
           github-token: ${{ github.token }}
 

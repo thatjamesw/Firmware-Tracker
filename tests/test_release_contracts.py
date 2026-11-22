@@ -20,6 +20,15 @@ def release(version='1.2.0', date='2026-01-01'):
 
 
 class ReleaseContractTests(unittest.TestCase):
+    def test_allowed_empty_primary_survives_failed_fallback(self):
+        source = {'type': 'dji_downloads', 'allow_empty': True,
+                  'fallback_sources': [{'type': 'dji_downloads', 'allow_empty': True}]}
+        with patch.object(ffd, 'sync_device', side_effect=[[], TimeoutError('fallback timed out')]) as sync:
+            result = ffd.process_device('device', 'Device', source, 1)
+        self.assertEqual(sync.call_count, 2)
+        self.assertEqual(result['status'], 'ok_empty')
+        self.assertEqual(result['used_source'], source)
+
     def test_all_registered_sources_share_the_contract(self):
         fixtures = Path(__file__).parent / 'fixtures'
         cases = [

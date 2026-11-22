@@ -247,6 +247,9 @@ function initSourceBanner() {
 const uiState = {rows: [], unseen: new Set(), query: "", category: "", unseenOnly: false, sortKey: "category", sortDir: "asc"};
 let returnFocusId = "";
 const STALE_AFTER_MS = 3 * 24 * 60 * 60 * 1000;
+const CHECK_DATE_FORMATTER = new Intl.DateTimeFormat("en-GB", {
+  day: "2-digit", month: "2-digit", year: "numeric"
+});
 
 function sourceFreshness(deviceId, now = Date.now()) {
   const health = TRACKER_CONFIG.source_sync_status?.device_health?.[deviceId];
@@ -272,8 +275,8 @@ function sourceFreshness(deviceId, now = Date.now()) {
 }
 
 function sourceCoverage(rows, now = Date.now()) {
-  const counts = {today: 0, earlier: 0, overdue: 0, failed: 0, missing: 0, manual: 0};
-  const today = new Date(now).toDateString();
+  const counts = {overdue: 0, failed: 0, missing: 0, manual: 0};
+  const recentChecks = [];
   for (const row of rows) {
     const health = TRACKER_CONFIG.source_sync_status?.device_health?.[row.deviceId];
     if (health?.status === "manual_fallback") {
@@ -285,15 +288,21 @@ function sourceCoverage(rows, now = Date.now()) {
     if (failed) counts.failed += 1;
     if (!Number.isFinite(timestamp)) counts.missing += 1;
     else if (now - timestamp > STALE_AFTER_MS) counts.overdue += 1;
-    else if (!failed) counts[new Date(timestamp).toDateString() === today ? "today" : "earlier"] += 1;
+    else if (!failed) recentChecks.push(timestamp);
   }
-  const parts = [`${counts.today} device${counts.today === 1 ? "" : "s"} checked today`];
-  if (counts.earlier) parts.push(`${counts.earlier} checked recently`);
+  const parts = [];
+  if (recentChecks.length) {
+    const date = CHECK_DATE_FORMATTER.format(Math.max(...recentChecks));
+    const checked = recentChecks.filter(timestamp => CHECK_DATE_FORMATTER.format(timestamp) === date).length;
+    parts.push(`${checked} device${checked === 1 ? "" : "s"} checked ${date}`);
+    const earlier = recentChecks.length - checked;
+    if (earlier) parts.push(`${earlier} checked recently`);
+  }
   if (counts.overdue) parts.push(`${counts.overdue} check${counts.overdue === 1 ? "" : "s"} overdue`);
   if (counts.failed) parts.push(`${counts.failed} check${counts.failed === 1 ? "" : "s"} failed`);
   if (counts.missing) parts.push(`${counts.missing} not checked yet`);
   if (counts.manual) parts.push(`${counts.manual} manually verified`);
-  return {text: parts.join(" · "), warning: Boolean(counts.overdue || counts.failed || counts.missing)};
+  return {text: parts.join(" · ") || "No devices checked", warning: Boolean(counts.overdue || counts.failed || counts.missing)};
 }
 
 function filteredRows(rows, state) {
@@ -474,12 +483,6 @@ function initSourceFreshness() {
 }
 
 function initApp() {
-  const manageUrl = TRACKER_CONFIG.manage_devices_url;
-  if (manageUrl?.startsWith("https://github.com/")) {
-    const link = document.getElementById("manage-devices");
-    link.href = manageUrl;
-    link.hidden = false;
-  }
   uiState.rows = getAllRows();
   uiState.unseen = detectNewFirmware(uiState.rows).newDeviceIds;
   const categorySelect = document.getElementById("category-filter");
