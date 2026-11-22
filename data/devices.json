@@ -446,8 +446,7 @@
       "transient_issues": [],
       "issue_streaks": {},
       "max_issue_streak_days": 0
-    },
-    "manage_devices_url": "https://github.com/thatjamesw/Firmware-Tracker/actions/workflows/manage-devices.yml"
+    }
   },
   "categories": {
     "consumer-drones": {

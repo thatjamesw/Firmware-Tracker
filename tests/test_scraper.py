@@ -158,7 +158,7 @@ class RobustParserTests(unittest.TestCase):
             with (
                 patch.object(ffd, 'DATA_FILE', data),
                 patch.object(ffd, 'process_device', return_value=result),
-                patch.object(sys, 'argv', ['scan', '--dry-run', '--fail-on-regression', '--metrics-file', str(metrics)]),
+                patch.object(sys, 'argv', ['scan', '--fail-on-regression', '--metrics-file', str(metrics)]),
                 patch.dict(ffd.os.environ, {'GITHUB_STEP_SUMMARY': str(summary)}),
                 patch('sys.stdout', new_callable=io.StringIO),
                 patch('sys.stderr', new_callable=io.StringIO),

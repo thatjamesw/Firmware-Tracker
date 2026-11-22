@@ -347,6 +347,7 @@ def _process_device(
             attempts.append(fallback_source)
 
     last_result: dict[str, Any] = {}
+    allowed_empty_result: dict[str, Any] | None = None
     for idx, candidate in enumerate(attempts):
         source_type = str(candidate.get("type") or "")
         vendor = SOURCE_VENDOR.get(source_type, "unknown")
@@ -406,11 +407,14 @@ def _process_device(
                 reason="no firmware entries published yet" if bool(candidate.get("allow_empty")) else "no firmware entries parsed",
             )
         # Even an allowed empty result must try the remaining fallbacks.
+        if result["status"] == "ok_empty" and allowed_empty_result is None:
+            allowed_empty_result = result
         last_result = result
 
+    final_result = allowed_empty_result or last_result
     if debug_enabled:
-        print(f"{debug_prefix} final status={last_result.get('status')} reason={last_result.get('reason')}")
-    return last_result
+        print(f"{debug_prefix} final status={final_result.get('status')} reason={final_result.get('reason')}")
+    return final_result
 
 
 def build_device_health(result: dict[str, Any], prior: dict[str, Any], run_now: str) -> dict[str, Any]:
@@ -658,11 +662,10 @@ def main() -> int:
                 f"- {issue['vendor']}: {issue['device_id']} ({issue['status']}: {issue['reason']})"
             )
 
-    should_write = bool(updated_devices)
-    if prior_sync_status != sync_status:
-        should_write = True
+    strict_failure = bool(regressions and args.fail_on_regression)
+    should_write = bool(updated_devices) or prior_sync_status != sync_status
 
-    if should_write and not args.dry_run:
+    if should_write and not args.dry_run and not strict_failure:
         write_json_atomic(DATA_FILE, payload)
         print(f"Wrote updates to {DATA_FILE}")
 
@@ -677,10 +680,10 @@ def main() -> int:
 
     if os.environ.get("GITHUB_STEP_SUMMARY"):
         with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
-            summary.write(format_scan_summary(sync_status, updated_devices, metrics, tracked))
+            summary.write(format_scan_summary(sync_status, [] if strict_failure else updated_devices, metrics, tracked))
 
-    if regressions and args.fail_on_regression:
-        print("Regressions detected and --fail-on-regression is set.", file=sys.stderr)
+    if strict_failure:
+        print("Regressions detected. No firmware data written.", file=sys.stderr)
         return 2
 
     return 0

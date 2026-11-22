@@ -15,7 +15,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: pages
+  group: ${{ github.event_name == 'push' && 'pages' || 'firmware-sync' }}
   cancel-in-progress: false
 
 jobs:
@@ -29,13 +29,14 @@ jobs:
     steps:
       - name: Decide whether to run today
         id: gate
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           WORKFLOW_FILE: update-and-deploy.yml
         run: |
-          if [[ "${{ github.event_name }}" != "schedule" ]]; then
+          if [[ "$GITHUB_EVENT_NAME" != "schedule" ]]; then
             echo "run_now=true" >> "$GITHUB_OUTPUT"
-            echo "Manual dispatch. Proceeding."
+            echo "Push or manual dispatch. Proceeding."
             exit 0
           fi
 
@@ -54,16 +55,27 @@ jobs:
           published_runs="$(gh api \
             "repos/${GITHUB_REPOSITORY}/actions/workflows/${WORKFLOW_FILE}/runs?branch=main&event=push&status=success&per_page=50")"
 
-          published_today="$(jq \
+          published_sha="$(jq -r \
             --arg last_scan_utc "$last_scan_utc" \
-            --arg main_sha "$main_sha" \
             --arg start_utc "$start_utc" \
             --arg end_utc "$end_utc" \
-            '$last_scan_utc >= $start_utc and $last_scan_utc < $end_utc
-              and any(.workflow_runs[]; .head_sha == $main_sha and .created_at >= $last_scan_utc and .conclusion == "success")' \
+            'if $last_scan_utc >= $start_utc and $last_scan_utc < $end_utc then
+               ([.workflow_runs[] | select(.created_at >= $last_scan_utc and .conclusion == "success")][0].head_sha // "")
+             else "" end' \
             <<< "$published_runs")"
 
-          if [[ "$published_today" == "true" ]]; then
+          # Ignore commits that only touch paths outside the Pages push trigger.
+          if [[ -n "$published_sha" && "$published_sha" != "$main_sha" ]]; then
+            if ! gh api "repos/${GITHUB_REPOSITORY}/compare/${published_sha}...${main_sha}?per_page=1" | jq -e '
+              def deployment_path: test("^(docs/|data/|scripts/|requirements[.]txt$|[.]github/workflows/update-and-deploy[.]yml$)");
+              .status == "ahead" and (.files | type == "array" and length < 300 and
+                all(.[]; ([.filename, .previous_filename // ""] | any(deployment_path)) | not))
+            ' > /dev/null; then
+              published_sha=""
+            fi
+          fi
+
+          if [[ -n "$published_sha" ]]; then
             echo "run_now=false" >> "$GITHUB_OUTPUT"
             echo "Today's scan is merged and published. Skipping."
           else
@@ -82,10 +94,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.event_name == 'schedule' && 'main' || github.sha }}
 
       - name: Setup Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@v7.1.0
         with:
           python-version: '3.15'
           cache: 'pip'
@@ -94,9 +108,9 @@ jobs:
         run: python -m pip install --upgrade pip && python -m pip install -r requirements.txt
 
       - name: Setup Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@v7.1.0
         with:
-          node-version: '24'
+          node-version: '26'
 
       - name: Run parser and schema tests
         run: python -m unittest discover -s tests -p 'test_*.py' -v
@@ -113,8 +127,8 @@ jobs:
           fi
 
       - name: Upload scan metrics
-        if: always()
-        uses: actions/upload-artifact@v7
+        if: always() && github.event_name != 'push'
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: scan-metrics
           path: scan-metrics.json
@@ -141,7 +155,7 @@ jobs:
       - name: Create or Update Sync PR
         if: github.event_name != 'push'
         id: cpr
-        uses: peter-evans/create-pull-request@v8
+        uses: peter-evans/create-pull-request@v8.1.3
         with:
           token: ${{ secrets.FW_BOT_TOKEN || github.token }}
           commit-message: "chore: sync firmware data from official sources and regenerate assets"
@@ -167,7 +181,7 @@ jobs:
 
       - name: Enable Auto-merge for Sync PR
         if: steps.cpr.outputs.pull-request-number
-        uses: peter-evans/enable-pull-request-automerge@v3
+        uses: peter-evans/enable-pull-request-automerge@v3.0.0
         with:
           token: ${{ secrets.FW_BOT_TOKEN || github.token }}
           pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
@@ -175,7 +189,7 @@ jobs:
 
       - name: Upload Pages artifact
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/upload-pages-artifact@v5
+        uses: actions/upload-pages-artifact@v5.0.0
         with:
           path: docs
 
@@ -194,4 +208,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@v5.0.1

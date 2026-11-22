@@ -78,7 +78,6 @@ def main() -> int:
         fail("TRACKER_CONFIG must be an object")
 
     required_config_keys = {
-        "generated_at_utc",
         "device_download_pages",
         "device_source_types",
         "source_sync_status",

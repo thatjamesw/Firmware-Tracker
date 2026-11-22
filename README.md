@@ -79,8 +79,9 @@ the current release notes and acknowledgement action.
 scan time independently of the site's build time. Devices without a successful
 check in more than three days show **Check overdue**; devices with no recorded success show **Not checked yet**. A failed
 source check is identified on its row even when a global issue banner is hidden.
-The status summary counts successful checks today in your local timezone, recent
-checks, overdue and failed checks, and devices requiring manual verification.
+The status summary shows the most recent successful check date as DD/MM/YYYY in
+your local timezone, the number of devices checked on that date, and counts for
+earlier recent checks, overdue and failed checks, and manual verifications.
 These counts cover the full watchlist, independently of search and filters.
 Release details include the exact last successful check and official download
 link, with older releases collapsed below the latest release.
@@ -102,10 +103,8 @@ keyboard focus, and overflow against a local static server. CI runs the same sui
 
 ## Manage devices without editing JSON
 
-Use **Manage devices on GitHub** in the site header, or open the repository's
-[Manage Devices workflow](https://github.com/thatjamesw/Firmware-Tracker/actions/workflows/manage-devices.yml)
-and choose **Run workflow**. The workflow must first be merged into `main` to appear.
-You need repository access to run it.
+Open the repository’s Manage Devices workflow and choose **Run workflow**.
+You need repository access to run it. [Manage Devices workflow](https://github.com/thatjamesw/Firmware-Tracker/actions/workflows/manage-devices.yml)
 
 For a typical DJI device, fill in just:
 
@@ -176,7 +175,7 @@ python scripts/fetch_firmware_details.py --dry-run --metrics-file /tmp/scan-metr
 node --test tests/frontend.test.js
 ```
 
-Python 3.15 and Node 24 LTS are used for checks. Each scan shares downloads by URL,
+Python 3.15 and Node 26 LTS are used for checks. Each scan shares downloads by URL,
 including in-flight requests, and allows two requests per host. Cache data lives
 only for the current process/scan; there is no persistent HTTP cache.
 The fetcher retries temporary HTTP errors (408, 429, 500, 502, 503, 504) and network
@@ -215,8 +214,8 @@ explicit unknown date stays unknown when historical metadata is merged.
    (automatically following Finnish daylight saving time), aiming to publish by
    08:00. Overnight attempts leave room for GitHub scheduler delays; the target
    time is not guaranteed.
-   Backup attempts continue until today's scan is merged and the current `main`
-   has a successful deployment. Manual dispatch always runs. No human approval
+   Backup attempts continue until today's scan is merged and the deployment
+   includes the current site inputs. Manual dispatch always runs. No human approval
    is required for sync PRs; required CI checks must pass before auto-merge.
 6. CI runs parser/schema tests and a frontend smoke test before generated changes are merged.
 
@@ -230,7 +229,7 @@ explicit unknown date stays unknown when historical metadata is merged.
   - runs `scripts/smoke_test_frontend.py` to verify generated browser assets and script wiring
   - runs desktop and mobile Chromium browser tests
 - `Update and Deploy Firmware Tracker` workflow (`.github/workflows/update-and-deploy.yml`) runs daily + manual:
-  - skips a scheduled attempt only when today's scan is merged and the current `main` is successfully published
+  - skips a scheduled attempt only when today's scan is merged and the current site inputs are published
   - re-runs tests
   - fetches official firmware data with regression guardrails enabled
   - regenerates browser assets + markdown summary
@@ -238,15 +237,16 @@ explicit unknown date stays unknown when historical metadata is merged.
   - reports scan results and timing in the Actions summary, including failed scans
   - on pushes to `main`, validates and deploys the merged data without another vendor scan or automation PR
 
-CI, sync, and device-management workflows all use Python 3.15 and Node 24 LTS.
+CI, sync, and device-management workflows all use Python 3.15 and Node 26 LTS.
+CI uses npm 12 for package installation and dependency auditing.
 
 ### Automated Sync PR Setup (One-time)
 
 To run fully hands-off daily:
 
-1. Add these actions to your repository Actions allowlist:
-   - `peter-evans/create-pull-request@v8`
-   - `peter-evans/enable-pull-request-automerge@v3`
+1. If your repository restricts actions with an allowlist, allow the refs used in
+   the workflow for `peter-evans/create-pull-request` and
+   `peter-evans/enable-pull-request-automerge`.
 2. Add repository secret `FW_BOT_TOKEN` (fine-grained PAT):
    - Repository permissions: `Contents: Read and write`, `Pull requests: Read and write`
 3. Branch protection for `main`:
@@ -279,10 +279,9 @@ Recommended GitHub branch protection:
   - Vendor HTML parsers use shared text/date/link helpers and tolerate common markup changes in Apple, Sony, Godox, Atomos, Bambu, and TP-Link pages.
   - Per-device and per-vendor health is tracked (`consecutive_failures`, `last_success_utc`, `last_error_type`) for better diagnostics.
   - Scheduled scans publish healthy updates and source health even when an individual lookup fails, retaining that device's last known good firmware. Schema validation and release guardrails remain enforced.
-  - Optional strict mode: `python scripts/fetch_firmware_details.py --fail-on-regression` exits nonzero on source regressions for manual diagnostics; scheduled scans do not use it.
+  - Optional strict mode: `python scripts/fetch_firmware_details.py --fail-on-regression` reports source regressions and exits nonzero before writing firmware data. Scheduled scans publish healthy updates and keep the last known good firmware for affected devices.
 - UI is single-table for all devices and includes:
   - A firmware status summary that changes when unseen firmware is detected
-  - Last generated timestamp
   - Source issue banner when a vendor feed is failing (for example DJI parsing errors)
   - New-firmware status and row highlights based on what your browser has previously seen (`Mark as Seen` to clear)
   - `Release details` include an `Open official download page` link (landing page, not direct binary URL)

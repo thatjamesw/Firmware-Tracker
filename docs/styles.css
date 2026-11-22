@@ -27,12 +27,8 @@ button:disabled { cursor: default; opacity: .65; }
 a { color: var(--accent); }
 .shell { max-width: 1280px; margin: 0 auto; padding: 0 28px 56px; }
 .masthead { border-bottom: 4px solid var(--accent); background: var(--ink); color: #f5efdf; }
-.masthead-inner { max-width: 1280px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; padding: 28px; }
+.masthead-inner { max-width: 1280px; margin: 0 auto; padding: 28px; }
 h1 { margin: 0; font-size: clamp(1.7rem, 4vw, 2.3rem); font-weight: 720; letter-spacing: -.035em; line-height: 1.05; }
-#manage-devices { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; white-space: nowrap; font-size: 13px; }
-.masthead .ghost { color: #f5efdf; border-color: #767a80; }
-.masthead .ghost:hover { background: #343b45; border-color: #f5efdf; }
-.masthead :focus-visible { outline-color: #f5efdf; }
 ::selection { background: #a32740; color: #fff; }
 input { caret-color: var(--accent); }
 input::placeholder { color: var(--muted); opacity: 1; }
@@ -114,9 +110,7 @@ ul.release-notes { padding-left: 20px; }
 }
 @media (max-width: 760px) {
   .shell { padding: 0 16px 40px; }
-  .masthead-inner { gap: 8px; padding: 18px 16px 12px; }
-  #manage-devices { min-height: 32px; padding: 2px 0; border: 0; border-radius: 0; font-weight: 500; }
-  #manage-devices:hover { background: transparent; text-decoration: underline; text-underline-offset: 3px; }
+  .masthead-inner { padding: 18px 16px 12px; }
   .firmware-status { align-items: flex-start; flex-wrap: wrap; gap: 12px; padding: 16px 0; }
   .firmware-status strong { font-size: 20px; }
   .toolbar { gap: 12px; }

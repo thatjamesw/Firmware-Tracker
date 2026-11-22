@@ -129,17 +129,18 @@ test('metadata corrections do not mark an acknowledged version new', () => {
 test('coverage reflects device checks rather than the global scan timestamp', () => {
   const ctx = app();
   const now = Date.parse('2026-11-03T12:00:00Z');
-  const current = new Date(now).toISOString();
-  ctx.TRACKER_CONFIG.source_sync_status = {last_run_utc: current, device_health: {
+  const current = new Date(now - 86400000).toISOString();
+  ctx.TRACKER_CONFIG.source_sync_status = {last_run_utc: new Date(now).toISOString(), device_health: {
     healthy: {status:'ok', last_success_utc:current},
     empty: {status:'ok_empty', last_success_utc:current},
     failed: {status:'error', last_success_utc:current},
     stale: {status:'ok', last_success_utc:'2020-01-01T00:00:00Z'},
     manual: {status:'manual_fallback', last_success_utc:current},
-    recent: {status:'ok', last_success_utc:new Date(now - 86400000).toISOString()},
+    recent: {status:'ok', last_success_utc:new Date(now - 2 * 86400000).toISOString()},
   }};
   const coverage = ctx.sourceCoverage(['healthy','empty','failed','stale','manual','recent','missing'].map(deviceId => ({deviceId})), now);
-  assert.equal(coverage.text, '2 devices checked today · 1 checked recently · 1 check overdue · 1 check failed · 1 not checked yet · 1 manually verified');
+  const date = new Date(current).toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit', year:'numeric'});
+  assert.equal(coverage.text, `2 devices checked ${date} · 1 checked recently · 1 check overdue · 1 check failed · 1 not checked yet · 1 manually verified`);
   assert.equal(coverage.warning, true);
   assert.equal(ctx.sourceCoverage([{deviceId:'healthy'}], now).warning, false);
   assert.equal(ctx.sourceCoverage(['healthy', 'recent', 'manual'].map(deviceId => ({deviceId})), now).warning, false);

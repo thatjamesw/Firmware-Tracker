@@ -30,7 +30,8 @@ test('search, category and empty state work together', async ({page}) => {
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('/');
   await expect(page.getByRole('heading', {name:'Firmware Tracker', exact:true})).toBeVisible();
-  await expect(page.getByRole('link', {name:'Manage devices on GitHub'})).toHaveAttribute('href', /actions\/workflows\/manage-devices.yml$/);
+  await expect(page.locator('header a')).toHaveCount(0);
+  await expect(page.locator('#firmware-status-coverage')).toContainText(/devices checked \d{2}\/\d{2}\/\d{4}/);
   await page.getByLabel('Search devices', {exact:true}).fill('pOcKeT');
   await expect(page.locator('tbody tr')).toHaveCount(1);
   await expect(page.locator('tbody')).toContainText('Osmo Pocket 4P');
@@ -123,10 +124,9 @@ test('unseen filtering keeps the page horizontally aligned', async ({page}) => {
   expect(await positions()).toEqual(before);
 });
 
-test('fresh generation cannot hide stale source checks', async ({page}) => {
+test('stale source checks show their date and overdue status', async ({page}) => {
   await page.route('**/devices/config.js', async route => {
     const config = structuredClone(data.config);
-    config.generated_at_utc = new Date().toISOString();
     config.source_sync_status.last_run_utc = '2020-01-01T10:00:00Z';
     config.source_sync_status.device_health.osmo_pocket_4p.last_success_utc = '2020-01-01T10:00:00Z';
     await route.fulfill({contentType:'application/javascript', body:`const TRACKER_CONFIG = ${JSON.stringify(config)};`});
