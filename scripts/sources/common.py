@@ -325,6 +325,12 @@ def default_expected_version_pattern(source: dict[str, Any]) -> str:
         return r"\d+(?:\.\d+)*(?:[A-Za-z0-9.\-]*)?"
     if source_type == "tplink_downloads":
         return r"\d+(?:\.\d+)+(?: Build \d{8})?"
+    if source_type == "playstation_support":
+        return r"\d{2}\.\d{2}-\d{2}\.\d{2}\.\d{2}"
+    if source_type in {"pihole_releases", "byd_release_notes"}:
+        return r"\d+(?:\.\d+){1,2}"
+    if source_type == "merlin_releases":
+        return r"(?:\d+_)?\d+\.\d+_\d+"
     if source_type in {"dji_downloads", "atomos_support", "bambu_wiki", "godox_listing"}:
         return r"\d+(?:\.\d+)+"
     if source_type == "sony_cscs":

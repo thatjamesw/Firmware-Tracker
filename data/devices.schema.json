@@ -115,6 +115,10 @@
             "atomos_support",
             "bambu_wiki",
             "tplink_downloads",
+            "playstation_support",
+            "pihole_releases",
+            "byd_release_notes",
+            "merlin_releases",
             "static"
           ]
         },
@@ -299,6 +303,18 @@
               "model",
               "hardware_version"
             ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": ["playstation_support", "pihole_releases", "byd_release_notes", "merlin_releases"]
+              }
+            }
+          },
+          "then": {
+            "required": ["url"]
           }
         },
         {

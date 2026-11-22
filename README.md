@@ -14,6 +14,10 @@ Static firmware-tracking site that deploys on GitHub Pages and syncs from offici
   - Atomos: official product-support firmware sections (device article based)
   - Bambu: official wiki release-history pages
   - TP-Link: official support/download firmware pages
+  - PlayStation 5: official system software release notes
+  - Pi-hole Core, Web, and FTL: stable releases from their official GitHub repositories
+  - BYD Sealion 7: BYD Norway OTA release notes with BYD Denmark as a fallback
+  - ASUS RT-AX86U: Asuswrt-Merlin stable releases from the exact model’s SourceForge RSS feed
   - Static/manual entries for devices without stable public firmware feeds
 - Generator: `scripts/generate_index.py`
 - Generated browser assets:
@@ -142,6 +146,10 @@ Some vendors need a model or variant to avoid matching the wrong hardware:
 | Atomos | Product support page | — | Article ID, e.g. `NinjaVArticle` |
 | Bambu | Wiki release-history page | — | Series, e.g. `P1` |
 | TP-Link | Download page | Model, e.g. `Deco BE65` | Hardware version, e.g. `V2` |
+| PlayStation | PS5 system software release notes | — | — |
+| Pi-hole | Official Core, Web, or FTL GitHub releases page | — | — |
+| BYD | BYD Norway or Denmark Sealion 7 OTA release notes | — | — |
+| Asuswrt-Merlin | SourceForge RSS feed for the exact model’s `Release` folder | — | — |
 | Manual | Official support page; select `static` | — | — |
 
 Manual entries use **Manual version** (a version or `App-managed`) and optional
@@ -267,7 +275,8 @@ Recommended GitHub branch protection:
   - fallbacks: regional/product download pages listed in `data/devices.json`
 - `Godox V860II (Sony)` is mapped to `V860IIS` firmware feed.
 - `Amaran 300c` is set as app-managed (`Sidus Link`) via static/manual entry.
-- `Dell U4025QW` remains static/manual due anti-bot protections on official support pages.
+- BYD Sealion 7 reports published Nordic OTA releases and the multimedia build when listed. Rollout availability varies by market and vehicle.
+- PlayStation and BYD release dates stay blank when the source provides no exact day.
 - Sync runs in parallel with retry/backoff and records source health each run.
   - Default: app continues to serve last known good data even if a source fails.
   - Transient network failures (for example temporary DNS outages in CI) are tracked separately and do not raise persistent UI source-issue banners.

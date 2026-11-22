@@ -39,7 +39,10 @@ def build_device_download_pages(device_sources: dict) -> dict:
         if source_type == "static":
             pages[device_id] = source.get("page_url", "")
             continue
-        if source_type in {"apple_support", "atomos_support", "bambu_wiki"}:
+        if source_type in {
+            "apple_support", "atomos_support", "bambu_wiki",
+            "playstation_support", "pihole_releases", "byd_release_notes", "merlin_releases",
+        }:
             pages[device_id] = source.get("page_url", "") or source.get("url", "")
             continue
         pages[device_id] = ""

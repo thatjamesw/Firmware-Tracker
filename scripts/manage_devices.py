@@ -17,6 +17,8 @@ from fetch_firmware_details import (
 )
 from sources import SOURCE_VENDOR
 from sources.common import configure_fetch, write_json_atomic
+from sources.merlin import RELEASE_FEED_URL as MERLIN_RELEASE_FEED_URL
+from sources.pihole import RELEASES_URL as PIHOLE_RELEASES_URL
 
 VENDOR_DOMAINS = {
     "dji_downloads": ("dji.com",),
@@ -26,10 +28,16 @@ VENDOR_DOMAINS = {
     "atomos_support": ("atomos.com",),
     "bambu_wiki": ("bambulab.com",),
     "tplink_downloads": ("tp-link.com",),
+    "playstation_support": ("playstation.com",),
+    "pihole_releases": ("github.com",),
+    "byd_release_notes": ("byd.no", "bydauto.dk"),
+    "merlin_releases": ("sourceforge.net",),
 }
 DEFAULT_CATEGORIES = {
     "sony_cscs": "Cameras", "atomos_support": "Cameras", "godox_listing": "Lighting",
     "apple_support": "Apple", "bambu_wiki": "3D Printer", "tplink_downloads": "Networking",
+    "playstation_support": "Gaming", "pihole_releases": "Networking", "byd_release_notes": "Vehicles",
+    "merlin_releases": "Networking",
 }
 
 
@@ -47,6 +55,10 @@ def clean(value, label: str, limit: int = 300) -> str:
 def infer_type(url: str) -> str:
     host = (urlparse(url).hostname or "").lower()
     for kind, domains in VENDOR_DOMAINS.items():
+        if kind == "pihole_releases" and not PIHOLE_RELEASES_URL.fullmatch(url):
+            continue
+        if kind == "merlin_releases" and not MERLIN_RELEASE_FEED_URL.fullmatch(url):
+            continue
         if any(host == d or host.endswith("." + d) for d in domains):
             return kind
     raise ValueError("This vendor is not supported automatically. Choose static for a manual entry.")
@@ -64,6 +76,10 @@ def validate_source(source: dict) -> None:
         host = parsed.hostname.lower()
         if not any(host == d or host.endswith("." + d) for d in VENDOR_DOMAINS[kind]):
             raise ValueError(f"Use an official {SOURCE_VENDOR[kind]} domain for this source")
+    if kind == "pihole_releases" and not PIHOLE_RELEASES_URL.fullmatch(url):
+        raise ValueError("Use the official GitHub releases page for Pi-hole Core, Web or FTL")
+    if kind == "merlin_releases" and not MERLIN_RELEASE_FEED_URL.fullmatch(url):
+        raise ValueError("Use the Asuswrt-Merlin RSS feed for the exact model's Release folder")
     fields = {
         "sony_cscs": ("mdl",), "godox_listing": ("title_contains",),
         "apple_support": ("kind",),

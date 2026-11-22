@@ -12,7 +12,14 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import fetch_firmware_details as ffd
-from sources import SYNC_HANDLERS, common, tplink, apple, atomos, bambu, dji, godox, sony
+from sources import SYNC_HANDLERS, common, tplink, apple, atomos, bambu, byd, dji, godox, merlin, pihole, playstation, sony
+
+
+MERLIN_FEED_URL = 'https://sourceforge.net/projects/asuswrt-merlin/rss?path=/RT-AX86U/Release'
+MERLIN_STABLE_ITEM = (
+    b'<item><title>/RT-AX86U/Release/RT-AX86U_3004_388.13_0.zip</title>'
+    b'<pubDate>Sat, 07 Nov 2026 17:22:41 UT</pubDate></item>'
+)
 
 
 def release(version='1.2.0', date='2026-01-01'):
@@ -39,6 +46,13 @@ class ReleaseContractTests(unittest.TestCase):
             ('godox_listing', godox, {'title_contains': 'V860IIS'}, b'<div class="item"><div class="tit">V860IIS Firmware <span>V1.2</span></div><div class="text">Release Date 2026-01-01</div></div></body>'),
             ('sony_cscs', sony, {'mdl': 'ILCE-1M2'}, b"<script>config={, ver: '2.0'}</script><p>2026-01-01</p>"),
             ('tplink_downloads', tplink, {'model': 'Deco BE65', 'hardware_version': 'V2'}, b'Deco BE65(EU)_V2_1.2.0 Build 20250101 Published Date: 2026-01-01'),
+            ('playstation_support', playstation, {}, b'<h3>Version: 26.07-14.23.00</h3><ul><li>System fixes.</li></ul>'),
+            ('pihole_releases', pihole, {'url': 'https://github.com/pi-hole/FTL/releases'},
+             b'{"tag_name":"v6.9","published_at":"2026-11-11T18:50:30Z","draft":false,"prerelease":false}'),
+            ('byd_release_notes', byd, {'url': 'https://byd.no/eie-byd/din-byd-sealion-7'},
+             b'<h1>Din BYD Sealion 7</h1><p><strong>V3.3.0 - august 2026</strong></p><p>OTA-oppdatering</p><p>Multimediaversjon: 51.1.4.2606030.1</p>'),
+            ('merlin_releases', merlin, {'url': MERLIN_FEED_URL, 'requires_date': True},
+             b'<rss><channel>' + MERLIN_STABLE_ITEM + b'</channel></rss>'),
         ]
         self.assertEqual({kind for kind, *_ in cases} | {'static'}, set(SYNC_HANDLERS))
         for kind, module, options, html in cases:
@@ -52,6 +66,63 @@ class ReleaseContractTests(unittest.TestCase):
                 self.assertTrue(result['releases'][0]['evidence']['source_url'].startswith('https://'))
         result = ffd.process_device('manual', 'Manual', {'type': 'static', 'release': release('App-managed', '')}, 1)
         self.assertEqual(result['status'], 'ok')
+
+    def test_playstation_selects_latest_version_with_its_own_notes(self):
+        source = {'type': 'playstation_support', 'url': 'https://www.playstation.com/example'}
+        html = (
+            b'<h3>Version: 26.07-14.22.00</h3><ul><li>Previous fixes.</li></ul>'
+            b'<h3>Version: 26.07-14.23.00</h3><ul><li>System fixes.</li></ul>'
+        )
+        with patch.object(playstation, 'fetch_bytes', return_value=html):
+            latest, = playstation.sync_playstation_support(source, 1)
+        self.assertEqual(latest['version'], '26.07-14.23.00')
+        self.assertEqual(latest['release_note']['en'], '• System fixes.')
+        self.assertEqual(latest['released_time'], '')
+
+    def test_pihole_uses_each_components_stable_release(self):
+        for repo in ('pi-hole', 'web', 'FTL'):
+            source = {'type': 'pihole_releases', 'url': f'https://github.com/pi-hole/{repo}/releases'}
+            payload = {'tag_name': 'v6.9', 'published_at': '2026-11-11T18:50:30Z', 'draft': False, 'prerelease': False}
+            with self.subTest(repo=repo), patch.object(pihole, 'fetch_bytes', return_value=json.dumps(payload).encode()) as fetch:
+                latest, = pihole.sync_pihole_releases(source, 1)
+                fetch.assert_called_once_with(f'https://api.github.com/repos/pi-hole/{repo}/releases/latest', 1)
+                self.assertEqual(latest['version'], '6.9')
+                self.assertEqual(latest['released_time'], '2026-11-11')
+        payload['prerelease'] = True
+        with patch.object(pihole, 'fetch_bytes', return_value=json.dumps(payload).encode()):
+            self.assertEqual(pihole.sync_pihole_releases(source, 1), [])
+
+    def test_byd_fallback_scopes_the_build_and_uses_no_invented_day(self):
+        source = {'type': 'byd_release_notes', 'url': 'https://www.bydauto.dk/example'}
+        html = (
+            b'<h1>Aktuelle softwareopdateringer for BYD SEALION 7</h1>'
+            b'<h3>OTA V3.3.0 - august 2026</h3>'
+            b'<p>Systemversion: 51.1.4.2606030.1</p>'
+            b'<p>OTA V3.2.3 - juni 2026</p>'
+            b'<p>Systemversion: 51.1.4.2604130.1</p>'
+        )
+        with patch.object(byd, 'fetch_bytes', return_value=html):
+            latest, = byd.sync_byd_release_notes(source, 1)
+        self.assertEqual(latest['version'], '3.3.0')
+        self.assertIn('Denmark', latest['release_note']['en'])
+        self.assertIn('51.1.4.2606030.1', latest['release_note']['en'])
+        self.assertEqual(latest['released_time'], '')
+        with patch.object(byd, 'fetch_bytes', return_value=html.replace(b'SEALION 7', b'SEALION 6')):
+            self.assertEqual(byd.sync_byd_release_notes(source, 1), [])
+
+    def test_merlin_accepts_only_the_configured_models_stable_packages(self):
+        source = {'type': 'merlin_releases', 'url': MERLIN_FEED_URL, 'requires_date': True}
+        feed = (
+            b'<rss><channel>'
+            + MERLIN_STABLE_ITEM.replace(b'/Release/', b'/Beta/').replace(b'388.13', b'388.99')
+            + MERLIN_STABLE_ITEM.replace(b'RT-AX86U', b'RT-AX86U_PRO').replace(b'3004', b'3006')
+            + MERLIN_STABLE_ITEM
+            + b'</channel></rss>'
+        )
+        with patch.object(merlin, 'fetch_bytes', return_value=feed):
+            latest, = merlin.sync_merlin_releases(source, 1)
+        self.assertEqual(latest['version'], '3004_388.13_0')
+        self.assertEqual(latest['released_time'], '2026-11-07')
 
     def test_invalid_output_tries_fallback_without_mutating_input(self):
         invalids = [None, {}, [None], [release() | {'active': 'false'}],
