@@ -219,7 +219,7 @@
       }
     },
     "sync_status": {
-      "last_run_utc": "2026-11-24T09:58:56Z",
+      "last_run_utc": "2026-11-25T08:41:25Z",
       "health_counts": {
         "ok": 26,
         "ok_empty": 1,
@@ -235,7 +235,7 @@
           "ok_count": 5,
           "issues": [],
           "transient_count": 0,
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": ""
         },
@@ -244,7 +244,7 @@
           "ok_count": 1,
           "issues": [],
           "transient_count": 0,
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": ""
         },
@@ -253,7 +253,7 @@
           "ok_count": 1,
           "issues": [],
           "transient_count": 0,
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": ""
         },
@@ -262,7 +262,7 @@
           "ok_count": 1,
           "issues": [],
           "transient_count": 0,
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": ""
         },
@@ -271,7 +271,7 @@
           "ok_count": 3,
           "issues": [],
           "transient_count": 0,
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": ""
         },
@@ -280,7 +280,7 @@
           "ok_count": 3,
           "issues": [],
           "transient_count": 0,
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": ""
         },
@@ -289,7 +289,7 @@
           "ok_count": 3,
           "issues": [],
           "transient_count": 0,
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": ""
         },
@@ -298,7 +298,7 @@
           "ok_count": 1,
           "issues": [],
           "transient_count": 0,
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": ""
         },
@@ -307,7 +307,7 @@
           "ok_count": 6,
           "issues": [],
           "transient_count": 0,
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": ""
         },
@@ -316,7 +316,7 @@
           "ok_count": 1,
           "issues": [],
           "transient_count": 0,
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": ""
         }
@@ -325,7 +325,7 @@
         "airpods_pro_3": {
           "vendor": "apple",
           "status": "ok",
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -333,7 +333,7 @@
         "amaran_300c": {
           "vendor": "static",
           "status": "ok",
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -341,7 +341,7 @@
         "apple_ios": {
           "vendor": "apple",
           "status": "ok",
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -349,7 +349,7 @@
         "apple_macos": {
           "vendor": "apple",
           "status": "ok",
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -357,7 +357,7 @@
         "apple_watchos": {
           "vendor": "apple",
           "status": "ok",
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -365,7 +365,7 @@
         "asus_rt_ax86u": {
           "vendor": "asuswrt-merlin",
           "status": "ok",
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -382,7 +382,7 @@
         "bambu_p1s": {
           "vendor": "bambu",
           "status": "ok",
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -390,7 +390,7 @@
         "byd_sealion_7": {
           "vendor": "byd",
           "status": "ok",
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -398,7 +398,7 @@
         "godox_ad400proii": {
           "vendor": "godox",
           "status": "ok",
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -406,7 +406,7 @@
         "godox_v860iis": {
           "vendor": "godox",
           "status": "ok",
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -414,7 +414,7 @@
         "godox_x3pros": {
           "vendor": "godox",
           "status": "ok",
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -422,7 +422,7 @@
         "homepod_mini_2": {
           "vendor": "apple",
           "status": "ok",
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -430,7 +430,7 @@
         "osmo_pocket_4p": {
           "vendor": "dji",
           "status": "ok",
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -438,7 +438,7 @@
         "pihole_core": {
           "vendor": "pihole",
           "status": "ok",
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -446,7 +446,7 @@
         "pihole_ftl": {
           "vendor": "pihole",
           "status": "ok",
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -454,7 +454,7 @@
         "pihole_web": {
           "vendor": "pihole",
           "status": "ok",
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -462,7 +462,7 @@
         "playstation_5": {
           "vendor": "playstation",
           "status": "ok",
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -470,7 +470,7 @@
         "sony_1635gm2": {
           "vendor": "sony",
           "status": "ok_empty",
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -478,7 +478,7 @@
         "sony_2470gm2": {
           "vendor": "sony",
           "status": "ok",
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -486,7 +486,7 @@
         "sony_24f14gm": {
           "vendor": "sony",
           "status": "ok",
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -494,7 +494,7 @@
         "sony_50f12gm": {
           "vendor": "sony",
           "status": "ok",
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -502,7 +502,7 @@
         "sony_70200gm2": {
           "vendor": "sony",
           "status": "ok",
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -510,7 +510,7 @@
         "sony_a1ii": {
           "vendor": "sony",
           "status": "ok",
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -518,7 +518,7 @@
         "tplink_deco_be65_v2": {
           "vendor": "tplink",
           "status": "ok",
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -526,7 +526,7 @@
         "wa150": {
           "vendor": "dji",
           "status": "ok",
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
@@ -534,7 +534,7 @@
         "wa520": {
           "vendor": "dji",
           "status": "ok",
-          "last_success_utc": "2026-11-24T09:58:56Z",
+          "last_success_utc": "2026-11-25T08:41:25Z",
           "consecutive_failures": 0,
           "last_error_type": "",
           "last_error_reason": ""
